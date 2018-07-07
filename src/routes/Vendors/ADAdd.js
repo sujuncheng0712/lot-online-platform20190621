@@ -46,11 +46,8 @@ class DealerAdd extends PureComponent {
     };
   }
 
-  componentWillMount() {
-    this.getAgentsInfo();
-  }
-
   componentDidMount() {
+    this.getAgentsInfo();
     this.getAgentsList();
   }
 
@@ -103,8 +100,6 @@ class DealerAdd extends PureComponent {
     lists.forEach((val, k) => {
       aMenu.push(<Select.Option key={k} value={val.aid}>{val.contact}</Select.Option>);
     });
-
-    console.log(superior);
 
     // 请求服务器
     const validate = () => {
@@ -191,13 +186,14 @@ class DealerAdd extends PureComponent {
               )}
               <Cascader
                 options={options}
-                value={area.split("/")}
+                value={area.split("/").length > 1 ? area.split("/") : ''}
                 onChange={(value) => {
                   this.setState({
                     area: value.join("/"),
                   })
                 }}
                 allowClear={false}
+                placeholder="请选择"
               />
             </Form.Item>
             <Form.Item label={fieldLabels.superior} {...formItemLayout} >
