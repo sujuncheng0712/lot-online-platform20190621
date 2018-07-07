@@ -72,7 +72,7 @@ class CenterProfile extends PureComponent {
     fetch(getDeal).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) this.setState({dealInfo: info.data});
+          if (info.status) this.setState({dealList: info.data});
         });
       }
     });
