@@ -98,7 +98,7 @@ class DealerAdd extends PureComponent {
 
     const aMenu = [];
     lists.forEach((val, k) => {
-      aMenu.push(<Select.Option key={k} value={val.aid}>{val.contact}</Select.Option>);
+      aMenu.push(<Select.Option key={k} value={val.aid}>{val.contact}（{val.area}）</Select.Option>);
     });
 
     // 请求服务器

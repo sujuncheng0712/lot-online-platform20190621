@@ -18,6 +18,7 @@ class EquipmentsList extends PureComponent {
 
       codeId: '',
       deviceId: '',
+      agentsName: '',
     };
   }
 
@@ -92,10 +93,10 @@ class EquipmentsList extends PureComponent {
 
   // 获取搜索后的列表
   searchList() {
-    const {lists, codeId, deviceId} = this.state;
+    const {lists, codeId, deviceId, agentsName} = this.state;
     const arr = [];
     lists.forEach((val) => {
-      if (val.activation_code === codeId || val.eid === deviceId) arr.push(val);
+      if (val.activation_code === codeId || val.eid === deviceId || val.agents === agentsName) arr.push(val);
     });
 
     if (arr.length === 0) message.error('没找到对应的数据');
@@ -134,6 +135,11 @@ class EquipmentsList extends PureComponent {
       if (val.online_at && !val.offline_at) onLine.push(val);
 
       versionArr.push(val.version || '0.0.0');
+    });
+
+    const notUpgraded = [];
+    versionArr.forEach((val) => {
+      if (val < versionArr.sort()[versionArr.length - 1]) notUpgraded.push(val);
     });
 
     const menu = (info) => (
@@ -298,7 +304,9 @@ class EquipmentsList extends PureComponent {
             <Divider type="vertical" />
             <Badge status="success" text={`在线设备共${onLine.length}台`} />
             <Divider type="vertical" />
-            <Badge status="success" text={`设备在线率${Math.ceil(onLine.length / total * 100) || 0}%`} />
+            <Badge status="processing" text={`设备在线率${Math.ceil(onLine.length / total * 100) || 0}%`} />
+            <Divider type="vertical" />
+            <Badge status="error" text={`未升级设备${notUpgraded.length}台`} />
           </div>
         </div>
         <div style={styles.search}>
@@ -320,6 +328,17 @@ class EquipmentsList extends PureComponent {
                 placeholder="请输入需要查找的设备ID"
                 onChange={(e) => {
                   this.setState({deviceId: e.target.value});
+                }}
+              />
+            </div>
+          </div>
+          <div style={styles.searchRow}>
+            <div style={styles.searchTit}>代理商：</div>
+            <div style={{width: 200}}>
+              <Input
+                placeholder="请输入需要查找的代理商名字"
+                onChange={(e) => {
+                  this.setState({agentsName: e.target.value});
                 }}
               />
             </div>
