@@ -1,4 +1,4 @@
-/* eslint-disable no-param-reassign,no-plusplus,no-script-url */
+/* eslint-disable no-param-reassign,no-plusplus,no-script-url,no-undef */
 import React, {PureComponent} from 'react';
 import {Table, Badge, Divider, Input, Button, Icon, message, Popconfirm, Menu, Dropdown} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
@@ -13,7 +13,6 @@ class EquipmentsList extends PureComponent {
       userLists: [],
       dealersLists: [],
       agentsLists: [],
-      total: 0,
       loading: true,
 
       codeId: '',
@@ -78,14 +77,7 @@ class EquipmentsList extends PureComponent {
     fetch(equipmentsListUrl).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) {
-            let k = 1;
-            info.data.forEach((val) => {
-              val.id = k;
-              k++;
-            });
-            this.setState({lists: info.data, total: info.total, loading: false});
-          }
+          if (info.status) this.setState({lists: info.data, loading: false});
         });
       }
     });
@@ -105,10 +97,11 @@ class EquipmentsList extends PureComponent {
   }
 
   render() {
-    const {lists, userLists, dealersLists, agentsLists, total, loading} = this.state;
+    const {lists, userLists, dealersLists, agentsLists, loading} = this.state;
 
     const onLine = [];
     const versionArr = [];
+    let k = 1;
     lists.forEach((val) => {
       userLists.forEach((user) => {
         if (val.uid === user.uid) {
@@ -135,6 +128,9 @@ class EquipmentsList extends PureComponent {
       if (val.online_at && !val.offline_at) onLine.push(val);
 
       versionArr.push(val.version || '0.0.0');
+
+      val.id = k;
+      k++;
     });
 
     const notUpgraded = [];
@@ -300,11 +296,11 @@ class EquipmentsList extends PureComponent {
       <PageHeaderLayout title="已激活设备列表">
         <div style={{padding: 20, backgroundColor: '#fff'}}>
           <div style={{marginTop: 15, textAlign: 'left'}}>
-            <Badge status="success" text={`已激活设备共${total}台`} />
+            <Badge status="success" text={`已激活设备共${lists.length}台`} />
             <Divider type="vertical" />
             <Badge status="success" text={`在线设备共${onLine.length}台`} />
             <Divider type="vertical" />
-            <Badge status="processing" text={`设备在线率${Math.ceil(onLine.length / total * 100) || 0}%`} />
+            <Badge status="processing" text={`设备在线率${Math.ceil(onLine.length / lists.length * 100) || 0}%`} />
             <Divider type="vertical" />
             <Badge status="error" text={`未升级设备${notUpgraded.length}台`} />
           </div>

@@ -17,6 +17,7 @@ class SubsidyList extends PureComponent {
       lists: [],
       loading: true,
       orderId: '',
+      agentsName: '',
     };
   }
 
@@ -76,13 +77,8 @@ class SubsidyList extends PureComponent {
         res.json().then((info) => {
           if (info.status) {
             const data = [];
-            let k = 1;
             info.data.forEach((val) => {
-              if (val.type === 1 || val.type === 3) {
-                val.id = k;
-                data.push(val);
-                k++;
-              }
+              if (val.type === 1 || val.type === 3) data.push(val);
             });
             this.setState({lists: data, loading: false});
           }
@@ -93,10 +89,10 @@ class SubsidyList extends PureComponent {
 
   // 搜索列表
   searchList() {
-    const {lists, orderId} = this.state;
+    const {lists, orderId, agentsName} = this.state;
     const arr = [];
     lists.forEach((val) => {
-      if (val.oid === orderId) {
+      if (val.oid === orderId || val.agents === agentsName) {
         arr.push(val);
       }
     });
@@ -114,12 +110,17 @@ class SubsidyList extends PureComponent {
     let thisMonth = 0;
     let lastMonth = 0;
 
+    let k = 1;
     lists.forEach((val) => {
       ordersLists.forEach((value) => {
         if (val.oid === value.oid) {
           val.consignee = value.consignee;
           val.pay_amount = value.pay_amount;
-          val.state = value.state;
+          if (val.agent_earning > 0 && value.state === 10) {
+            val.state = 4;
+          } else {
+            val.state = value.state;
+          }
         }
       });
       dealersLists.forEach((value) => {
@@ -177,6 +178,9 @@ class SubsidyList extends PureComponent {
           lastMonth += parseInt(val.dealer_earning);
         }
       }
+
+      val.id = k;
+      k++;
     });
 
     return (
@@ -211,6 +215,21 @@ class SubsidyList extends PureComponent {
               />
             </div>
           </div>
+          {
+            localStorage.getItem('antd-pro-authority') === 'vendors' ? (
+              <div style={styles.searchRow}>
+                <div style={styles.searchTit}>商家名字：</div>
+                <div style={{width: 200}}>
+                  <Input
+                    placeholder="请输入需要查找的商家名字"
+                    onChange={(e) => {
+                      this.setState({agentsName: e.target.value});
+                    }}
+                  />
+                </div>
+              </div>
+            ) : ''
+          }
           <Button type="primary" onClick={this.searchList.bind(this)}><Icon type="search" /> 查找收益</Button>
         </div>
         <div style={{padding: 20, backgroundColor: '#fff'}}>
@@ -282,9 +301,6 @@ class SubsidyList extends PureComponent {
               )
             }
             pagination={{
-              onChange: (page) => {
-                console.log(page);
-              },
               pageSize: 10,
             }}
           />

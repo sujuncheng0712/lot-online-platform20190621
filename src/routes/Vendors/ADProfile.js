@@ -1,4 +1,4 @@
-/* eslint-disable no-param-reassign */
+/* eslint-disable no-param-reassign,no-plusplus,radix */
 import React, {PureComponent} from 'react';
 import {Card, Col, Row, Button, Tabs, Table, List, Divider} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
@@ -108,7 +108,6 @@ class ADProfile extends PureComponent {
   getEarnings() {
     const {location: {search}} = this.props;
     const ad = search.slice(1).split('&');
-    const role = ad[0].slice(1).split('=')[1];
     const roleId = ad[1].slice(1).split('=')[1];
 
     const getEarnings = `${url}/earnings`;
