@@ -142,7 +142,7 @@ class CenterProfile extends PureComponent {
         <Card title="签约信息" bordered={false}>
           <Tabs defaultActiveKey="1">
             <Tabs.TabPane tab="当前签约" key="1">
-              <Table rowKey="id" columns={dealColumns} dataSource={dealList[0]} />
+              <Table rowKey="id" columns={dealColumns} dataSource={dealList} />
             </Tabs.TabPane>
             <Tabs.TabPane tab="历史签约" key="2">
               <Table rowKey="id" columns={dealColumns} dataSource={dealList} />

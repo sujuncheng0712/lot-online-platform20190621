@@ -80,6 +80,10 @@ const menuData = [
         name: '钱包账户',
         path: 'wallet-list',
       },
+      {
+        name: '提现申请',
+        path: 'withdrawal',
+      },
     ],
   },
   {
@@ -168,6 +172,7 @@ const menuData = [
       {
         name: '发货额度',
         path: 'delivery-quota',
+        authority: ['admin', 'vendors'],
       },
       {
         name: '登陆密码',

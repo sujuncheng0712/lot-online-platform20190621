@@ -169,11 +169,11 @@ class EquipmentsList extends PureComponent {
               });
             }}
           >
-            <a href="javascript:;">{info.activation_code.length > 16 ? '退货退单' : '解除激活'}</a>
+            <a href="javascript:;">{info.activation_code && info.activation_code.length > 16 ? '退货退单' : '解除激活'}</a>
           </Popconfirm>
         </Menu.Item>
         {
-          info.activation_code.length > 16 ? (
+          info.activation_code && info.activation_code.length > 16 ? (
             <Menu.Item>
               <Popconfirm
                 placement="left"
@@ -254,7 +254,7 @@ class EquipmentsList extends PureComponent {
                           }
                         });
                       } else {
-                        message.error(`更新请求失败：[设备已离线]`);
+                        message.error(`更新请求失败：[设备不在线]`);
                       }
                     }}
                   />
