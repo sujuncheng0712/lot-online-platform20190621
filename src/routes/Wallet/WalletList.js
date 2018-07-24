@@ -2,13 +2,15 @@ import React, {PureComponent} from 'react';
 import {Button, Divider, Tabs, Table, List} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
-class SubsidyList extends PureComponent {
+class WalletList extends PureComponent {
   constructor(...args) {
     super(...args);
     this.state = {
       lists: [
         {
           id: 1,
+          created_at: '2018年06月11日 11:39:19',
+          oid: '201806111146',
           name: '周成华',
           amount: '50元',
           fee: '0.3元',
@@ -18,6 +20,8 @@ class SubsidyList extends PureComponent {
           state: '0',
         }, {
           id: 2,
+          created_at: '2018年06月11日 11:39:19',
+          oid: '201806111146',
           name: '周成华',
           amount: '50元',
           fee: '0.3元',
@@ -49,14 +53,13 @@ class SubsidyList extends PureComponent {
 
   render() {
     const {lists, lists2} = this.state;
-    console.log(lists, lists2);
 
     const columns = [
-      {title: '时间', dataIndex: 'created_at'},
-      {title: '类型', dataIndex: 'type'},
-      {title: '收入/支出金额(元)', dataIndex: 'and'},
-      {title: '账户余额', dataIndex: 'balance'},
-      {title: '备注', dataIndex: 'remarks'},
+      {title: '时间', dataIndex: 'created_at', align:'center'},
+      {title: '类型', dataIndex: 'type', align:'center'},
+      {title: '收入/支出金额(元)', dataIndex: 'and', align:'center'},
+      {title: '账户余额', dataIndex: 'balance', align:'center'},
+      {title: '备注', dataIndex: 'remarks', align:'center'},
     ];
 
     return (
@@ -76,7 +79,7 @@ class SubsidyList extends PureComponent {
                 <div style={styles.col}>提现金额</div>
                 <div style={styles.col}>手续费</div>
                 <div style={styles.col}>开户名</div>
-                <div style={styles.col}>开银行</div>
+                <div style={styles.col}>开户银行</div>
                 <div style={styles.col}>账户</div>
                 <div style={styles.col}>最新进度</div>
               </div>
@@ -90,11 +93,9 @@ class SubsidyList extends PureComponent {
                     <div key={item.oid} style={styles.item}>
                       <div style={styles.row}>
                         <div>
-                          发起时间：{'2018年06月11日11:39:19'}
+                          发起时间：{item.created_at}
                           <Divider type="vertical" />
-                          流水单号：{'201806111146'}
-                          <Divider type="vertical" />
-                          正在处理
+                          流水单号：{item.oid}
                         </div>
                       </div>
                       <div style={styles.column}>
@@ -172,4 +173,4 @@ const styles = {
   },
 };
 
-export default SubsidyList;
+export default WalletList;

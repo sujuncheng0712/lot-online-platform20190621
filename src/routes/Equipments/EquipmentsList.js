@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign,no-plusplus,no-script-url,no-undef */
 import React, {PureComponent} from 'react';
-import {Table, Badge, Divider, Input, Button, Icon, message, Popconfirm, Menu, Dropdown} from 'antd';
+import {Table, Badge, Divider, Input, Button, Icon, message, Popconfirm, Menu, Dropdown, Popover} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
@@ -77,7 +77,15 @@ class EquipmentsList extends PureComponent {
     fetch(equipmentsListUrl).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) this.setState({lists: info.data, loading: false});
+          if (info.status) {
+            const lists = [];
+            info.data.forEach((val) => {
+              if (val.activation_code) {
+                lists.push(val);
+              }
+            });
+            this.setState({lists, loading: false});
+          }
         });
       }
     });
@@ -275,7 +283,16 @@ class EquipmentsList extends PureComponent {
           <Badge status="default" text="离线" />
         ),
       },
-      {title: '使用人', dataIndex: 'mobile', align: 'center'},
+      localStorage.getItem('antd-pro-authority') === 'vendors' ? {
+        title: '使用人',
+        dataIndex: 'mobile',
+        align: 'center',
+        render: (val, info) => (
+          <Popover placement="top" title="用户ID" content={info.uid} trigger="click">
+            {val}
+          </Popover>
+        ),
+      } : {title: '使用人', dataIndex: 'mobile', align: 'center'},
       {title: '推荐人', dataIndex: 'contact', align: 'center'},
       {title: '代理商', dataIndex: 'agents', align: 'center'},
       localStorage.getItem('antd-pro-authority') === 'vendors' ? {

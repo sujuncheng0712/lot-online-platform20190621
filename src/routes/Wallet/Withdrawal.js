@@ -25,7 +25,7 @@ const formItemLayout = {
   },
 };
 
-class ResetPassword extends PureComponent {
+class Withdrawal extends PureComponent {
   constructor(...args) {
     super(...args);
     this.state = {};
@@ -39,11 +39,7 @@ class ResetPassword extends PureComponent {
     const validate = () => {
       validateFieldsAndScroll((error, values) => {
         if (!error) {
-          const data = JSON.stringify({
-            old_pwd: values.old_password,
-            new_pwd: values.password,
-            username: values.username,
-          });
+          const data = JSON.stringify(values);
           const getPWD = `${url}/${auth.type}/${auth.uuid}/pwd`;
           fetch(getPWD, {
             method: 'PUT',
@@ -51,11 +47,7 @@ class ResetPassword extends PureComponent {
           }).then((res) => {
             if (res.ok) {
               res.json().then((info) => {
-                if (info.status) {
-                  message.success('密码修改成功');
-                }else {
-                  message.error(`密码修改失败[${info.message}],请重试`);
-                }
+                console.log(info);
               });
             }
           });
@@ -151,4 +143,4 @@ class ResetPassword extends PureComponent {
 export default connect(({global, loading}) => ({
   collapsed: global.collapsed,
   submitting: loading.effects['form/submitAdvancedForm'],
-}))(Form.create()(ResetPassword));
+}))(Form.create()(Withdrawal));

@@ -116,6 +116,10 @@ export const getRouterData = app => {
     '/wallet/withdrawal': {
       component: dynamicWrapper(app, [], () => import('../routes/Wallet/Withdrawal')),
     },
+    // 提现审核
+    '/finance/finance-list': {
+      component: dynamicWrapper(app, [], () => import('../routes/Finance/FinanceList')),
+    },
     // 代理商列表
     '/vendors/agents-list': {
       component: dynamicWrapper(app, [], () => import('../routes/Vendors/AgentsList')),
