@@ -40,6 +40,9 @@ class DealerAdd extends PureComponent {
     this.state = {
       options: Ares,
       area: '',
+      l1:'',
+      l2:'',
+      l3:'',
       superior: '请选择',
       ADinfo: {},
       lists: [],
@@ -122,6 +125,7 @@ class DealerAdd extends PureComponent {
       });
     };
 
+    // 获取错误信息
     const errors = getFieldsError();
     const getErrorInfo = () => {
       const errorCount = Object.keys(errors).filter(key => errors[key]).length;
@@ -192,7 +196,7 @@ class DealerAdd extends PureComponent {
                     area: value.join("/"),
                   })
                 }}
-                allowClear={false}
+                changeOnSelect
                 placeholder="请选择"
               />
             </Form.Item>
