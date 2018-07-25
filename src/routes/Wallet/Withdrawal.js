@@ -1,5 +1,5 @@
 import React, {PureComponent} from 'react';
-import {Card, Button, Form, Icon, Input, Popover, message, Divider} from 'antd';
+import {Card, Button, Form, Icon, Input, Popover, Divider} from 'antd';
 import {connect} from 'dva';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 import styles from './style.less';

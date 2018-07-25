@@ -40,9 +40,6 @@ class DealerAdd extends PureComponent {
     this.state = {
       options: Ares,
       area: '',
-      l1:'',
-      l2:'',
-      l3:'',
       superior: '请选择',
       ADinfo: {},
       lists: [],
