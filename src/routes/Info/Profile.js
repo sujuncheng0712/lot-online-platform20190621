@@ -7,36 +7,36 @@ const url = 'http://iot.dochen.cn/api';
 const role = localStorage.getItem('antd-pro-authority');
 const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
 
-const dealColumns = [
-  {title: '起始时间', dataIndex: 'begin_start'},
-  {title: '共已缴金额(元)', dataIndex: 'sum'},
-  {title: '保证金(元)', dataIndex: 'earnest_money'},
-  {title: '应配发货额度(台)', dataIndex: 'delivery_quota'},
-  {title: '补贴金额(元)', dataIndex: 'subsidy'},
-  {title: '滤芯返点(%)', dataIndex: 'rebate'},
-  {title: '售后返点(%)', dataIndex: 'After_sales'},
-];
-
-const goodsColumns = [
-  {title: '合同约定押金(元)', dataIndex: 'month'},
-  {title: '已缴纳押金(元)', dataIndex: 'date'},
-  {title: '应配发货额度(台)', dataIndex: 'state'},
-  {title: '已发货数量', dataIndex: 'amount'},
-  {title: '已退货', dataIndex: 'balance'},
-  {title: '已激活数量', dataIndex: 'remark'},
-  {title: '未激活数量', dataIndex: 'remark'},
-  {title: '剩余发货额度', dataIndex: 'remark'},
-];
-
-const goodsColumns2 = [
-  {title: '序号', dataIndex: 'month'},
-  {title: '日期', dataIndex: 'date'},
-  {title: '单号', dataIndex: 'state'},
-  {title: '数量', dataIndex: 'amount'},
-  {title: '类型', dataIndex: 'balance'},
-  {title: '账户', dataIndex: 'remark'},
-  {title: '代理商', dataIndex: 'remark'},
-];
+// const dealColumns = [
+//   {title: '起始时间', dataIndex: 'begin_start'},
+//   {title: '共已缴金额(元)', dataIndex: 'sum'},
+//   {title: '保证金(元)', dataIndex: 'earnest_money'},
+//   {title: '应配发货额度(台)', dataIndex: 'delivery_quota'},
+//   {title: '补贴金额(元)', dataIndex: 'subsidy'},
+//   {title: '滤芯返点(%)', dataIndex: 'rebate'},
+//   {title: '售后返点(%)', dataIndex: 'After_sales'},
+// ];
+//
+// const goodsColumns = [
+//   {title: '合同约定押金(元)', dataIndex: 'month'},
+//   {title: '已缴纳押金(元)', dataIndex: 'date'},
+//   {title: '应配发货额度(台)', dataIndex: 'state'},
+//   {title: '已发货数量', dataIndex: 'amount'},
+//   {title: '已退货', dataIndex: 'balance'},
+//   {title: '已激活数量', dataIndex: 'remark'},
+//   {title: '未激活数量', dataIndex: 'remark'},
+//   {title: '剩余发货额度', dataIndex: 'remark'},
+// ];
+//
+// const goodsColumns2 = [
+//   {title: '序号', dataIndex: 'month'},
+//   {title: '日期', dataIndex: 'date'},
+//   {title: '单号', dataIndex: 'state'},
+//   {title: '数量', dataIndex: 'amount'},
+//   {title: '类型', dataIndex: 'balance'},
+//   {title: '账户', dataIndex: 'remark'},
+//   {title: '代理商', dataIndex: 'remark'},
+// ];
 
 class CenterProfile extends PureComponent {
   constructor(...args) {
@@ -79,7 +79,7 @@ class CenterProfile extends PureComponent {
   }
 
   render() {
-    const {info, agentsList, goodsList, dealList} = this.state;
+    const {info, agentsList/* , goodsList, dealList */} = this.state;
 
     agentsList.forEach((agents) => {
       if (info.superior === agents.aid) info.agents = agents.contact;
@@ -138,7 +138,7 @@ class CenterProfile extends PureComponent {
             <Col span={20} style={{lineHeight: 3}}>{info.username}</Col>
           </Row>
         </Card>
-        <br />
+        {/* <br />
         <Card title="签约信息" bordered={false}>
           <Tabs defaultActiveKey="1">
             <Tabs.TabPane tab="当前签约" key="1">
@@ -159,7 +159,7 @@ class CenterProfile extends PureComponent {
               <Table rowKey="id" columns={goodsColumns2} dataSource={goodsList} />
             </Tabs.TabPane>
           </Tabs>
-        </Card>
+        </Card> */}
       </PageHeaderLayout>
     );
   }
