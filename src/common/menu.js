@@ -66,7 +66,7 @@ const menuData = [
       {
         name: '结算中心',
         path: 'clearing-list',
-        authority: ['admin', 'vendors'],
+        // authority: ['admin', 'vendors'],
       },
     ],
   },
