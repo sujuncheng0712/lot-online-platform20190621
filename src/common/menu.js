@@ -74,7 +74,7 @@ const menuData = [
     name: '我的钱包',
     icon: 'red-envelope',
     path: 'wallet',
-    authority: ['admin', 'vendors'],
+    // authority: ['admin', 'vendors'],
     children: [
       {
         name: '钱包账户',

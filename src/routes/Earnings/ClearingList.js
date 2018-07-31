@@ -40,6 +40,7 @@ class ClearingList extends PureComponent {
         this.getSummary();
     }
 
+    // 获取结算列表
     getSummary() {
         const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
         let getSummary = `${url}/earnings`;
@@ -69,12 +70,7 @@ class ClearingList extends PureComponent {
                 <Divider type="vertical" />
                 <span>手续费 0.6%，48小时内到账</span>
               </div>
-              <Tabs
-                defaultActiveKey="1"
-                onChange={(k) => {
-                            console.log(k);
-                        }}
-              >
+              <Tabs defaultActiveKey="1">
                 <Tabs.TabPane tab="收益结算概括" key="1">
                   <Table rowKey="id" columns={columns} dataSource={lists} />
                 </Tabs.TabPane>

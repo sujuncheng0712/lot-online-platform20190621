@@ -1,17 +1,21 @@
+/* eslint-disable no-shadow,no-param-reassign,radix */
 import React, {PureComponent} from 'react';
-import {Card, Button, Form, Icon, Input, Popover, Divider} from 'antd';
+import {Card, Button, Form, Icon, Input, Popover} from 'antd';
 import {connect} from 'dva';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 import styles from './style.less';
 
 const url = 'http://iot.dochen.cn/api';
+const role = localStorage.getItem('antd-pro-authority');
 const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
 
 // 输入框
 const fieldLabels = {
-  balance: '可提现金额',
-  amount: '金额',
-  pay_password: '支付密码',
+  account: '账户',
+  bank: '开户银行',
+  name: '姓名',
+  mobile: '手机',
+  amount: '提现金额',
 };
 
 const formItemLayout = {
@@ -39,10 +43,15 @@ class Withdrawal extends PureComponent {
     const validate = () => {
       validateFieldsAndScroll((error, values) => {
         if (!error) {
+          values.amount = parseInt(values.amount);
+          values.type = role;
+          console.log(values);
           const data = JSON.stringify(values);
-          const getPWD = `${url}/${auth.type}/${auth.uuid}/pwd`;
-          fetch(getPWD, {
-            method: 'PUT',
+          let postWallet = `${url}/wallet`;
+          postWallet += `/${auth.uuid}`;
+          postWallet += `/apply`;
+          fetch(postWallet, {
+            method: 'POST',
             body: JSON.stringify({data}),
           }).then((res) => {
             if (res.ok) {
@@ -80,6 +89,7 @@ class Withdrawal extends PureComponent {
           </li>
         );
       });
+
       return (
         <span className={styles.errorIcon} style={{float: 'right'}}>
           <Popover
@@ -98,33 +108,71 @@ class Withdrawal extends PureComponent {
 
     return (
       <PageHeaderLayout wrapperClassName={styles.advancedForm}>
-        <Card className={styles.card} bordered={false} title={<div>中国农业银行（尾号6073）<a href="/">修改绑定银行卡 <Icon type="right" /></a></div>}>
+        <Card
+          className={styles.card}
+          bordered={false}
+          title={`可提现金额${300}`}
+        >
           <Form>
-            <Form.Item label={fieldLabels.balance} {...formItemLayout} >
-              {getFieldDecorator('balance', {
-                initialValue: '300.00',
+            <Form.Item label={fieldLabels.account} {...formItemLayout} >
+              {getFieldDecorator('account', {
+                rules: [
+                  {required: true, message: '银行卡号必须填写'},
+                ],
               })(
-                <Input disabled />
+                <Input
+                  type="text"
+                  placeholder="请输入银行卡号"
+                />
+              )}
+            </Form.Item>
+            <Form.Item label={fieldLabels.bank} {...formItemLayout} >
+              {getFieldDecorator('bank', {
+                rules: [
+                  {required: true, message: '开户银行必须填写'},
+                ],
+              })(
+                <Input
+                  type="text"
+                  placeholder="请输入开户银行"
+                />
+              )}
+            </Form.Item>
+            <Form.Item label={fieldLabels.name} {...formItemLayout} >
+              {getFieldDecorator('name', {
+                rules: [
+                  {required: true, message: '开户人姓名必须填写'},
+                ],
+              })(
+                <Input
+                  type="text"
+                  placeholder="请输入开户人姓名"
+                />
+              )}
+            </Form.Item>
+            <Form.Item label={fieldLabels.mobile} {...formItemLayout} >
+              {getFieldDecorator('mobile', {
+                rules: [
+                  {required: true, message: '开户人手机号必须填写'},
+                ],
+              })(
+                <Input
+                  type="text"
+                  placeholder="请输入开户人手机号"
+                />
               )}
             </Form.Item>
             <Form.Item label={fieldLabels.amount} {...formItemLayout} >
               {getFieldDecorator('amount', {
                 rules: [
-                  {required: true, message: '新密码必须填写'},
+                  {required: true, message: '提现金额必须填写'},
                   {validator: this.checkPassword},
                 ],
               })(
-                <Input type="password" placeholder="请输入8-16位的密码，区分大小写" />
-              )}
-            </Form.Item>
-            <Form.Item label={fieldLabels.pay_password} {...formItemLayout} >
-              {getFieldDecorator('pay_password', {
-                rules: [
-                  {required: true, message: '确认密码必须填写'},
-                  {validator: this.checkConfirm},
-                ],
-              })(
-                <Input type="password" placeholder="请重新输入密码" />
+                <Input
+                  type="number"
+                  placeholder="请输入所提现的金额"
+                />
               )}
             </Form.Item>
           </Form>
@@ -132,8 +180,6 @@ class Withdrawal extends PureComponent {
         <div style={{display: `flex`, alignItems: `center`, flexDirection: `row-reverse`}}>
           <Button type="primary" onClick={validate} loading={submitting}>确认提现</Button>
           {getErrorInfo()}
-          <Divider type="vertical" />
-          <a href="/">忘记支付密码</a>
         </div>
       </PageHeaderLayout>
     );

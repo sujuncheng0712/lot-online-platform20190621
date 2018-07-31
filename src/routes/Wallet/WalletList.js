@@ -1,66 +1,60 @@
+/* eslint-disable prefer-const,no-param-reassign */
 import React, {PureComponent} from 'react';
 import {Button, Divider, Tabs, Table, List} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
+
+const url = 'http://iot.dochen.cn/api';
+const role = localStorage.getItem('antd-pro-authority');
+const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
+const typeMap = ['支出', '收入'];
+const stateMap = ['', '请求', '已接受 (付款完成)', '', '', '', '', '', '', '', '已拒绝'];
 
 class WalletList extends PureComponent {
   constructor(...args) {
     super(...args);
     this.state = {
-      lists: [
-        {
-          id: 1,
-          created_at: '2018年06月11日 11:39:19',
-          oid: '201806111146',
-          name: '周成华',
-          amount: '50元',
-          fee: '0.3元',
-          account: '周成华',
-          bank: '中国农业银行',
-          number: '6228480109443866073',
-          state: '0',
-        }, {
-          id: 2,
-          created_at: '2018年06月11日 11:39:19',
-          oid: '201806111146',
-          name: '周成华',
-          amount: '50元',
-          fee: '0.3元',
-          account: '周成华',
-          bank: '中国农业银行',
-          number: '6228480109443866073',
-          state: '1',
-        },
-      ],
-      lists2: [
-        {
-          created_at:'2018-05-31 15:40:16',
-          type:'支出',
-          and:'-6960元',
-          balance:'-5960元',
-          remarks:'购买激活码',
-        },{
-          created_at:'2018-05-31 15:40:16',
-          type:'收入',
-          and:'-6960元',
-          balance:'-5960元',
-          remarks:'购买激活码',
-        },
-      ],
+      lists: [],
     };
   }
 
-  componentDidMount() {}
+  componentDidMount() {
+    this.getWallet();
+  }
+
+  getWallet() {
+    let getWallet = `${url}/wallet`;
+    // getWallet += `/${auth.uuid}`;
+    getWallet += `?${role === 'agents' ? 'aid' : 'did'}=${auth.uuid}`;
+    fetch(getWallet).then((res) => {
+      if (res.ok) {
+        res.json().then((info) => {
+          console.log(info);
+          if (info.status) {
+            this.setState({lists: info.data});
+          }
+        });
+      }
+    });
+  }
 
   render() {
-    const {lists, lists2} = this.state;
+    const {lists} = this.state;
 
     const columns = [
-      {title: '时间', dataIndex: 'created_at', align:'center'},
-      {title: '类型', dataIndex: 'type', align:'center'},
-      {title: '收入/支出金额(元)', dataIndex: 'and', align:'center'},
-      {title: '账户余额', dataIndex: 'balance', align:'center'},
-      {title: '备注', dataIndex: 'remarks', align:'center'},
+      {title: '时间', dataIndex: 'created_at', align: 'center'},
+      {title: '类型', dataIndex: 'type', align: 'center', render: val => typeMap[val]},
+      {title: '收入/支出金额(元)', dataIndex: 'amount', align: 'center'},
+      {title: '账户余额(元)', dataIndex: 'balance', align: 'center', render: val => val || 0},
+      {title: '备注', dataIndex: 'remark', align: 'center', render: val => val || '无'},
     ];
+
+    let schedules = [];
+    lists.forEach((val, k) => {
+      if (val.state) {
+        val.id = k + 1;
+        schedules.push(val);
+      }
+    });
 
     return (
       <PageHeaderLayout title="钱包账户">
@@ -86,7 +80,7 @@ class WalletList extends PureComponent {
               <List
                 split={false}
                 bordered={false}
-                dataSource={lists}
+                dataSource={schedules}
                 loading={false}
                 renderItem={
                   item => (
@@ -103,10 +97,10 @@ class WalletList extends PureComponent {
                         <div style={styles.col}>{item.name}</div>
                         <div style={styles.col}>{item.amount}</div>
                         <div style={styles.col}>{item.fee}</div>
-                        <div style={styles.col}>{item.account}</div>
+                        <div style={styles.col}>{item.name}</div>
                         <div style={styles.col}>{item.bank}</div>
-                        <div style={styles.col}>{item.number}</div>
-                        <div style={styles.col}>{item.state === '1' ? '提现成功' : '正在处理'}</div>
+                        <div style={styles.col}>{item.account}</div>
+                        <div style={styles.col}>{stateMap[item.state]}</div>
                       </div>
                     </div>
                   )
@@ -117,7 +111,7 @@ class WalletList extends PureComponent {
               />
             </Tabs.TabPane>
             <Tabs.TabPane tab="账户收支明细" key="2">
-              <Table rowKey="id" columns={columns} dataSource={lists2} />
+              <Table rowKey="id" columns={columns} dataSource={lists} />
             </Tabs.TabPane>
           </Tabs>
         </div>

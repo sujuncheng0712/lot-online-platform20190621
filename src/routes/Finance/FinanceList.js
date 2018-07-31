@@ -2,6 +2,9 @@ import React, {PureComponent} from 'react';
 import {Tabs, List, Divider, Button} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
+const url = 'http://iot.dochen.cn/api';
+const stateMap = ['', '请求', '已接受 (付款完成)', '', '', '', '', '', '', '', '已拒绝'];
+
 class FinanceList extends PureComponent {
   constructor(...args) {
     super(...args);
@@ -34,7 +37,23 @@ class FinanceList extends PureComponent {
     };
   }
 
-  componentDidMount() {}
+  componentDidMount() {
+    this.getWalletApply();
+  }
+
+  getWalletApply(){
+    const getWalletApply = `${url}/wallet/apply`;
+    fetch(getWalletApply).then((res) => {
+      if (res.ok) {
+        res.json().then((info) => {
+          console.log(info);
+          if (info.status) {
+            this.setState({lists: info.data});
+          }
+        });
+      }
+    });
+  }
 
   render() {
     const {lists} = this.state;
@@ -59,7 +78,7 @@ class FinanceList extends PureComponent {
                 dataSource={lists}
                 loading={false}
                 renderItem={
-                  item => (
+                  (item, key) => (
                     <div key={item.oid} style={styles.item}>
                       <div style={styles.row}>
                         <div>
@@ -69,18 +88,74 @@ class FinanceList extends PureComponent {
                         </div>
                       </div>
                       <div style={styles.column}>
-                        <div style={styles.order}>{item.id}</div>
+                        <div style={styles.order}>{key + 1}</div>
                         <div style={styles.col}>{item.name}</div>
                         <div style={styles.col}>{item.amount}</div>
-                        <div style={styles.col}>{item.fee}</div>
-                        <div style={styles.col}>{item.account}</div>
+                        <div style={styles.col}>{item.service}</div>
+                        <div style={styles.col}>{item.name}</div>
                         <div style={styles.col}>{item.bank}</div>
-                        <div style={styles.col}>{item.number}</div>
-                        <div style={styles.col}>
-                          <Button type="primary" size="small">通过</Button>
-                          <Divider type="vertical" />
-                          <Button type="primary" size="small">不通过</Button>
-                        </div>
+                        <div style={styles.col}>{item.account}</div>
+                        {
+                          item.state ? (
+                            <div style={styles.col}>{stateMap[item.state]}</div>
+                          ) : (
+                            <div style={styles.col}>
+                              <Button
+                                type="primary"
+                                size="small"
+                                onClick={() => {
+                                  const data = JSON.stringify({verdict: 1});
+                                  let postWalletApply = `${url}/wallet`;
+                                  postWalletApply += `/${item.uid}`;
+                                  postWalletApply += `/apply`;
+                                  postWalletApply += `/${item.uuid}`;
+                                  fetch(postWalletApply, {
+                                    method: 'POST',
+                                    body: JSON.stringify({data}),
+                                  }).then((res) => {
+                                    if (res.ok) {
+                                      res.json().then((info) => {
+                                        console.log(info);
+                                        if (info.status) {
+                                          this.setState({lists: info.data});
+                                        }
+                                      });
+                                    }
+                                  });
+                                }}
+                              >
+                                通过
+                              </Button>
+                              <Divider type="vertical" />
+                              <Button
+                                type="primary"
+                                size="small"
+                                onClick={() => {
+                                  const data = JSON.stringify({verdict: 0});
+                                  let postWalletApply = `${url}/wallet`;
+                                  postWalletApply += `/${item.uid}`;
+                                  postWalletApply += `/apply`;
+                                  postWalletApply += `/${item.uuid}`;
+                                  fetch(postWalletApply, {
+                                    method: 'POST',
+                                    body: JSON.stringify({data}),
+                                  }).then((res) => {
+                                    if (res.ok) {
+                                      res.json().then((info) => {
+                                        console.log(info);
+                                        if (info.status) {
+                                          this.setState({lists: info.data});
+                                        }
+                                      });
+                                    }
+                                  });
+                                }}
+                              >
+                                拒绝
+                              </Button>
+                            </div>
+                          )
+                        }
                       </div>
                     </div>
                   )
