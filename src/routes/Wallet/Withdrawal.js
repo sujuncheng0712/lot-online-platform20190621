@@ -1,6 +1,6 @@
 /* eslint-disable no-shadow,no-param-reassign,radix */
 import React, {PureComponent} from 'react';
-import {Card, Button, Form, Icon, Input, Popover} from 'antd';
+import {Card, Button, Form, Icon, Input, Popover, message} from 'antd';
 import {connect} from 'dva';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 import styles from './style.less';
@@ -56,7 +56,9 @@ class Withdrawal extends PureComponent {
           }).then((res) => {
             if (res.ok) {
               res.json().then((info) => {
-                console.log(info);
+                if (info.code === 20013) {
+                  message.error('余额不足');
+                }
               });
             }
           });

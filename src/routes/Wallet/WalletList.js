@@ -61,7 +61,7 @@ class WalletList extends PureComponent {
         <div style={styles.content}>
           <div style={{marginBottom: 15}}>
             <span>账户余额 <span>{300}</span> 元</span>&nbsp;&nbsp;
-            <Button type="primary" size="small">提现</Button>
+            <a href="#/wallet/withdrawal"><Button type="primary" size="small">提现</Button></a>
             <Divider type="vertical" />
             <span>手续费 0.6%，48小时内到账</span>
           </div>
