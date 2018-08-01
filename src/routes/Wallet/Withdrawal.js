@@ -32,7 +32,7 @@ const formItemLayout = {
 class Withdrawal extends PureComponent {
   constructor(...args) {
     super(...args);
-    this.state = {balance};
+    this.state = {balance: 0};
   }
 
   componentDidMount() {
