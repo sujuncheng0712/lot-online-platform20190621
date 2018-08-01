@@ -57,7 +57,7 @@ class Withdrawal extends PureComponent {
             if (res.ok) {
               res.json().then((info) => {
                 if (info.code === 20013) message.error('余额不足');
-                if (info.status) location.has = '#/wallet/wallet-list';
+                if (info.status) location.href = '#/wallet/wallet-list';
               });
             }
           });
