@@ -3,7 +3,7 @@ import {Tabs, List, Divider, Button} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
-const stateMap = ['', '请求', '已接受 (付款完成)', '', '', '', '', '', '', '', '已拒绝'];
+const stateMap = ['', '处理中', '已提现', '', '', '', '', '', '', '', '未通过'];
 
 class FinanceList extends PureComponent {
   constructor(...args) {

@@ -6,7 +6,7 @@ import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 const url = 'http://iot.dochen.cn/api';
 const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
 const typeMap = ['支出', '收入'];
-const stateMap = ['', '请求', '已接受 (付款完成)', '', '', '', '', '', '', '', '已拒绝'];
+const stateMap = ['', '处理中', '已提现', '', '', '', '', '', '', '', '未通过'];
 
 class WalletList extends PureComponent {
   constructor(...args) {
