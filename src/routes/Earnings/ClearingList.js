@@ -41,6 +41,7 @@ class ClearingList extends PureComponent {
   componentDidMount() {
     this.getSummary();
     this.getEarnings();
+    this.getUsersList();
   }
 
   // 获取结算列表
