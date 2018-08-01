@@ -22,10 +22,10 @@ const typeMap = ['', '用户订单', '', '团购订单'];
 const columns2 = [
   {title: '日期', dataIndex: 'created_at'},
   {title: '订单编号', dataIndex: 'oid'},
-  {title: '订单类型', dataIndex: 'type', render: val => typeMap[val]},
-  {title: '付款金额', dataIndex: 'total'},
+  {title: '订单类型', dataIndex: 'type', align: 'center', render: val => typeMap[val]},
+  {title: '付款金额', dataIndex: 'total', align: 'center'},
   {title: '付款人', dataIndex: 'uid'},
-  {title: '我的收益', dataIndex: '', render: info => role === 'agents' ? info.agent_earning : info.dealer_earning},
+  {title: '我的收益', dataIndex: '', align: 'center', render: info => role === 'agents' ? info.agent_earning : info.dealer_earning},
 ];
 
 class ClearingList extends PureComponent {
@@ -34,6 +34,7 @@ class ClearingList extends PureComponent {
     this.state = {
       lists: [],
       earningsLists:[],
+      userLists: [],
     };
   }
 
@@ -70,8 +71,22 @@ class ClearingList extends PureComponent {
     });
   }
 
+  // 获取用户列表
+  getUsersList() {
+    const usersListUrl = `${url}/users`;
+    fetch(usersListUrl).then((res) => {
+      if (res.ok) {
+        res.json().then((info) => {
+          if (info.status) {
+            this.setState({userLists: info.data});
+          }
+        });
+      }
+    });
+  }
+
   render() {
-    const {lists, earningsLists} = this.state;
+    const {lists, earningsLists, userLists} = this.state;
 
     let nowadays = 0;
     let yesterday = 0;
@@ -79,6 +94,12 @@ class ClearingList extends PureComponent {
     let lastMonth = 0;
 
     earningsLists.forEach((val) => {
+      userLists.forEach((Uval) => {
+        // if (Uval.uid === val.uid) {
+        //
+        // }
+      });
+
       if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate()) {
         if (localStorage.getItem('antd-pro-authority') === 'vendors') {
           nowadays += parseInt(val.agent_earning);
