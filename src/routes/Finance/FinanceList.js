@@ -1,20 +1,49 @@
+/* eslint-disable no-param-reassign */
 import React, {PureComponent} from 'react';
 import {Tabs, List, Divider, Button} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
-const stateMap = ['', '处理中', '已提现', '', '', '', '', '', '', '', '未通过'];
+const stateMap = ['', '处理中', '已处理', '', '', '', '', '', '', '', '未通过'];
 
 class FinanceList extends PureComponent {
   constructor(...args) {
     super(...args);
     this.state = {
       lists: [],
+      dealersLists: [],
+      agentsLists: [],
     };
   }
 
   componentDidMount() {
+    this.getDealers();
+    this.getAgents();
     this.getWalletApply();
+  }
+
+  // 获取经销商列表
+  getDealers() {
+    const getDealers = `${url}/dealers`;
+    fetch(getDealers).then((res) => {
+      if (res.ok) {
+        res.json().then((info) => {
+          if (info.status) this.setState({dealersLists: info.data});
+        });
+      }
+    });
+  }
+
+  // 获取代理商列表
+  getAgents() {
+    const getAgents = `${url}/agents`;
+    fetch(getAgents).then((res) => {
+      if (res.ok) {
+        res.json().then((info) => {
+          if (info.status) this.setState({agentsLists: info.data});
+        });
+      }
+    });
   }
 
   // 获取提现申请列表
@@ -23,7 +52,6 @@ class FinanceList extends PureComponent {
     fetch(getWalletApply).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          console.log(info);
           if (info.status) {
             this.setState({lists: info.data});
           }
@@ -54,164 +82,103 @@ class FinanceList extends PureComponent {
   }
 
   render() {
-    const {lists} = this.state;
+    const {lists, dealersLists, agentsLists} = this.state;
+
+    const lists1 = [];
+    const lists2 = [];
+    const lists3 = [];
+    lists.forEach((val)=>{
+      dealersLists.forEach((Dval)=>{
+        if (Dval.did === val.uid) val.contact = Dval.contact;
+      });
+      agentsLists.forEach((Aval)=>{
+        if (Aval.aid === val.uid) val.contact = Aval.contact;
+      });
+
+      if (val.state && val.state === 1) lists1.push(val);
+      if (val.state && val.state === 2) lists2.push(val);
+      if (val.state && val.state === 10) lists3.push(val);
+    });
+
+    const htmlHeader = (
+      <div style={styles.colBk}>
+        <div style={styles.order}>序号</div>
+        <div style={styles.col}>提现人</div>
+        <div style={styles.col}>提现金额</div>
+        <div style={styles.col}>手续费</div>
+        <div style={styles.bank}>开户银行</div>
+        <div style={styles.col}>开户名</div>
+        <div style={styles.tool}>操作</div>
+      </div>
+    );
+    const htmlBody = (data) => (
+      <List
+        split={false}
+        bordered={false}
+        dataSource={data}
+        pagination={{pageSize: 10}}
+        loading={false}
+        renderItem={
+          (item, key) => (
+            <div key={item.oid} style={styles.item}>
+              <div style={styles.row}>
+                <div>
+                  发起时间：{'2018年06月11日 11:39:19'}
+                  <Divider type="vertical" />
+                  银行账户：{item.account}
+                </div>
+              </div>
+              <div style={styles.column}>
+                <div style={styles.order}>{key + 1}</div>
+                <div style={styles.col}>{item.contact}</div>
+                <div style={styles.col}>{item.amount}</div>
+                <div style={styles.col}>{item.service || `0.1%`}</div>
+                <div style={styles.bank}>{item.bank}</div>
+                <div style={styles.col}>{item.name}</div>{
+                item.state === 1 ? (
+                  <div style={styles.tool}>
+                    <Button
+                      type="primary"
+                      size="small"
+                      onClick={this.postWalletApply.bind(this, item.uid, item.uuid, 1)}
+                    >
+                      通过
+                    </Button>
+                    <Divider type="vertical" />
+                    <Button
+                      type="primary"
+                      size="small"
+                      onClick={this.postWalletApply.bind(this, item.uid, item.uuid, 0)}
+                    >
+                      拒绝
+                    </Button>
+                  </div>
+                ) : (
+                  <div style={styles.col}>{stateMap[item.state]}</div>
+                )
+              }
+              </div>
+            </div>
+          )
+        }
+      />
+    );
+
     return (
       <PageHeaderLayout title="审核列表">
         <div style={styles.content}>
           <Tabs defaultActiveKey="1">
-            <Tabs.TabPane tab="待审核" key="1">
-              <div style={styles.colBk}>
-                <div style={styles.order}>序号</div>
-                <div style={styles.col}>提现人</div>
-                <div style={styles.col}>提现金额</div>
-                <div style={styles.col}>手续费</div>
-                <div style={styles.col}>开户名</div>
-                <div style={styles.col}>开户银行</div>
-                <div style={styles.col}>账户</div>
-                <div style={styles.col}>操作</div>
-              </div>
-              <List
-                split={false}
-                bordered={false}
-                dataSource={lists}
-                loading={false}
-                renderItem={
-                  (item, key) => (
-                    <div key={item.oid} style={styles.item}>
-                      <div style={styles.row}>
-                        <div>
-                          发起时间：{'2018年06月11日 11:39:19'}
-                          <Divider type="vertical" />
-                          流水单号：{'201806111146'}
-                        </div>
-                      </div>
-                      <div style={styles.column}>
-                        <div style={styles.order}>{key + 1}</div>
-                        <div style={styles.col}>{item.name}</div>
-                        <div style={styles.col}>{item.amount}</div>
-                        <div style={styles.col}>{item.service}</div>
-                        <div style={styles.col}>{item.name}</div>
-                        <div style={styles.col}>{item.bank}</div>
-                        <div style={styles.col}>{item.account}</div>
-                        {
-                          item.state === 1 ? (
-                            <div style={styles.col}>
-                              <Button
-                                type="primary"
-                                size="small"
-                                onClick={this.postWalletApply.bind(this, item.uid, item.uuid, 1)}
-                              >
-                                通过
-                              </Button>
-                              <Divider type="vertical" />
-                              <Button
-                                type="primary"
-                                size="small"
-                                onClick={this.postWalletApply.bind(this, item.uid, item.uuid, 0)}
-                              >
-                                拒绝
-                              </Button>
-                            </div>
-                          ) : (
-                            <div style={styles.col}>{stateMap[item.state]}</div>
-                          )
-                        }
-                      </div>
-                    </div>
-                  )
-                }
-                pagination={{
-                  pageSize: 10,
-                }}
-              />
+            <Tabs.TabPane tab="未处理" key="1">
+              {htmlHeader}
+              {htmlBody(lists1)}
             </Tabs.TabPane>
-            <Tabs.TabPane tab="已通过" key="2">
-              <div style={styles.colBk}>
-                <div style={styles.order}>序号</div>
-                <div style={styles.col}>提现人</div>
-                <div style={styles.col}>提现金额</div>
-                <div style={styles.col}>手续费</div>
-                <div style={styles.col}>开户名</div>
-                <div style={styles.col}>开户银行</div>
-                <div style={styles.col}>账户</div>
-                <div style={styles.col}>最新进度</div>
-              </div>
-              <List
-                split={false}
-                bordered={false}
-                dataSource={lists}
-                loading={false}
-                renderItem={
-                  item => (
-                    <div key={item.oid} style={styles.item}>
-                      <div style={styles.row}>
-                        <div>
-                          发起时间：{'2018年06月11日 11:39:19'}
-                          <Divider type="vertical" />
-                          流水单号：{'201806111146'}
-                        </div>
-                      </div>
-                      <div style={styles.column}>
-                        <div style={styles.order}>{item.id}</div>
-                        <div style={styles.col}>{item.name}</div>
-                        <div style={styles.col}>{item.amount}</div>
-                        <div style={styles.col}>{item.fee}</div>
-                        <div style={styles.col}>{item.account}</div>
-                        <div style={styles.col}>{item.bank}</div>
-                        <div style={styles.col}>{item.number}</div>
-                        <div style={styles.col}>{item.state === '1' ? '提现成功' : '正在处理'}</div>
-                      </div>
-                    </div>
-                  )
-                }
-                pagination={{
-                  pageSize: 10,
-                }}
-              />
+            <Tabs.TabPane tab="已处理" key="2">
+              {htmlHeader}
+              {htmlBody(lists2)}
             </Tabs.TabPane>
             <Tabs.TabPane tab="未通过" key="3">
-              <div style={styles.colBk}>
-                <div style={styles.order}>序号</div>
-                <div style={styles.col}>提现人</div>
-                <div style={styles.col}>提现金额</div>
-                <div style={styles.col}>手续费</div>
-                <div style={styles.col}>开户名</div>
-                <div style={styles.col}>开户银行</div>
-                <div style={styles.col}>账户</div>
-                <div style={styles.col}>最新进度</div>
-              </div>
-              <List
-                split={false}
-                bordered={false}
-                dataSource={lists}
-                loading={false}
-                renderItem={
-                  item => (
-                    <div key={item.oid} style={styles.item}>
-                      <div style={styles.row}>
-                        <div>
-                          发起时间：{'2018年06月11日 11:39:19'}
-                          <Divider type="vertical" />
-                          流水单号：{'201806111146'}
-                        </div>
-                      </div>
-                      <div style={styles.column}>
-                        <div style={styles.order}>{item.id}</div>
-                        <div style={styles.col}>{item.name}</div>
-                        <div style={styles.col}>{item.amount}</div>
-                        <div style={styles.col}>{item.fee}</div>
-                        <div style={styles.col}>{item.account}</div>
-                        <div style={styles.col}>{item.bank}</div>
-                        <div style={styles.col}>{item.number}</div>
-                        <div style={styles.col}>{item.state === '1' ? '提现成功' : '正在处理'}</div>
-                      </div>
-                    </div>
-                  )
-                }
-                pagination={{
-                  pageSize: 10,
-                }}
-              />
+              {htmlHeader}
+              {htmlBody(lists3)}
             </Tabs.TabPane>
           </Tabs>
         </div>
@@ -245,14 +212,28 @@ const styles = {
     justifyContent: 'space-between',
   },
   col: {
-    width: '15%',
+    width: '8%',
+    height: 40,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bank: {
+    width: '20%',
+    height: 40,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tool: {
+    width: '20%',
     height: 40,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
   },
   order: {
-    width: '8%',
+    width: '5%',
     height: 30,
     display: 'flex',
     alignItems: 'center',

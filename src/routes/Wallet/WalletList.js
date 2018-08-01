@@ -6,7 +6,7 @@ import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 const url = 'http://iot.dochen.cn/api';
 const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
 const typeMap = ['支出', '收入'];
-const stateMap = ['', '处理中', '已提现', '', '', '', '', '', '', '', '未通过'];
+const stateMap = ['', '处理中', '已处理', '', '', '', '', '', '', '', '未通过'];
 
 class WalletList extends PureComponent {
   constructor(...args) {
@@ -91,8 +91,8 @@ class WalletList extends PureComponent {
                 <div style={styles.col}>提现金额</div>
                 <div style={styles.col}>手续费</div>
                 <div style={styles.col}>开户名</div>
-                <div style={styles.col}>开户银行</div>
-                <div style={styles.col}>账户</div>
+                <div style={styles.bank}>开户银行</div>
+                <div style={styles.bank}>账户</div>
                 <div style={styles.col}>最新进度</div>
               </div>
               <List
@@ -112,7 +112,7 @@ class WalletList extends PureComponent {
                       </div>
                       <div style={styles.column}>
                         <div style={styles.order}>{item.id}</div>
-                        <div style={styles.col}>{item.name}</div>
+                        <div style={styles.col}>{auth.contact}</div>
                         <div style={styles.col}>{item.amount}</div>
                         <div style={styles.col}>{item.fee}</div>
                         <div style={styles.col}>{item.name}</div>
@@ -163,8 +163,15 @@ const styles = {
     justifyContent: 'space-between',
   },
   col: {
-    width: '15%',
+    width: '8%',
     height: 40,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bank: {
+    width: '15%',
+    height: 30,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
