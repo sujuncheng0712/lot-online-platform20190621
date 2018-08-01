@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import React, {PureComponent} from 'react';
 import {Tabs, Table, Card} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
@@ -24,7 +25,7 @@ const columns2 = [
   {title: '订单编号', dataIndex: 'oid'},
   {title: '订单类型', dataIndex: 'type', align: 'center', render: val => typeMap[val]},
   {title: '付款金额', dataIndex: 'total', align: 'center'},
-  {title: '付款人', dataIndex: 'uid'},
+  {title: '付款人', dataIndex: 'mobile'},
   {title: '我的收益', dataIndex: '', align: 'center', render: info => role === 'agents' ? info.agent_earning : info.dealer_earning},
 ];
 
@@ -96,9 +97,7 @@ class ClearingList extends PureComponent {
 
     earningsLists.forEach((val) => {
       userLists.forEach((Uval) => {
-        // if (Uval.uid === val.uid) {
-        //
-        // }
+        if (Uval.uid === val.uid) val.mobile = Uval.mobile;
       });
 
       if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate()) {
