@@ -106,7 +106,7 @@ class WalletList extends PureComponent {
                 <div style={styles.order}>{item.id}</div>
                 <div style={styles.col}>{auth.contact}</div>
                 <div style={styles.col}>{item.amount}</div>
-                <div style={styles.col}>{item.fee}</div>
+                <div style={styles.col}>{item.fee || '0.1%'}</div>
                 <div style={styles.bank}>{item.bank}</div>
                 <div style={styles.col}>{item.name}</div>
                 <div style={styles.col}>{stateMap[item.state]}</div>
