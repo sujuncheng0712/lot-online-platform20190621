@@ -33,12 +33,13 @@ class ClearingList extends PureComponent {
     this.state = {
       lists: [],
       lists2: [],
-      balance: 0,
+      earningsLists:[],
     };
   }
 
   componentDidMount() {
     this.getSummary();
+    this.getEarnings();
   }
 
   // 获取结算列表
@@ -49,25 +50,86 @@ class ClearingList extends PureComponent {
     fetch(getSummary).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) {
-            let balance = 0;
-            info.data.forEach(val => {
-              balance += val.allowance + val.commission + val.refund
-            });
-            this.setState({lists: info.data, balance});
-          }
+          if (info.status) this.setState({lists: info.data});
+        });
+      }
+    });
+  }
+
+  // 获取收益列表
+  getEarnings() {
+    let getEarnings = `${url}/earnings`;
+    getEarnings += auth.type === 'vendors' ? '' : auth.type === 'agents' ? `?aid=${auth.uuid}` : `?did=${auth.uuid}`;
+
+    fetch(getEarnings).then((res) => {
+      if (res.ok) {
+        res.json().then((info) => {
+          if (info.status) this.setState({earningsLists: info.data});
         });
       }
     });
   }
 
   render() {
-    const {lists, lists2, balance} = this.state;
+    const {lists, lists2, earningsLists} = this.state;
+
+    let nowadays = 0;
+    let yesterday = 0;
+    let thisMonth = 0;
+    let lastMonth = 0;
+
+    earningsLists.forEach((val) => {
+      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate()) {
+        if (localStorage.getItem('antd-pro-authority') === 'vendors') {
+          nowadays += parseInt(val.agent_earning);
+          nowadays += parseInt(val.dealer_earning);
+        } else if (localStorage.getItem('antd-pro-authority') === 'agents') {
+          nowadays += parseInt(val.agent_earning);
+        } else if (localStorage.getItem('antd-pro-authority') === 'dealers') {
+          nowadays += parseInt(val.dealer_earning);
+        }
+      }
+      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() - 1) {
+        if (localStorage.getItem('antd-pro-authority') === 'vendors') {
+          yesterday += parseInt(val.agent_earning);
+          yesterday += parseInt(val.dealer_earning);
+        } else if (localStorage.getItem('antd-pro-authority') === 'agents') {
+          yesterday += parseInt(val.agent_earning);
+        } else if (localStorage.getItem('antd-pro-authority') === 'dealers') {
+          yesterday += parseInt(val.dealer_earning);
+        }
+      }
+      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth()) {
+        if (localStorage.getItem('antd-pro-authority') === 'vendors') {
+          thisMonth += parseInt(val.agent_earning);
+          thisMonth += parseInt(val.dealer_earning);
+        } else if (localStorage.getItem('antd-pro-authority') === 'agents') {
+          thisMonth += parseInt(val.agent_earning);
+        } else if (localStorage.getItem('antd-pro-authority') === 'dealers') {
+          thisMonth += parseInt(val.dealer_earning);
+        }
+      }
+      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() - 1) {
+        if (localStorage.getItem('antd-pro-authority') === 'vendors') {
+          lastMonth += parseInt(val.agent_earning);
+          lastMonth += parseInt(val.dealer_earning);
+        } else if (localStorage.getItem('antd-pro-authority') === 'agents') {
+          lastMonth += parseInt(val.agent_earning);
+        } else if (localStorage.getItem('antd-pro-authority') === 'dealers') {
+          lastMonth += parseInt(val.dealer_earning);
+        }
+      }
+    });
 
     return (
       <PageHeaderLayout title="结算列表">
         <Card title={`待结算收益共 ${800} 元`} border={false}>
-          33
+          <div style={styles.count}>
+            <div style={styles.countRow}><div>今天收益</div><div>{nowadays}元</div></div>
+            <div style={styles.countRow}><div>昨天收益</div><div>{yesterday}元</div></div>
+            <div style={styles.countRow}><div>本月收益</div><div>{thisMonth}元</div></div>
+            <div style={styles.countRow}><div>上月收益</div><div>{lastMonth}元</div></div>
+          </div>
         </Card>
         <br />
         <Card border={false}>
@@ -84,5 +146,23 @@ class ClearingList extends PureComponent {
     );
   }
 }
+
+const styles = {
+  count: {
+    width: '100%',
+    padding: 20,
+    backgroundColor: '#fff',
+    marginBottom: 15,
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  countRow: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+};
 
 export default ClearingList;

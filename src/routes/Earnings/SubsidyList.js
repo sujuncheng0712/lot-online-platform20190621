@@ -186,22 +186,10 @@ class SubsidyList extends PureComponent {
     return (
       <PageHeaderLayout title="收益列表">
         <div style={styles.count}>
-          <div style={styles.countRow}>
-            <div>今天收益</div>
-            <div>{nowadays}元</div>
-          </div>
-          <div style={styles.countRow}>
-            <div>昨天收益</div>
-            <div>{yesterday}元</div>
-          </div>
-          <div style={styles.countRow}>
-            <div>本月收益</div>
-            <div>{thisMonth}元</div>
-          </div>
-          <div style={styles.countRow}>
-            <div>上月收益</div>
-            <div>{lastMonth}元</div>
-          </div>
+          <div style={styles.countRow}><div>今天收益</div><div>{nowadays}元</div></div>
+          <div style={styles.countRow}><div>昨天收益</div><div>{yesterday}元</div></div>
+          <div style={styles.countRow}><div>本月收益</div><div>{thisMonth}元</div></div>
+          <div style={styles.countRow}><div>上月收益</div><div>{lastMonth}元</div></div>
         </div>
         <div style={styles.search}>
           <div style={styles.searchRow}>
