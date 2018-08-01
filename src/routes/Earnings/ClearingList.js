@@ -123,12 +123,12 @@ class ClearingList extends PureComponent {
 
     return (
       <PageHeaderLayout title="结算列表">
-        <Card title={`待结算收益共 ${800} 元`} border={false}>
+        <Card title={`待结算收益共 ${thisMonth} 元`} border={false}>
           <div style={styles.count}>
-            <div style={styles.countRow}><div>今天收益</div><div>{nowadays}元</div></div>
-            <div style={styles.countRow}><div>昨天收益</div><div>{yesterday}元</div></div>
-            <div style={styles.countRow}><div>本月收益</div><div>{thisMonth}元</div></div>
-            <div style={styles.countRow}><div>上月收益</div><div>{lastMonth}元</div></div>
+            <div style={styles.countRow}><div>今天</div><div>{nowadays}元</div></div>
+            <div style={styles.countRow}><div>昨天</div><div>{yesterday}元</div></div>
+            <div style={styles.countRow}><div>本月</div><div>{thisMonth}元</div></div>
+            <div style={styles.countRow}><div>上月</div><div>{lastMonth}元</div></div>
           </div>
         </Card>
         <br />
