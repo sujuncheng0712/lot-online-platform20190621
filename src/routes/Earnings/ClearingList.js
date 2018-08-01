@@ -24,7 +24,7 @@ const columns2 = [
   {title: '日期', dataIndex: 'created_at'},
   {title: '订单编号', dataIndex: 'oid'},
   {title: '订单类型', dataIndex: 'type', align: 'center', render: val => typeMap[val]},
-  {title: '付款金额', dataIndex: 'total', align: 'center'},
+  {title: '付款金额', dataIndex: 'pay_amount', align: 'center'},
   {title: '付款人', dataIndex: 'mobile'},
   {title: '我的收益', dataIndex: '', align: 'center', render: info => role === 'agents' ? info.agent_earning : info.dealer_earning},
 ];
@@ -36,6 +36,7 @@ class ClearingList extends PureComponent {
       lists: [],
       earningsLists:[],
       userLists: [],
+      orderLists: [],
     };
   }
 
@@ -43,6 +44,7 @@ class ClearingList extends PureComponent {
     this.getSummary();
     this.getEarnings();
     this.getUsersList();
+    this.getOrders();
   }
 
   // 获取结算列表
@@ -87,8 +89,22 @@ class ClearingList extends PureComponent {
     });
   }
 
+  // 获取订单列表
+  getOrders() {
+    let getOrders = `${url}/orders`;
+    getOrders += auth.type === 'vendors' ? '' : auth.type === 'agents' ? `?aid=${auth.uuid}` : `?did=${auth.uuid}`;
+
+    fetch(getOrders).then((res) => {
+      if (res.ok) {
+        res.json().then((info) => {
+          if (info.status) this.setState({orderLists:info.data});
+        });
+      }
+    });
+  }
+
   render() {
-    const {lists, earningsLists, userLists} = this.state;
+    const {lists, earningsLists, userLists, orderLists} = this.state;
 
     let nowadays = 0;
     let yesterday = 0;
@@ -98,6 +114,9 @@ class ClearingList extends PureComponent {
     earningsLists.forEach((val) => {
       userLists.forEach((Uval) => {
         if (Uval.uid === val.uid) val.mobile = Uval.mobile;
+      });
+      orderLists.forEach((Oval)=>{
+        if (Oval.oid === val.oid) val.pay_amount = Oval.pay_amount;
       });
 
       if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate()) {
