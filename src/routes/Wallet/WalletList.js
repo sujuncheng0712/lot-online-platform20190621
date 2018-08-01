@@ -74,6 +74,49 @@ class WalletList extends PureComponent {
       }
     });
 
+    const htmlHeader = (
+      <div style={styles.colBk}>
+        <div style={styles.order}>序号</div>
+        <div style={styles.col}>提现人</div>
+        <div style={styles.col}>提现金额</div>
+        <div style={styles.col}>手续费</div>
+        <div style={styles.bank}>开户银行</div>
+        <div style={styles.col}>开户名</div>
+        <div style={styles.col}>最新进度</div>
+      </div>
+    );
+    const htmlBody = (data) => (
+      <List
+        split={false}
+        bordered={false}
+        dataSource={data}
+        pagination={{pageSize: 10}}
+        loading={false}
+        renderItem={
+          item => (
+            <div key={item.oid} style={styles.item}>
+              <div style={styles.row}>
+                <div>
+                  发起时间：{item.created_at}
+                  <Divider type="vertical" />
+                  银行账户：{item.account}
+                </div>
+              </div>
+              <div style={styles.column}>
+                <div style={styles.order}>{item.id}</div>
+                <div style={styles.col}>{auth.contact}</div>
+                <div style={styles.col}>{item.amount}</div>
+                <div style={styles.col}>{item.fee}</div>
+                <div style={styles.bank}>{item.bank}</div>
+                <div style={styles.col}>{item.name}</div>
+                <div style={styles.col}>{stateMap[item.state]}</div>
+              </div>
+            </div>
+          )
+        }
+      />
+    );
+
     return (
       <PageHeaderLayout title="钱包账户">
         <div style={styles.content}>
@@ -85,48 +128,8 @@ class WalletList extends PureComponent {
           </div>
           <Tabs defaultActiveKey="1">
             <Tabs.TabPane tab="提现进度查询" key="1">
-              <div style={styles.colBk}>
-                <div style={styles.order}>序号</div>
-                <div style={styles.col}>提现人</div>
-                <div style={styles.col}>提现金额</div>
-                <div style={styles.col}>手续费</div>
-                <div style={styles.col}>开户名</div>
-                <div style={styles.bank}>开户银行</div>
-                <div style={styles.bank}>账户</div>
-                <div style={styles.col}>最新进度</div>
-              </div>
-              <List
-                split={false}
-                bordered={false}
-                dataSource={schedules}
-                loading={false}
-                renderItem={
-                  item => (
-                    <div key={item.oid} style={styles.item}>
-                      <div style={styles.row}>
-                        <div>
-                          发起时间：{item.created_at}
-                          <Divider type="vertical" />
-                          流水单号：{item.oid}
-                        </div>
-                      </div>
-                      <div style={styles.column}>
-                        <div style={styles.order}>{item.id}</div>
-                        <div style={styles.col}>{auth.contact}</div>
-                        <div style={styles.col}>{item.amount}</div>
-                        <div style={styles.col}>{item.fee}</div>
-                        <div style={styles.col}>{item.name}</div>
-                        <div style={styles.col}>{item.bank}</div>
-                        <div style={styles.col}>{item.account}</div>
-                        <div style={styles.col}>{stateMap[item.state]}</div>
-                      </div>
-                    </div>
-                  )
-                }
-                pagination={{
-                  pageSize: 10,
-                }}
-              />
+              {htmlHeader}
+              {htmlBody(schedules)}
             </Tabs.TabPane>
             <Tabs.TabPane tab="账户收支明细" key="2">
               <Table rowKey="id" columns={columns} dataSource={lists} />
@@ -170,7 +173,7 @@ const styles = {
     justifyContent: 'center',
   },
   bank: {
-    width: '15%',
+    width: '20%',
     height: 30,
     display: 'flex',
     alignItems: 'center',
