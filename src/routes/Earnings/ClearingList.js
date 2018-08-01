@@ -1,5 +1,5 @@
 import React, {PureComponent} from 'react';
-import {Button, Divider, Tabs, Table, Card} from 'antd';
+import {Tabs, Table, Card} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
@@ -32,7 +32,6 @@ class ClearingList extends PureComponent {
     super(...args);
     this.state = {
       lists: [],
-      lists2: [],
       earningsLists:[],
     };
   }
@@ -71,7 +70,7 @@ class ClearingList extends PureComponent {
   }
 
   render() {
-    const {lists, lists2, earningsLists} = this.state;
+    const {lists, earningsLists} = this.state;
 
     let nowadays = 0;
     let yesterday = 0;
@@ -138,7 +137,7 @@ class ClearingList extends PureComponent {
               <Table rowKey="id" columns={columns} dataSource={lists} />
             </Tabs.TabPane>
             <Tabs.TabPane tab="收益结算明细" key="2">
-              <Table rowKey="id" columns={columns2} dataSource={lists2} />
+              <Table rowKey="id" columns={columns2} dataSource={earningsLists} />
             </Tabs.TabPane>
           </Tabs>
         </Card>
