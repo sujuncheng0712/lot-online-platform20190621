@@ -32,12 +32,36 @@ const formItemLayout = {
 class Withdrawal extends PureComponent {
   constructor(...args) {
     super(...args);
-    this.state = {};
+    this.state = {balance};
+  }
+
+  componentDidMount() {
+    this.countBalance();
+  }
+
+  countBalance() {
+    let getSummary = `${url}/earnings`;
+    getSummary += `/${auth.uuid}`;
+    getSummary += `/summary`;
+    fetch(getSummary).then((res) => {
+      if (res.ok) {
+        res.json().then((info) => {
+          if (info.status) {
+            let balance = 0;
+            info.data.forEach(val => {
+              balance += val.allowance + val.commission + val.refund
+            });
+            this.setState({balance});
+          }
+        });
+      }
+    });
   }
 
   render() {
     const {form, submitting} = this.props;
     const {getFieldDecorator, validateFieldsAndScroll, getFieldsError} = form;
+    const {balance} = this.state;
 
     // 请求服务器
     const validate = () => {
@@ -112,7 +136,7 @@ class Withdrawal extends PureComponent {
         <Card
           className={styles.card}
           bordered={false}
-          title={`可提现金额：${300} 元`}
+          title={`可提现金额：${balance} 元`}
         >
           <Form>
             <Form.Item label={fieldLabels.account} {...formItemLayout} >

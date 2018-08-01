@@ -81,7 +81,7 @@ class WalletList extends PureComponent {
             <span>账户余额 <span>{balance}</span> 元</span>&nbsp;&nbsp;
             <a href="#/wallet/withdrawal"><Button type="primary" size="small">提现</Button></a>
             <Divider type="vertical" />
-            <span>手续费 0.6%，48小时内到账</span>
+            {/* <span>手续费 0.6%，48小时内到账</span> */}
           </div>
           <Tabs defaultActiveKey="1">
             <Tabs.TabPane tab="提现进度查询" key="1">
