@@ -19,12 +19,12 @@ const columns = [
 ];
 
 const columns2 = [
-  {title: '月份', dataIndex: 'month'},
-  {title: '时间', dataIndex: 'date'},
-  {title: '类型', dataIndex: 'state'},
-  {title: '收入/支出金额(元)', dataIndex: 'amount'},
-  {title: '账户余额', dataIndex: 'balance'},
-  {title: '备注', dataIndex: 'remark'},
+  {title: '日期', dataIndex: 'month'},
+  {title: '订单编号', dataIndex: 'date'},
+  {title: '订单类型', dataIndex: 'state'},
+  {title: '付款金额', dataIndex: 'amount'},
+  {title: '付款人', dataIndex: 'balance'},
+  {title: '我的收益', dataIndex: 'remark'},
 ];
 
 
@@ -77,10 +77,10 @@ class ClearingList extends PureComponent {
             {/* <span>手续费 0.6%，48小时内到账</span> */}
           </div>
           <Tabs defaultActiveKey="1">
-            <Tabs.TabPane tab="收益结算概括" key="1">
+            <Tabs.TabPane tab="已结算概况" key="1">
               <Table rowKey="id" columns={columns} dataSource={lists} />
             </Tabs.TabPane>
-            <Tabs.TabPane tab="账户收支明细" key="2">
+            <Tabs.TabPane tab="收益结算明细" key="2">
               <Table rowKey="id" columns={columns2} dataSource={lists2} />
             </Tabs.TabPane>
           </Tabs>
