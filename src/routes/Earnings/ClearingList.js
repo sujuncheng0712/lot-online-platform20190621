@@ -3,6 +3,7 @@ import {Tabs, Table, Card} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
+const role = localStorage.getItem('antd-pro-authority');
 const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
 
 const columns = [
@@ -17,14 +18,14 @@ const columns = [
     align: 'center',
   },
 ];
-
+const typeMap = ['', '用户订单', '', '团购订单'];
 const columns2 = [
-  {title: '日期', dataIndex: 'month'},
-  {title: '订单编号', dataIndex: 'date'},
-  {title: '订单类型', dataIndex: 'state'},
-  {title: '付款金额', dataIndex: 'amount'},
-  {title: '付款人', dataIndex: 'balance'},
-  {title: '我的收益', dataIndex: 'remark'},
+  {title: '日期', dataIndex: 'created_at'},
+  {title: '订单编号', dataIndex: 'oid'},
+  {title: '订单类型', dataIndex: 'type', render: val => typeMap[val]},
+  {title: '付款金额', dataIndex: 'total'},
+  {title: '付款人', dataIndex: 'uid'},
+  {title: '我的收益', dataIndex: '', render: info => role === 'agents' ? info.agent_earning : info.dealer_earning},
 ];
 
 class ClearingList extends PureComponent {
