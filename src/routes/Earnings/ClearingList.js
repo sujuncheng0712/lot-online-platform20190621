@@ -112,11 +112,11 @@ class ClearingList extends PureComponent {
     let lastMonth = 0;
 
     earningsLists.forEach((val) => {
-      userLists.forEach((Uval) => {
-        if (Uval.uid === val.uid) val.mobile = Uval.mobile;
-      });
       orderLists.forEach((Oval)=>{
         if (Oval.oid === val.oid) val.pay_amount = Oval.pay_amount;
+        userLists.forEach((Uval) => {
+          if (Uval.uid === Oval.uid) val.mobile = Uval.mobile;
+        });
       });
 
       if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate()) {
