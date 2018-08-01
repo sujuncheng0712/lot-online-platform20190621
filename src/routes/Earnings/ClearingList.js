@@ -1,5 +1,5 @@
 import React, {PureComponent} from 'react';
-import {Button, Divider, Tabs, Table} from 'antd';
+import {Button, Divider, Tabs, Table, Card} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
@@ -26,7 +26,6 @@ const columns2 = [
   {title: '付款人', dataIndex: 'balance'},
   {title: '我的收益', dataIndex: 'remark'},
 ];
-
 
 class ClearingList extends PureComponent {
   constructor(...args) {
@@ -67,15 +66,10 @@ class ClearingList extends PureComponent {
 
     return (
       <PageHeaderLayout title="结算列表">
+        <Card title={`待结算收益共 ${800} 元`}>
+          33
+        </Card>
         <div style={styles.content}>
-          <div style={{marginBottom: 15}}>
-            <span>待结算 <span>{1000}</span> 元</span>
-            <Divider type="vertical" />
-            <span>账户余额 <span>{balance}</span> 元</span>&nbsp;&nbsp;
-            <Button type="primary" size="small">提现</Button>
-            <Divider type="vertical" />
-            {/* <span>手续费 0.6%，48小时内到账</span> */}
-          </div>
           <Tabs defaultActiveKey="1">
             <Tabs.TabPane tab="已结算概况" key="1">
               <Table rowKey="id" columns={columns} dataSource={lists} />
