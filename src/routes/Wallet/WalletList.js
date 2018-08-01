@@ -4,7 +4,6 @@ import {Button, Divider, Tabs, Table, List} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
-// const role = localStorage.getItem('antd-pro-authority');
 const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
 const typeMap = ['支出', '收入'];
 const stateMap = ['', '请求', '已接受 (付款完成)', '', '', '', '', '', '', '', '已拒绝'];
@@ -14,6 +13,7 @@ class WalletList extends PureComponent {
     super(...args);
     this.state = {
       lists: [],
+      balance: 0,
     };
   }
 
@@ -25,7 +25,6 @@ class WalletList extends PureComponent {
   getWallet() {
     let getWallet = `${url}/wallet`;
     getWallet += `/${auth.uuid}`;
-    // getWallet += `?${role === 'agents' ? 'aid' : 'did'}=${auth.uuid}`;
     fetch(getWallet).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
@@ -49,7 +48,7 @@ class WalletList extends PureComponent {
             info.data.forEach(val => {
               balance += val.allowance + val.commission + val.refund
             });
-            console.log(balance);
+            this.setState({balance});
           }
         });
       }
@@ -57,7 +56,7 @@ class WalletList extends PureComponent {
   }
 
   render() {
-    const {lists} = this.state;
+    const {lists, balance} = this.state;
 
     const columns = [
       {title: '时间', dataIndex: 'created_at', align: 'center'},
@@ -79,7 +78,7 @@ class WalletList extends PureComponent {
       <PageHeaderLayout title="钱包账户">
         <div style={styles.content}>
           <div style={{marginBottom: 15}}>
-            <span>账户余额 <span>{300}</span> 元</span>&nbsp;&nbsp;
+            <span>账户余额 <span>{balance}</span> 元</span>&nbsp;&nbsp;
             <a href="#/wallet/withdrawal"><Button type="primary" size="small">提现</Button></a>
             <Divider type="vertical" />
             <span>手续费 0.6%，48小时内到账</span>
