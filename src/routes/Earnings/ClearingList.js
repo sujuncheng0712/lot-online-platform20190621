@@ -66,10 +66,11 @@ class ClearingList extends PureComponent {
 
     return (
       <PageHeaderLayout title="结算列表">
-        <Card title={`待结算收益共 ${800} 元`}>
+        <Card title={`待结算收益共 ${800} 元`} border={false}>
           33
         </Card>
-        <div style={styles.content}>
+        <br />
+        <Card border={false}>
           <Tabs defaultActiveKey="1">
             <Tabs.TabPane tab="已结算概况" key="1">
               <Table rowKey="id" columns={columns} dataSource={lists} />
@@ -78,19 +79,10 @@ class ClearingList extends PureComponent {
               <Table rowKey="id" columns={columns2} dataSource={lists2} />
             </Tabs.TabPane>
           </Tabs>
-        </div>
+        </Card>
       </PageHeaderLayout>
     );
   }
 }
-
-const styles = {
-  content: {
-    width: '100%',
-    padding: 20,
-    backgroundColor: '#fff',
-    marginBottom: 15,
-  },
-};
 
 export default ClearingList;
