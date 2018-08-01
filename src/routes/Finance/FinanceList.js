@@ -9,31 +9,7 @@ class FinanceList extends PureComponent {
   constructor(...args) {
     super(...args);
     this.state = {
-      lists: [
-        {
-          id: 1,
-          created_at: '2018年06月11日 11:39:19',
-          oid: '201806111146',
-          name: '周成华',
-          amount: '50元',
-          fee: '0.3元',
-          account: '周成华',
-          bank: '中国农业银行',
-          number: '6228480109443866073',
-          state: '0',
-        }, {
-          id: 2,
-          created_at: '2018年06月11日 11:39:19',
-          oid: '201806111146',
-          name: '周成华',
-          amount: '50元',
-          fee: '0.3元',
-          account: '周成华',
-          bank: '中国农业银行',
-          number: '6228480109443866073',
-          state: '1',
-        },
-      ],
+      lists: [],
     };
   }
 
@@ -41,12 +17,34 @@ class FinanceList extends PureComponent {
     this.getWalletApply();
   }
 
+  // 获取提现申请列表
   getWalletApply(){
     const getWalletApply = `${url}/wallet/apply`;
     fetch(getWalletApply).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
           console.log(info);
+          if (info.status) {
+            this.setState({lists: info.data});
+          }
+        });
+      }
+    });
+  }
+
+  // 提现审核
+  postWalletApply(uid, uuid, type) {
+    const data = JSON.stringify({verdict: type});
+    let postWalletApply = `${url}/wallet`;
+    postWalletApply += `/${uid}`;
+    postWalletApply += `/apply`;
+    postWalletApply += `/${uuid}`;
+    fetch(postWalletApply, {
+      method: 'POST',
+      body: JSON.stringify({data}),
+    }).then((res) => {
+      if (res.ok) {
+        res.json().then((info) => {
           if (info.status) {
             this.setState({lists: info.data});
           }
@@ -96,33 +94,12 @@ class FinanceList extends PureComponent {
                         <div style={styles.col}>{item.bank}</div>
                         <div style={styles.col}>{item.account}</div>
                         {
-                          item.state ? (
-                            <div style={styles.col}>{stateMap[item.state]}</div>
-                          ) : (
+                          item.state === 1 ? (
                             <div style={styles.col}>
                               <Button
                                 type="primary"
                                 size="small"
-                                onClick={() => {
-                                  const data = JSON.stringify({verdict: 1});
-                                  let postWalletApply = `${url}/wallet`;
-                                  postWalletApply += `/${item.uid}`;
-                                  postWalletApply += `/apply`;
-                                  postWalletApply += `/${item.uuid}`;
-                                  fetch(postWalletApply, {
-                                    method: 'POST',
-                                    body: JSON.stringify({data}),
-                                  }).then((res) => {
-                                    if (res.ok) {
-                                      res.json().then((info) => {
-                                        console.log(info);
-                                        if (info.status) {
-                                          this.setState({lists: info.data});
-                                        }
-                                      });
-                                    }
-                                  });
-                                }}
+                                onClick={this.postWalletApply.bind(this, item.uid, item.uuid, 1)}
                               >
                                 通过
                               </Button>
@@ -130,30 +107,13 @@ class FinanceList extends PureComponent {
                               <Button
                                 type="primary"
                                 size="small"
-                                onClick={() => {
-                                  const data = JSON.stringify({verdict: 0});
-                                  let postWalletApply = `${url}/wallet`;
-                                  postWalletApply += `/${item.uid}`;
-                                  postWalletApply += `/apply`;
-                                  postWalletApply += `/${item.uuid}`;
-                                  fetch(postWalletApply, {
-                                    method: 'POST',
-                                    body: JSON.stringify({data}),
-                                  }).then((res) => {
-                                    if (res.ok) {
-                                      res.json().then((info) => {
-                                        console.log(info);
-                                        if (info.status) {
-                                          this.setState({lists: info.data});
-                                        }
-                                      });
-                                    }
-                                  });
-                                }}
+                                onClick={this.postWalletApply.bind(this, item.uid, item.uuid, 0)}
                               >
                                 拒绝
                               </Button>
                             </div>
+                          ) : (
+                            <div style={styles.col}>{stateMap[item.state]}</div>
                           )
                         }
                       </div>
