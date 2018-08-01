@@ -1,10 +1,10 @@
-/* eslint-disable prefer-const,no-param-reassign */
+/* eslint-disable prefer-const,no-param-reassign,class-methods-use-this */
 import React, {PureComponent} from 'react';
 import {Button, Divider, Tabs, Table, List} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
-const role = localStorage.getItem('antd-pro-authority');
+// const role = localStorage.getItem('antd-pro-authority');
 const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
 const typeMap = ['支出', '收入'];
 const stateMap = ['', '请求', '已接受 (付款完成)', '', '', '', '', '', '', '', '已拒绝'];
@@ -19,18 +19,37 @@ class WalletList extends PureComponent {
 
   componentDidMount() {
     this.getWallet();
+    this.countBalance();
   }
 
   getWallet() {
     let getWallet = `${url}/wallet`;
-    // getWallet += `/${auth.uuid}`;
-    getWallet += `?${role === 'agents' ? 'aid' : 'did'}=${auth.uuid}`;
+    getWallet += `/${auth.uuid}`;
+    // getWallet += `?${role === 'agents' ? 'aid' : 'did'}=${auth.uuid}`;
     fetch(getWallet).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          console.log(info);
           if (info.status) {
             this.setState({lists: info.data});
+          }
+        });
+      }
+    });
+  }
+
+  countBalance() {
+    let getSummary = `${url}/earnings`;
+    getSummary += `/${auth.uuid}`;
+    getSummary += `/summary`;
+    fetch(getSummary).then((res) => {
+      if (res.ok) {
+        res.json().then((info) => {
+          if (info.status) {
+            let balance = 0;
+            info.data.forEach(val => {
+              balance += val.allowance + val.commission + val.refund
+            });
+            console.log(balance);
           }
         });
       }

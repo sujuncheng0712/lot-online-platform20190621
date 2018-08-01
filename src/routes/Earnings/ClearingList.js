@@ -3,6 +3,7 @@ import {Button, Divider, Tabs, Table} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
+const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
 
 const columns = [
     {title: '月份', dataIndex: 'cycle', align: 'center'},
@@ -42,14 +43,12 @@ class ClearingList extends PureComponent {
 
     // 获取结算列表
     getSummary() {
-        const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
         let getSummary = `${url}/earnings`;
         getSummary += `/${auth.uuid}`;
         getSummary += `/summary`;
         fetch(getSummary).then((res) => {
             if (res.ok) {
                 res.json().then((info) => {
-                    console.log(info);
                     if (info.status) this.setState({lists: info.data});
                 });
             }
