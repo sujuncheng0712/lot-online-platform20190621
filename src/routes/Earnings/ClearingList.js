@@ -1,4 +1,4 @@
-/* eslint-disable no-param-reassign */
+/* eslint-disable no-param-reassign,radix */
 import React, {PureComponent} from 'react';
 import {Tabs, Table, Card} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
@@ -163,7 +163,7 @@ class ClearingList extends PureComponent {
 
     return (
       <PageHeaderLayout title="结算列表">
-        <Card title={`待结算收益共 ${thisMonth} 元`} border={false}>
+        <Card title={`待结算收益共 ${thisMonth} 元`} bordered={false}>
           <div style={styles.count}>
             <div style={styles.countRow}><div>今天</div><div>{nowadays}元</div></div>
             <div style={styles.countRow}><div>昨天</div><div>{yesterday}元</div></div>
@@ -172,7 +172,7 @@ class ClearingList extends PureComponent {
           </div>
         </Card>
         <br />
-        <Card border={false}>
+        <Card bordered={false}>
           <Tabs defaultActiveKey="1">
             <Tabs.TabPane tab="已结算概况" key="1">
               <Table rowKey="id" columns={columns} dataSource={lists} />
