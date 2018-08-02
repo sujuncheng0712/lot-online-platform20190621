@@ -21,7 +21,6 @@ class WalletList extends PureComponent {
 
   componentDidMount() {
     this.getWallet();
-    this.countBalance();
   }
 
   getWallet() {
@@ -30,28 +29,7 @@ class WalletList extends PureComponent {
     fetch(getWallet).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) {
-            this.setState({lists: info.data});
-          }
-        });
-      }
-    });
-  }
-
-  countBalance() {
-    let getSummary = `${url}/earnings`;
-    getSummary += `/${auth.uuid}`;
-    getSummary += `/summary`;
-    fetch(getSummary).then((res) => {
-      if (res.ok) {
-        res.json().then((info) => {
-          if (info.status) {
-            let balance = 0;
-            info.data.forEach(val => {
-              balance += val.allowance + val.commission + val.refund
-            });
-            this.setState({balance});
-          }
+          if (info.status) this.setState({lists: info.data, balance: info.data[0].balance});
         });
       }
     });

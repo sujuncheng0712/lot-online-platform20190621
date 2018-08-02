@@ -41,23 +41,16 @@ class Withdrawal extends PureComponent {
   }
 
   componentDidMount() {
-    this.countBalance();
+    this.getWallet();
   }
 
-  countBalance() {
-    let getSummary = `${url}/earnings`;
-    getSummary += `/${auth.uuid}`;
-    getSummary += `/summary`;
-    fetch(getSummary).then((res) => {
+  getWallet() {
+    let getWallet = `${url}/wallet`;
+    getWallet += `/${auth.uuid}`;
+    fetch(getWallet).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) {
-            let balance = 0;
-            info.data.forEach(val => {
-              balance += val.allowance + val.commission + val.refund
-            });
-            this.setState({balance});
-          }
+          if (info.status) this.setState({balance: info.data[0].balance});
         });
       }
     });
