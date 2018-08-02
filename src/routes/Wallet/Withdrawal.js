@@ -1,8 +1,9 @@
 /* eslint-disable no-shadow,no-param-reassign,radix */
 import React, {PureComponent} from 'react';
-import {Card, Button, Form, Icon, Input, Popover, message} from 'antd';
+import {Card, Button, Form, Icon, Input, Popover, message, Select} from 'antd';
 import {connect} from 'dva';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
+import banks from '../../models/banks'
 import styles from './style.less';
 
 const url = 'http://iot.dochen.cn/api';
@@ -11,10 +12,10 @@ const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.g
 
 // 输入框
 const fieldLabels = {
-  account: '账户',
   bank: '开户银行',
-  name: '姓名',
-  mobile: '手机',
+  account: '银行账户',
+  name: '开户人姓名',
+  mobile: '手机号',
   amount: '提现金额',
 };
 
@@ -32,7 +33,11 @@ const formItemLayout = {
 class Withdrawal extends PureComponent {
   constructor(...args) {
     super(...args);
-    this.state = {balance: 0};
+    this.state = {
+      balance: 0,
+      banks,
+      bankCode:'',
+    };
   }
 
   componentDidMount() {
@@ -61,7 +66,7 @@ class Withdrawal extends PureComponent {
   render() {
     const {form, submitting} = this.props;
     const {getFieldDecorator, validateFieldsAndScroll, getFieldsError} = form;
-    const {balance} = this.state;
+    const {balance, banks, bankCode} = this.state;
 
     // 请求服务器
     const validate = () => {
@@ -131,6 +136,11 @@ class Withdrawal extends PureComponent {
       );
     };
 
+    const banksList = [];
+    banks.forEach((item) => (
+      banksList.push(<Select.Option key={item.code} value={item.code}>{item.name}</Select.Option>)
+    ));
+
     return (
       <PageHeaderLayout wrapperClassName={styles.advancedForm}>
         <Card
@@ -139,27 +149,37 @@ class Withdrawal extends PureComponent {
           title={`可提现金额：${balance} 元`}
         >
           <Form>
+            <Form.Item label={fieldLabels.bank} {...formItemLayout} >
+              {getFieldDecorator('bank', {
+                initialValue: bankCode,
+                rules: [{required: true, message: '*'}],
+              })(
+                <Input
+                  type="hidden"
+                />
+              )}
+              <Select
+                showSearch
+                placeholder="请选择开户银行"
+                optionFilterProp="children"
+                onChange={(value) => {
+                  console.log(value);
+                  this.setState({bankCode: value});
+                }}
+                filterOption={(input, option) => option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}
+              >
+                {banksList}
+              </Select>
+            </Form.Item>
             <Form.Item label={fieldLabels.account} {...formItemLayout} >
               {getFieldDecorator('account', {
                 rules: [
-                  {required: true, message: '银行卡号必须填写'},
+                  {required: true, message: '银行账号必须填写'},
                 ],
               })(
                 <Input
                   type="text"
-                  placeholder="请输入银行卡号"
-                />
-              )}
-            </Form.Item>
-            <Form.Item label={fieldLabels.bank} {...formItemLayout} >
-              {getFieldDecorator('bank', {
-                rules: [
-                  {required: true, message: '开户银行必须填写'},
-                ],
-              })(
-                <Input
-                  type="text"
-                  placeholder="请输入开户银行"
+                  placeholder="请输入开户银行账号"
                 />
               )}
             </Form.Item>
@@ -178,12 +198,12 @@ class Withdrawal extends PureComponent {
             <Form.Item label={fieldLabels.mobile} {...formItemLayout} >
               {getFieldDecorator('mobile', {
                 rules: [
-                  {required: true, message: '开户人手机号必须填写'},
+                  {required: true, message: '手机号必须填写'},
                 ],
               })(
                 <Input
                   type="text"
-                  placeholder="请输入开户人手机号"
+                  placeholder="请输入在银行预留的手机号"
                 />
               )}
             </Form.Item>
@@ -196,7 +216,7 @@ class Withdrawal extends PureComponent {
               })(
                 <Input
                   type="number"
-                  placeholder="请输入所提现的金额"
+                  placeholder="请输入提现的金额"
                 />
               )}
             </Form.Item>
