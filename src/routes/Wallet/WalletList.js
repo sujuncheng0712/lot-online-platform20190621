@@ -15,7 +15,6 @@ class WalletList extends PureComponent {
     this.state = {
       lists: [],
       balance: 0,
-      banks,
     };
   }
 
@@ -36,7 +35,7 @@ class WalletList extends PureComponent {
   }
 
   render() {
-    const {lists, balance, banks} = this.state;
+    const {lists, balance} = this.state;
 
     const columns = [
       {title: '时间', dataIndex: 'created_at', align: 'center'},

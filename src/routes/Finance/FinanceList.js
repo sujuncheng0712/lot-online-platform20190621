@@ -14,7 +14,6 @@ class FinanceList extends PureComponent {
       lists: [],
       dealersLists: [],
       agentsLists: [],
-      banks,
     };
   }
 
@@ -82,7 +81,7 @@ class FinanceList extends PureComponent {
   }
 
   render() {
-    const {lists, dealersLists, agentsLists, banks} = this.state;
+    const {lists, dealersLists, agentsLists} = this.state;
 
     const lists1 = [];
     const lists2 = [];
