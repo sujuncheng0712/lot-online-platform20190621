@@ -35,7 +35,6 @@ class Withdrawal extends PureComponent {
     super(...args);
     this.state = {
       balance: 0,
-      banks,
       bankCode:'',
     };
   }
@@ -59,7 +58,7 @@ class Withdrawal extends PureComponent {
   render() {
     const {form, submitting} = this.props;
     const {getFieldDecorator, validateFieldsAndScroll, getFieldsError} = form;
-    const {balance, banks, bankCode} = this.state;
+    const {balance, bankCode} = this.state;
 
     // 请求服务器
     const validate = () => {
