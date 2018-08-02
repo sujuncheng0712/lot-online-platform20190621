@@ -75,9 +75,7 @@ class FinanceList extends PureComponent {
     }).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) {
-            this.setState({lists: info.data});
-          }
+          if (info.status) this.getWalletApply();
         });
       }
     });
