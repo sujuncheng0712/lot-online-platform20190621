@@ -2,6 +2,7 @@
 import React, {PureComponent} from 'react';
 import {Button, Divider, Tabs, Table, List} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
+import banks from '../../models/banks';
 
 const url = 'http://iot.dochen.cn/api';
 const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
@@ -14,6 +15,7 @@ class WalletList extends PureComponent {
     this.state = {
       lists: [],
       balance: 0,
+      banks,
     };
   }
 
@@ -56,7 +58,7 @@ class WalletList extends PureComponent {
   }
 
   render() {
-    const {lists, balance} = this.state;
+    const {lists, balance, banks} = this.state;
 
     const columns = [
       {title: '时间', dataIndex: 'created_at', align: 'center'},
@@ -68,6 +70,9 @@ class WalletList extends PureComponent {
 
     let schedules = [];
     lists.forEach((val, k) => {
+      banks.forEach((Bval) => {
+        if (Bval.code === val.bank) val.bank = Bval.name;
+      });
       if (val.state) {
         val.id = k + 1;
         schedules.push(val);
@@ -124,7 +129,7 @@ class WalletList extends PureComponent {
             <span>账户余额 <span>{balance}</span> 元</span>&nbsp;&nbsp;
             <a href="#/wallet/withdrawal"><Button type="primary" size="small">提现</Button></a>
             <Divider type="vertical" />
-            {/* <span>手续费 0.6%，48小时内到账</span> */}
+            <span>手续费 0.1%，72小时内到账</span>
           </div>
           <Tabs defaultActiveKey="1">
             <Tabs.TabPane tab="提现进度查询" key="1">

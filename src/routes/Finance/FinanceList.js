@@ -1,7 +1,8 @@
-/* eslint-disable no-param-reassign */
+/* eslint-disable no-param-reassign,no-shadow */
 import React, {PureComponent} from 'react';
 import {Tabs, List, Divider, Button} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
+import banks from '../../models/banks';
 
 const url = 'http://iot.dochen.cn/api';
 const stateMap = ['', '处理中', '已处理', '', '', '', '', '', '', '', '未通过'];
@@ -13,6 +14,7 @@ class FinanceList extends PureComponent {
       lists: [],
       dealersLists: [],
       agentsLists: [],
+      banks,
     };
   }
 
@@ -82,12 +84,15 @@ class FinanceList extends PureComponent {
   }
 
   render() {
-    const {lists, dealersLists, agentsLists} = this.state;
+    const {lists, dealersLists, agentsLists, banks} = this.state;
 
     const lists1 = [];
     const lists2 = [];
     const lists3 = [];
     lists.forEach((val)=>{
+      banks.forEach((Bval) => {
+        if (Bval.code === val.bank) val.bank = Bval.name;
+      });
       dealersLists.forEach((Dval)=>{
         if (Dval.did === val.uid) val.contact = Dval.contact;
       });
