@@ -24,9 +24,14 @@ const columns2 = [
   {title: '日期', dataIndex: 'created_at'},
   {title: '订单编号', dataIndex: 'oid'},
   {title: '订单类型', dataIndex: 'type', align: 'center', render: val => typeMap[val]},
-  {title: '付款金额', dataIndex: 'pay_amount', align: 'center'},
+  {title: '付款金额', dataIndex: 'pay_amount', align: 'center', render: val => `${val}元`},
   {title: '付款人', dataIndex: 'mobile'},
-  {title: '我的收益', dataIndex: '', align: 'center', render: info => role === 'agents' ? info.agent_earning : info.dealer_earning},
+  {
+    title: '我的收益',
+    dataIndex: '',
+    align: 'center',
+    render: info => `${role === 'agents' ? info.agent_earning : info.dealer_earning}元`,
+  },
 ];
 
 class ClearingList extends PureComponent {
