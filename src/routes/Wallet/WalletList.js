@@ -38,11 +38,11 @@ class WalletList extends PureComponent {
     const {lists, balance} = this.state;
 
     const columns = [
-      {title: '时间', dataIndex: 'created_at', align: 'center'},
-      {title: '类型', dataIndex: 'type', align: 'center', render: val => typeMap[val]},
-      {title: '收入/支出金额(元)', dataIndex: 'amount', align: 'center'},
-      {title: '账户余额(元)', dataIndex: 'balance', align: 'center', render: val => val || 0},
-      {title: '备注', dataIndex: 'remark', align: 'center', render: val => val || '无'},
+      {title: '时间', dataIndex: 'created_at', width:'20%'},
+      {title: '类型', dataIndex: 'type', render: val => typeMap[val]},
+      {title: '收入/支出金额', dataIndex: 'amount', width:'20%', render: val => `${val} 元`},
+      {title: '账户余额', dataIndex: 'balance', width:'20%', render: val => `${val || 0} 元`},
+      {title: '备注', dataIndex: 'purpose', width:'20%', render: val => val || '无'},
     ];
 
     let schedules = [];
@@ -106,7 +106,7 @@ class WalletList extends PureComponent {
             <span>账户余额 <span>{balance}</span> 元</span>&nbsp;&nbsp;
             <a href="#/wallet/withdrawal"><Button type="primary" size="small">提现</Button></a>
             <Divider type="vertical" />
-            <span>手续费 0.1%，72小时内到账</span>
+            <span>手续费 0.1%，最低2元，72小时内到账</span>
           </div>
           <Tabs defaultActiveKey="1">
             <Tabs.TabPane tab="提现进度查询" key="1">

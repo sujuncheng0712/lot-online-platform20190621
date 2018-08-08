@@ -134,7 +134,7 @@ class FinanceList extends PureComponent {
                 <div style={styles.order}>{key + 1}</div>
                 <div style={styles.col}>{item.contact}</div>
                 <div style={styles.col}>{item.amount}</div>
-                <div style={styles.col}>{item.service || `0.1%`}</div>
+                <div style={styles.col}>{item.service || `0`}</div>
                 <div style={styles.bank}>{item.bank}</div>
                 <div style={styles.col}>{item.name}</div>{
                 item.state === 1 ? (
@@ -156,7 +156,7 @@ class FinanceList extends PureComponent {
                     </Button>
                   </div>
                 ) : (
-                  <div style={styles.col}>{stateMap[item.state]}</div>
+                  <div style={styles.tool}>{stateMap[item.state]}</div>
                 )
               }
               </div>

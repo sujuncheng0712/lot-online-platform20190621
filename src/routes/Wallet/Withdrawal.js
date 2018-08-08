@@ -35,7 +35,8 @@ class Withdrawal extends PureComponent {
     super(...args);
     this.state = {
       balance: 0,
-      bankCode:'',
+      bankCode: '',
+      service: 2,
     };
   }
 
@@ -58,7 +59,7 @@ class Withdrawal extends PureComponent {
   render() {
     const {form, submitting} = this.props;
     const {getFieldDecorator, validateFieldsAndScroll, getFieldsError} = form;
-    const {balance, bankCode} = this.state;
+    const {balance, bankCode, service} = this.state;
 
     // 请求服务器
     const validate = () => {
@@ -105,7 +106,7 @@ class Withdrawal extends PureComponent {
         }
         return (
           <li key={key} className={styles.errorListItem} onClick={() => scrollToField(key)}>
-            <Icon type="cross-circle-o" className={styles.errorIcon} />
+            <Icon type="cross-circle-o" className={styles.errorIcon}/>
             <div className={styles.errorMessage}>{errors[key][0]}</div>
             <div className={styles.errorField}>{fieldLabels[key]}</div>
           </li>
@@ -121,7 +122,7 @@ class Withdrawal extends PureComponent {
             trigger="click"
             getPopupContainer={trigger => trigger.parentNode}
           >
-            <Icon type="exclamation-circle" />
+            <Icon type="exclamation-circle"/>
           </Popover>
           {errorCount}
         </span>
@@ -199,7 +200,11 @@ class Withdrawal extends PureComponent {
                 />
               )}
             </Form.Item>
-            <Form.Item label={fieldLabels.amount} {...formItemLayout} >
+            <Form.Item
+              label={fieldLabels.amount}
+              {...formItemLayout}
+              extra={`手续费${service}元（费率0.1%，最低2元）`}
+            >
               {getFieldDecorator('amount', {
                 rules: [
                   {required: true, message: '提现金额必须填写'},
@@ -209,6 +214,9 @@ class Withdrawal extends PureComponent {
                 <Input
                   type="number"
                   placeholder="请输入提现的金额"
+                  onChange={(e) => {
+                    this.setState({service: (Math.round(e.target.value * 0.1) / 100) <= 2 ? 2 : Math.round(e.target.value * 0.1) / 100});
+                  }}
                 />
               )}
             </Form.Item>

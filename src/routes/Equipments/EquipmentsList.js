@@ -226,6 +226,7 @@ class EquipmentsList extends PureComponent {
       {title: '序号', dataIndex: 'id', align: 'center'},
       {title: '激活时间', dataIndex: 'activation_at', align: 'center'},
       {title: '设备ID', dataIndex: 'eid', align: 'center'},
+      {title: '型号', dataIndex: 'model', align: 'center'},
       {
         title: '版本号',
         dataIndex: 'version',
