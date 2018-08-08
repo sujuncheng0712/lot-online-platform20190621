@@ -87,8 +87,8 @@ class WalletList extends PureComponent {
               <div style={styles.column}>
                 <div style={styles.order}>{item.id}</div>
                 <div style={styles.col}>{auth.contact}</div>
-                <div style={styles.col}>{item.amount}</div>
-                <div style={styles.col}>{item.fee || '0.1%'}</div>
+                <div style={styles.col}>{item.amount}元</div>
+                <div style={styles.col}>{item.fee || ((Math.round(item.amount * 0.1) / 100) <= 2 ? 2 : Math.round(item.amount * 0.1) / 100)}</div>
                 <div style={styles.bank}>{item.bank}</div>
                 <div style={styles.col}>{item.name}</div>
                 <div style={styles.col}>{stateMap[item.state]}</div>
