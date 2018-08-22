@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign,no-shadow */
 import React, {PureComponent} from 'react';
-import {Tabs, List, Divider, Button} from 'antd';
+import {Tabs, List, Divider, Button, Popconfirm} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 import banks from '../../models/banks';
 
@@ -125,7 +125,7 @@ class FinanceList extends PureComponent {
             <div key={item.oid} style={styles.item}>
               <div style={styles.row}>
                 <div>
-                  发起时间：{'2018年06月11日 11:39:19'}
+                  发起时间：{item.created_at}
                   <Divider type="vertical" />
                   银行账户：{item.account}
                 </div>
@@ -133,19 +133,23 @@ class FinanceList extends PureComponent {
               <div style={styles.column}>
                 <div style={styles.order}>{key + 1}</div>
                 <div style={styles.col}>{item.contact}</div>
-                <div style={styles.col}>{item.amount}</div>
-                <div style={styles.col}>{item.service || `0`}</div>
+                <div style={styles.col}>{item.amount}元</div>
+                <div style={styles.col}>
+                  {((Math.round(item.amount * 0.1) / 100) <= 2 ? 2 : Math.round(item.amount * 0.1) / 100).toFixed(2)}元
+                </div>
                 <div style={styles.bank}>{item.bank}</div>
                 <div style={styles.col}>{item.name}</div>{
                 item.state === 1 ? (
                   <div style={styles.tool}>
-                    <Button
-                      type="primary"
-                      size="small"
-                      onClick={this.postWalletApply.bind(this, item.uid, item.uuid, 1)}
+                    <Popconfirm
+                      placement="topRight"
+                      title="确认要通过这笔提现吗？"
+                      onConfirm={this.postWalletApply.bind(this, item.uid, item.uuid, 1)}
+                      okText="确认"
+                      cancelText="取消"
                     >
-                      通过
-                    </Button>
+                      <Button type="primary" size="small">通过</Button>
+                    </Popconfirm>
                     <Divider type="vertical" />
                     <Button
                       type="primary"

@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign,radix */
 import React, {PureComponent} from 'react';
-import {Tabs, Table, Card} from 'antd';
+import {Tabs, Table, Card, Select} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
@@ -42,6 +42,8 @@ class ClearingList extends PureComponent {
       earningsLists:[],
       userLists: [],
       orderLists: [],
+      dealersLists: [],
+      agentsLists: [],
     };
   }
 
@@ -50,12 +52,38 @@ class ClearingList extends PureComponent {
     this.getEarnings();
     this.getUsersList();
     this.getOrders();
+    this.getDealers();
+    this.getAgents();
+  }
+
+  // 获取经销商列表
+  getDealers() {
+    const getDealers = `${url}/dealers`;
+    fetch(getDealers).then((res) => {
+      if (res.ok) {
+        res.json().then((info) => {
+          if (info.status) this.setState({dealersLists: info.data});
+        });
+      }
+    });
+  }
+
+  // 获取代理商列表
+  getAgents() {
+    const getAgents = `${url}/agents`;
+    fetch(getAgents).then((res) => {
+      if (res.ok) {
+        res.json().then((info) => {
+          if (info.status) this.setState({agentsLists: info.data});
+        });
+      }
+    });
   }
 
   // 获取结算列表
-  getSummary() {
+  getSummary(id) {
     let getSummary = `${url}/earnings`;
-    getSummary += `/${auth.uuid}`;
+    getSummary += `/${id || auth.uuid}`;
     getSummary += `/summary`;
     fetch(getSummary).then((res) => {
       if (res.ok) {
@@ -67,9 +95,19 @@ class ClearingList extends PureComponent {
   }
 
   // 获取收益列表
-  getEarnings() {
+  getEarnings(type, id) {
     let getEarnings = `${url}/earnings`;
-    getEarnings += auth.type === 'vendors' ? '' : auth.type === 'agents' ? `?aid=${auth.uuid}` : `?did=${auth.uuid}`;
+    if (auth.type === 'vendors') {
+      if (type === 'agents') {
+        getEarnings += `?aid=${id}`;
+      } else if (type === 'dealers') {
+        getEarnings += `?did=${id}`;
+      }
+    } else if (auth.type === 'agents') {
+      getEarnings += `?aid=${auth.uuid}`;
+    } else if (auth.type === 'dealers') {
+      getEarnings += `?did=${auth.uuid}`;
+    }
 
     fetch(getEarnings).then((res) => {
       if (res.ok) {
@@ -109,7 +147,7 @@ class ClearingList extends PureComponent {
   }
 
   render() {
-    const {lists, earningsLists, userLists, orderLists} = this.state;
+    const {lists, earningsLists, userLists, orderLists, dealersLists, agentsLists} = this.state;
 
     let nowadays = 0;
     let yesterday = 0;
@@ -118,10 +156,10 @@ class ClearingList extends PureComponent {
 
     earningsLists.forEach((val) => {
       orderLists.forEach((Oval)=>{
-        if (Oval.oid === val.oid) val.pay_amount = Oval.pay_amount;
-        userLists.forEach((Uval) => {
-          if (Uval.uid === Oval.uid) val.mobile = Uval.mobile;
-        });
+        if (val.oid === Oval.oid) val.pay_amount = Oval.pay_amount;
+      });
+      userLists.forEach((Uval) => {
+        if (val.uid === Uval.uid) val.mobile = Uval.mobile;
       });
 
       if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate()) {
@@ -168,6 +206,27 @@ class ClearingList extends PureComponent {
 
     return (
       <PageHeaderLayout title="结算列表">
+        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
+          <Select
+            defaultValue="请选择"
+            style={{width: 200, marginBottom: 15}}
+            onChange={(value) => {
+              this.getSummary(value.split(',')[1]);
+              this.getEarnings(value.split(',')[0], value.split(',')[1]);
+            }}
+          >
+            <Select.OptGroup label="代理商">
+              {agentsLists.map((item, k) => (
+                <Select.Option key={k} value={`agents,${item.aid}`}>{item.contact}</Select.Option>
+              ))}
+            </Select.OptGroup>
+            <Select.OptGroup label="经销商">
+              {dealersLists.map((item, k) => (
+                <Select.Option key={k} value={`dealers,${item.did}`}>{item.contact}</Select.Option>
+              ))}
+            </Select.OptGroup>
+          </Select>
+        ) : ''}
         <Card title={`待结算收益共 ${thisMonth} 元`} bordered={false}>
           <div style={styles.count}>
             <div style={styles.countRow}><div>今天</div><div>{nowadays}元</div></div>

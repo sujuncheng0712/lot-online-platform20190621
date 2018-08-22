@@ -1,6 +1,6 @@
 /* eslint-disable prefer-const,no-param-reassign,class-methods-use-this */
 import React, {PureComponent} from 'react';
-import {Button, Divider, Tabs, Table, List} from 'antd';
+import {Button, Divider, Tabs, Table, List, Select} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 import banks from '../../models/banks';
 
@@ -15,16 +15,45 @@ class WalletList extends PureComponent {
     this.state = {
       lists: [],
       balance: 0,
+      dealersLists: [],
+      agentsLists: [],
     };
   }
 
   componentDidMount() {
+    this.getDealers();
+    this.getAgents();
     this.getWallet();
   }
 
-  getWallet() {
+  // 获取经销商列表
+  getDealers() {
+    const getDealers = `${url}/dealers`;
+    fetch(getDealers).then((res) => {
+      if (res.ok) {
+        res.json().then((info) => {
+          if (info.status) this.setState({dealersLists: info.data});
+        });
+      }
+    });
+  }
+
+  // 获取代理商列表
+  getAgents() {
+    const getAgents = `${url}/agents`;
+    fetch(getAgents).then((res) => {
+      if (res.ok) {
+        res.json().then((info) => {
+          if (info.status) this.setState({agentsLists: info.data});
+        });
+      }
+    });
+  }
+
+  // 获取余额信息
+  getWallet(id) {
     let getWallet = `${url}/wallet`;
-    getWallet += `/${auth.uuid}`;
+    getWallet += `/${id || auth.uuid}`;
     fetch(getWallet).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
@@ -35,7 +64,7 @@ class WalletList extends PureComponent {
   }
 
   render() {
-    const {lists, balance} = this.state;
+    const {lists, balance, dealersLists, agentsLists} = this.state;
 
     const columns = [
       {title: '时间', dataIndex: 'created_at', width:'20%'},
@@ -88,7 +117,9 @@ class WalletList extends PureComponent {
                 <div style={styles.order}>{item.id}</div>
                 <div style={styles.col}>{auth.contact}</div>
                 <div style={styles.col}>{item.amount}元</div>
-                <div style={styles.col}>{item.fee || ((Math.round(item.amount * 0.1) / 100) <= 2 ? 2 : Math.round(item.amount * 0.1) / 100)}元</div>
+                <div style={styles.col}>
+                  {item.fee || (((Math.round(item.amount * 0.1) / 100) <= 2 ? 2 : Math.round(item.amount * 0.1) / 100)).toFixed(2)}元
+                </div>
                 <div style={styles.bank}>{item.bank}</div>
                 <div style={styles.col}>{item.name}</div>
                 <div style={styles.col}>{stateMap[item.state]}</div>
@@ -101,6 +132,24 @@ class WalletList extends PureComponent {
 
     return (
       <PageHeaderLayout title="钱包账户">
+        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
+          <Select
+            defaultValue="请选择"
+            style={{width: 200, marginBottom: 15}}
+            onChange={(value) => this.getWallet(value)}
+          >
+            <Select.OptGroup label="代理商">
+              {agentsLists.map((item, k) => (
+                <Select.Option key={k} value={item.aid}>{item.contact}</Select.Option>
+              ))}
+            </Select.OptGroup>
+            <Select.OptGroup label="经销商">
+              {dealersLists.map((item, k) => (
+                <Select.Option key={k} value={item.did}>{item.contact}</Select.Option>
+              ))}
+            </Select.OptGroup>
+          </Select>
+        ) : ''}
         <div style={styles.content}>
           <div style={{marginBottom: 15}}>
             <span>账户余额 <span>{balance}</span> 元</span>&nbsp;&nbsp;

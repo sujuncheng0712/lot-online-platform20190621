@@ -30,13 +30,28 @@ const formItemLayout = {
   },
 };
 
+// 限制最小提现金额
+function validatePrimeNumber(number) {
+  if (number > 3) {
+    return {
+      validateStatus: 'success',
+      errorMsg: null,
+    };
+  }
+  return {
+    validateStatus: 'error',
+    errorMsg: '提现金额必须大于或等于3元！',
+  };
+}
+
 class Withdrawal extends PureComponent {
   constructor(...args) {
     super(...args);
     this.state = {
       balance: 0,
       bankCode: '',
-      service: 2,
+      service: 0,
+      number:{},
     };
   }
 
@@ -59,7 +74,7 @@ class Withdrawal extends PureComponent {
   render() {
     const {form, submitting} = this.props;
     const {getFieldDecorator, validateFieldsAndScroll, getFieldsError} = form;
-    const {balance, bankCode, service} = this.state;
+    const {balance, bankCode, service, number} = this.state;
 
     // 请求服务器
     const validate = () => {
@@ -106,7 +121,7 @@ class Withdrawal extends PureComponent {
         }
         return (
           <li key={key} className={styles.errorListItem} onClick={() => scrollToField(key)}>
-            <Icon type="cross-circle-o" className={styles.errorIcon}/>
+            <Icon type="cross-circle-o" className={styles.errorIcon} />
             <div className={styles.errorMessage}>{errors[key][0]}</div>
             <div className={styles.errorField}>{fieldLabels[key]}</div>
           </li>
@@ -122,7 +137,7 @@ class Withdrawal extends PureComponent {
             trigger="click"
             getPopupContainer={trigger => trigger.parentNode}
           >
-            <Icon type="exclamation-circle"/>
+            <Icon type="exclamation-circle" />
           </Popover>
           {errorCount}
         </span>
@@ -166,9 +181,7 @@ class Withdrawal extends PureComponent {
             </Form.Item>
             <Form.Item label={fieldLabels.account} {...formItemLayout} >
               {getFieldDecorator('account', {
-                rules: [
-                  {required: true, message: '银行账号必须填写'},
-                ],
+                rules: [{required: true, message: '银行账号必须填写'}],
               })(
                 <Input
                   type="text"
@@ -178,9 +191,7 @@ class Withdrawal extends PureComponent {
             </Form.Item>
             <Form.Item label={fieldLabels.name} {...formItemLayout} >
               {getFieldDecorator('name', {
-                rules: [
-                  {required: true, message: '开户人姓名必须填写'},
-                ],
+                rules: [{required: true, message: '开户人姓名必须填写'}],
               })(
                 <Input
                   type="text"
@@ -190,9 +201,7 @@ class Withdrawal extends PureComponent {
             </Form.Item>
             <Form.Item label={fieldLabels.mobile} {...formItemLayout} >
               {getFieldDecorator('mobile', {
-                rules: [
-                  {required: true, message: '手机号必须填写'},
-                ],
+                rules: [{required: true, message: '手机号必须填写'}],
               })(
                 <Input
                   type="text"
@@ -203,19 +212,22 @@ class Withdrawal extends PureComponent {
             <Form.Item
               label={fieldLabels.amount}
               {...formItemLayout}
-              extra={`手续费${service}元（费率0.1%，最低2元）`}
+              validateStatus={number.validateStatus}
+              help={number.errorMsg || `手续费${service}元（费率0.1%，最低2元）`}
             >
               {getFieldDecorator('amount', {
-                rules: [
-                  {required: true, message: '提现金额必须填写'},
-                  {validator: this.checkPassword},
-                ],
+                rules: [{required: true, message: '提现金额必须填写'}],
               })(
                 <Input
                   type="number"
                   placeholder="请输入提现的金额"
+                  addonAfter="元"
+                  style={{width:260}}
                   onChange={(e) => {
-                    this.setState({service: (Math.round(e.target.value * 0.1) / 100) <= 2 ? 2 : Math.round(e.target.value * 0.1) / 100});
+                    this.setState({
+                      number: {...validatePrimeNumber(e.target.value)},
+                      service: ((Math.round(e.target.value * 0.1) / 100) <= 2 ? 2 : Math.round(e.target.value * 0.1) / 100).toFixed(2),
+                    });
                   }}
                 />
               )}

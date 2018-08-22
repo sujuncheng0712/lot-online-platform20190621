@@ -18,7 +18,6 @@ class CenterProfile extends PureComponent {
 
   componentDidMount() {
     this.getAgents();
-    this.getDeal();
   }
 
   // 获取代理商列表
