@@ -44,10 +44,6 @@ const menuData = [
         name: '我的激活码',
         path: 'code-list',
       },
-      // {
-      //   name: '退码列表',
-      //   path: 'refunds-list',
-      // },
     ],
   },
   {
@@ -66,7 +62,6 @@ const menuData = [
       {
         name: '结算中心',
         path: 'clearing-list',
-        // authority: ['admin', 'vendors'],
       },
     ],
   },
@@ -74,7 +69,6 @@ const menuData = [
     name: '我的钱包',
     icon: 'red-envelope',
     path: 'wallet',
-    // authority: ['admin', 'vendors'],
     children: [
       {
         name: '钱包账户',
@@ -113,6 +107,11 @@ const menuData = [
         name: '经销商列表',
         path: 'dealers-list',
         authority: ['admin', 'vendors', 'agents'],
+      },
+      {
+        name: '收益分配',
+        path: 'distribution',
+        authority: ['admin', 'vendors'],
       },
     ],
   },

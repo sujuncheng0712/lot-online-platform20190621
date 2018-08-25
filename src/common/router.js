@@ -144,6 +144,11 @@ export const getRouterData = app => {
       component: dynamicWrapper(app, [], () => import('../routes/Vendors/DealAdd')),
       authority: ['admin', 'vendors'],
     },
+    // 新增签约信息
+    '/vendors/distribution': {
+      component: dynamicWrapper(app, [], () => import('../routes/Vendors/Distribution')),
+      authority: ['admin', 'vendors'],
+    },
     // 团购订单列表
     '/group/group-orders-list': {
       component: dynamicWrapper(app, [], () => import('../routes/Group/GroupOrdersList')),
