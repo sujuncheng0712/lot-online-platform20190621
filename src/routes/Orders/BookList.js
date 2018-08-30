@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign,no-plusplus */
 import React, {PureComponent} from 'react';
-import {Input, Button, Icon, message, List, Popconfirm, Popover, Divider, Select} from 'antd';
+import {Input, Button, Icon, message, List, Popconfirm, Popover, Divider} from 'antd';
 import Ellipsis from 'ant-design-pro/lib/Ellipsis';
 import 'ant-design-pro/dist/ant-design-pro.css';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
@@ -67,10 +67,12 @@ class OrdersList extends PureComponent {
   }
 
   // 获取订单列表
-  getOrders(type = '', uuid = '') {
+  getOrders() {
     const authData = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
     let getOrders = `${url}/orders`;
-    getOrders += authData.type === 'vendors' ? type === 'agents' ? `?aid=${uuid}` : `?did=${uuid}` : authData.type === 'agents' ? `?aid=${authData.uuid}` : `?did=${authData.uuid}`;
+    // getOrders += `?limit=${10}`;
+    // getOrders += `&offset=${0}`;
+    getOrders += authData.type === 'vendors' ? '' : authData.type === 'agents' ? `?aid=${authData.uuid}` : `?did=${authData.uuid}`;
 
     fetch(getOrders).then((res) => {
       if (res.ok) {
@@ -79,7 +81,7 @@ class OrdersList extends PureComponent {
             const lists = [];
             let k = 1;
             info.data.forEach((val) => {
-              if (val.type !== 3 && val.state >= 4 && val.state !== 10) {
+              if (val.type === 1 && val.state === 3 && val.message === 'book') {
                 val.id = k;
                 lists.push(val);
                 k++;
@@ -133,32 +135,14 @@ class OrdersList extends PureComponent {
           });
         }
       });
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() && val.state === 4 && val.type === 1) nowadays.push(val);
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() - 1 && val.state === 4 && val.type === 1) yesterday.push(val);
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && val.state === 4 && val.type === 1) thisMonth.push(val);
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() - 1 && val.state === 4 && val.type === 1) lastMonth.push(val);
+      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() && val.type === 1) nowadays.push(val);
+      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() - 1 && val.type === 1) yesterday.push(val);
+      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && val.type === 1) thisMonth.push(val);
+      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() - 1 && val.type === 1) lastMonth.push(val);
     });
 
     return (
-      <PageHeaderLayout title="产品订单列表">
-        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
-          <Select
-            defaultValue="请选择"
-            style={{width: 200, marginBottom: 15}}
-            onChange={(value) => this.getOrders(value.split(',')[0], value.split(',')[1])}
-          >
-            <Select.OptGroup label="代理商">
-              {agentsLists.map((item) => (
-                <Select.Option value={`agents,${item.aid}`}>{item.contact}</Select.Option>
-              ))}
-            </Select.OptGroup>
-            <Select.OptGroup label="经销商">
-              {dealersLists.map((item) => (
-                <Select.Option value={`dealers,${item.did}`}>{item.contact}</Select.Option>
-              ))}
-            </Select.OptGroup>
-          </Select>
-        ) : ''}
+      <PageHeaderLayout title="订单列表">
         <div style={styles.count}>
           <div style={styles.countRow}>
             <div>今天订单数</div>

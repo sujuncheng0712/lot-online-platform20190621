@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign,no-plusplus,no-script-url,no-undef */
 import React, {PureComponent} from 'react';
-import {Table, Badge, Divider, Input, Button, Icon, message, Popconfirm, Menu, Dropdown, Popover} from 'antd';
+import {Table, Badge, Divider, Input, Button, Icon, message, Popconfirm, Menu, Dropdown, Popover, Select} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
@@ -67,12 +67,12 @@ class EquipmentsList extends PureComponent {
   }
 
   // 获取设备列表
-  getEquipmentsList() {
+  getEquipmentsList(type = '', uuid = '') {
 
     const authData = JSON.parse(sessionStorage.getItem('dochen-auth'));
 
     let equipmentsListUrl = `${url}/equipments`;
-    equipmentsListUrl += authData.type === 'vendors' ? '' : authData.type === 'agents' ? `?aid=${authData.uuid}` : `?did=${authData.uuid}`;
+    equipmentsListUrl += authData.type === 'vendors' ? type === 'agents' ? `?aid=${uuid}` : `?did=${uuid}` : authData.type === 'agents' ? `?aid=${authData.uuid}` : `?did=${authData.uuid}`;
 
     fetch(equipmentsListUrl).then((res) => {
       if (res.ok) {
@@ -112,24 +112,19 @@ class EquipmentsList extends PureComponent {
     let k = 1;
     lists.forEach((val) => {
       userLists.forEach((user) => {
-        if (val.uid === user.uid) {
-          val.mobile = user.mobile;
+        if (val.uid === user.uid) val.mobile = user.mobile;
+      });
 
-          dealersLists.forEach((dealers) => {
-            if (user.rid === dealers.mobile) {
-              val.contact = dealers.contact;
-              agentsLists.forEach((agents) => {
-                if (dealers.superior === agents.aid) val.agents = agents.contact;
-              });
-            }
-          });
+      dealersLists.forEach((dealers) => {
+        if (val.relation.did === dealers.did) val.contact = dealers.contact;
+      });
 
-          agentsLists.forEach((agents) => {
-            if (user.rid === agents.mobile) {
-              val.contact = agents.contact;
-              val.agents = agents.contact;
-            }
-          });
+      agentsLists.forEach((agents) => {
+        if (val.relation.aid === agents.aid) {
+          val.agents = agents.contact;
+          if (!val.relation.did) {
+            val.contact = agents.contact;
+          }
         }
       });
 
@@ -312,6 +307,24 @@ class EquipmentsList extends PureComponent {
 
     return (
       <PageHeaderLayout title="已激活设备列表">
+        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
+          <Select
+            defaultValue="请选择"
+            style={{width: 200, marginBottom: 15}}
+            onChange={(value) => this.getEquipmentsList(value.split(',')[0], value.split(',')[1])}
+          >
+            <Select.OptGroup label="代理商">
+              {agentsLists.map((item) => (
+                <Select.Option value={`agents,${item.aid}`}>{item.contact}</Select.Option>
+              ))}
+            </Select.OptGroup>
+            <Select.OptGroup label="经销商">
+              {dealersLists.map((item) => (
+                <Select.Option value={`dealers,${item.did}`}>{item.contact}</Select.Option>
+              ))}
+            </Select.OptGroup>
+          </Select>
+        ) : ''}
         <div style={{padding: 20, backgroundColor: '#fff'}}>
           <div style={{marginTop: 15, textAlign: 'left'}}>
             <Badge status="success" text={`已激活设备共${lists.length}台`} />
@@ -342,17 +355,6 @@ class EquipmentsList extends PureComponent {
                 placeholder="请输入需要查找的设备ID"
                 onChange={(e) => {
                   this.setState({deviceId: e.target.value});
-                }}
-              />
-            </div>
-          </div>
-          <div style={styles.searchRow}>
-            <div style={styles.searchTit}>代理商：</div>
-            <div style={{width: 200}}>
-              <Input
-                placeholder="请输入需要查找的代理商名字"
-                onChange={(e) => {
-                  this.setState({agentsName: e.target.value});
                 }}
               />
             </div>

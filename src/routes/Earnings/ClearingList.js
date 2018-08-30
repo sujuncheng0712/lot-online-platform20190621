@@ -216,13 +216,13 @@ class ClearingList extends PureComponent {
             }}
           >
             <Select.OptGroup label="代理商">
-              {agentsLists.map((item, k) => (
-                <Select.Option key={k} value={`agents,${item.aid}`}>{item.contact}</Select.Option>
+              {agentsLists.map((item) => (
+                <Select.Option value={`agents,${item.aid}`}>{item.contact}</Select.Option>
               ))}
             </Select.OptGroup>
             <Select.OptGroup label="经销商">
-              {dealersLists.map((item, k) => (
-                <Select.Option key={k} value={`dealers,${item.did}`}>{item.contact}</Select.Option>
+              {dealersLists.map((item) => (
+                <Select.Option value={`dealers,${item.did}`}>{item.contact}</Select.Option>
               ))}
             </Select.OptGroup>
           </Select>

@@ -80,7 +80,7 @@ export const getRouterData = app => {
     '/orders/orders-list': {
       component: dynamicWrapper(app, [], () => import('../routes/Orders/OrdersList')),
     },
-    // 产品订单详情
+    // 订单详情
     '/orders/order-profile': {
       component: dynamicWrapper(app, [], () => import('../routes/Orders/OrderProfile')),
     },
@@ -88,9 +88,9 @@ export const getRouterData = app => {
     '/orders/filters-list': {
       component: dynamicWrapper(app, [], () => import('../routes/Orders/FiltersList')),
     },
-    // 耗材订单详情
-    '/orders/filters-profile': {
-      component: dynamicWrapper(app, [], () => import('../routes/Orders/FilterProfile')),
+    // 预约订单列表
+    '/orders/book-list': {
+      component: dynamicWrapper(app, [], () => import('../routes/Orders/BookList')),
     },
     // 退款列表
     '/orders/refunds-list': {

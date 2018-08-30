@@ -139,13 +139,13 @@ class WalletList extends PureComponent {
             onChange={(value) => this.getWallet(value)}
           >
             <Select.OptGroup label="代理商">
-              {agentsLists.map((item, k) => (
-                <Select.Option key={k} value={item.aid}>{item.contact}</Select.Option>
+              {agentsLists.map((item) => (
+                <Select.Option value={item.aid}>{item.contact}</Select.Option>
               ))}
             </Select.OptGroup>
             <Select.OptGroup label="经销商">
-              {dealersLists.map((item, k) => (
-                <Select.Option key={k} value={item.did}>{item.contact}</Select.Option>
+              {dealersLists.map((item) => (
+                <Select.Option value={item.did}>{item.contact}</Select.Option>
               ))}
             </Select.OptGroup>
           </Select>

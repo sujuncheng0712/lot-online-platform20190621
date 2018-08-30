@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 import React, {PureComponent} from 'react';
-import {Card, Select} from 'antd';
+import {Card, Select, Table, Input, Tag} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
@@ -12,7 +12,6 @@ class Distribution extends PureComponent {
       dealersLists: [],
       agentsLists: [],
       productsLists: [],
-      info: {},
     };
   }
 
@@ -66,82 +65,48 @@ class Distribution extends PureComponent {
   }
 
   render() {
-    const {info, dealersLists, agentsLists, productsLists} = this.state;
+    const {dealersLists, agentsLists, productsLists} = this.state;
 
-    const html = (item, key) => (
-      <div key={key} style={styles.item}>
-        <img
-          src={item.intro_image}
-          alt={item.title}
-          style={styles.itemImg}
-        />
-        <div style={styles.itemTitle}>{item.title}</div>
-        <div style={styles.itemPrice}>¥{item.price}</div>
-        <div style={styles.itemDistribution}>{item.distribution}</div>
-      </div>
-    );
-
-    const lists01 = [];
-    const lists02 = [];
-    const lists03 = [];
-    productsLists.forEach((val, key) => {
-      if (val.type === 1 || val.type === 4) lists01.push(html(val, key));
-      if (val.type === 2) lists02.push(html(val, key));
-      if (val.type === 3) lists03.push(html(val, key));
-    });
-
-    console.log(lists01);
+    const columns = [
+      {title: '缩略图', dataIndex: 'prev_image', render: (val) => (<img src={val} alt="" width={60} />)},
+      {title: '标题', dataIndex: 'title'},
+      {title: '描述', dataIndex: 'desc'},
+      {title: '价格', dataIndex: 'price', render: (val) => `¥${val}.00`},
+      {title: '标签', dataIndex: 'tags', render: (val) => val ? (<Tag color="blue">{val}</Tag>) : ''},
+      {
+        title: '补贴()',
+        render: () => (
+          <Input placeholder="Basic usage" />
+        ),
+      },
+    ];
 
     return (
       <PageHeaderLayout title="收益分配">
-        <Card title="商家" bordered={false}>
-          <Select
-            defaultValue="请选择"
-            style={{width: '100%'}}
-            onChange={(value) => {
-              console.log(`selected ${value}`);
-            }}
-          >
-            <Select.OptGroup label="代理商">
-              {agentsLists.map((item, key) => (
-                <Select.Option key={key} value={item.aid}>{item.contact}</Select.Option>
-              ))}
-            </Select.OptGroup>
-            <Select.OptGroup label="经销商">
-              {dealersLists.map((item, key) => (
-                <Select.Option key={key} value={item.did}>{item.contact}</Select.Option>
-              ))}
-            </Select.OptGroup>
-          </Select>
+        <Select
+          defaultValue="请选择"
+          style={{width: 200, marginBottom: 15}}
+          onChange={(value) => {
+            console.log(`selected ${value}`);
+          }}
+        >
+          <Select.OptGroup label="代理商">
+            {agentsLists.map((item) => (
+              <Select.Option value={item.aid}>{item.contact}</Select.Option>
+            ))}
+          </Select.OptGroup>
+          <Select.OptGroup label="经销商">
+            {dealersLists.map((item) => (
+              <Select.Option value={item.did}>{item.contact}</Select.Option>
+            ))}
+          </Select.OptGroup>
+        </Select>
+        <Card title="产品 补贴/返点" bordered={false}>
+          <Table columns={columns} dataSource={productsLists} />
         </Card>
-        <br />
-        <Card title="产品" bordered={false}>{lists01}</Card>
-        <br />
-        <Card title="耗材" bordered={false}>{lists02}</Card>
-        <br />
-        <Card title="激活码" bordered={false}>{lists03}</Card>
       </PageHeaderLayout>
     );
   }
 }
-
-const styles = {
-  item: {
-    height: 60,
-    display: 'flex',
-    alignItems: 'center',
-  },
-  itemImg: {
-    width: 30,
-    height: 30,
-    marginRight: 15,
-  },
-  itemTitle: {
-    width: 200,
-  },
-  itemPrice: {
-    width: 100,
-  },
-};
 
 export default Distribution;
