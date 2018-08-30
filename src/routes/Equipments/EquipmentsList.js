@@ -314,12 +314,12 @@ class EquipmentsList extends PureComponent {
             onChange={(value) => this.getEquipmentsList(value.split(',')[0], value.split(',')[1])}
           >
             <Select.OptGroup label="代理商">
-              {agentsLists.map((item) => (
+              {agentsLists.forEach((item) => (
                 <Select.Option value={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
               ))}
             </Select.OptGroup>
             <Select.OptGroup label="经销商">
-              {dealersLists.map((item) => (
+              {dealersLists.forEach((item) => (
                 <Select.Option value={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
               ))}
             </Select.OptGroup>
