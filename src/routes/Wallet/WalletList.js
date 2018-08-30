@@ -140,12 +140,12 @@ class WalletList extends PureComponent {
           >
             <Select.OptGroup label="代理商">
               {agentsLists.map((item) => (
-                <Select.Option value={item.aid}>{item.contact}</Select.Option>
+                <Select.Option value={item.aid}>{item.contact}({item.mobile})</Select.Option>
               ))}
             </Select.OptGroup>
             <Select.OptGroup label="经销商">
               {dealersLists.map((item) => (
-                <Select.Option value={item.did}>{item.contact}</Select.Option>
+                <Select.Option value={item.did}>{item.contact}({item.mobile})</Select.Option>
               ))}
             </Select.OptGroup>
           </Select>
