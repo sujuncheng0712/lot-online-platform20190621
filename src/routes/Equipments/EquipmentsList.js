@@ -80,11 +80,12 @@ class EquipmentsList extends PureComponent {
           if (info.status) {
             const lists = [];
             info.data.forEach((val) => {
-              if (val.activation_code) {
-                lists.push(val);
-              }
+              if (val.activation_code) lists.push(val);
             });
             this.setState({lists, loading: false});
+          } else {
+            this.setState({lists: [], loading: false});
+            message.warning(`提示：[${info.message}]`);
           }
         });
       }
@@ -311,21 +312,10 @@ class EquipmentsList extends PureComponent {
 
     return (
       <PageHeaderLayout title="已激活设备列表">
-        <div style={{padding: 20, backgroundColor: '#fff'}}>
-          <div style={{marginTop: 15, textAlign: 'left'}}>
-            <Badge status="success" text={`已激活设备共${lists.length}台`} />
-            <Divider type="vertical" />
-            <Badge status="success" text={`在线设备共${onLine.length}台`} />
-            <Divider type="vertical" />
-            <Badge status="processing" text={`设备在线率${Math.ceil(onLine.length / lists.length * 100) || 0}%`} />
-            <Divider type="vertical" />
-            <Badge status="error" text={`未升级设备${notUpgraded.length}台`} />
-          </div>
-        </div>
         <div style={styles.search}>
           <div style={styles.searchRow}>
             <div style={styles.searchTit}>激活码/订单号：</div>
-            <div style={{width: 200}}>
+            <div style={{width: 300}}>
               <Input
                 placeholder="请输入激活码或订单编号"
                 onChange={(e) => {
@@ -336,7 +326,7 @@ class EquipmentsList extends PureComponent {
           </div>
           <div style={styles.searchRow}>
             <div style={styles.searchTit}>设备ID：</div>
-            <div style={{width: 200}}>
+            <div style={{width: 300}}>
               <Input
                 placeholder="请输入需要查找的设备ID"
                 onChange={(e) => {
@@ -346,28 +336,56 @@ class EquipmentsList extends PureComponent {
             </div>
           </div>
           <Button type="primary" onClick={this.searchList.bind(this)}><Icon type="search" /> 查找</Button>
-          <div style={styles.searchRow}>
-            <div style={styles.searchTit}>代理商：</div>
-            <div style={{width: 200}}>
-              {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
+        </div>
+        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
+          <div style={styles.search}>
+            <div style={styles.searchRow}>
+              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;代理商：</div>
+              <div style={{width: 300}}>
                 <Select
                   defaultValue="请选择"
-                  style={{width: 200}}
-                  onChange={(value) => this.getEquipmentsList(value.split(',')[0], value.split(',')[1])}
+                  style={{width: 300}}
+                  onChange={(value) => {
+                    this.getEquipmentsList(value.split(',')[0], value.split(',')[1]);
+                  }}
                 >
                   <Select.OptGroup label="代理商">
                     {agentsLists.map((item) => (
                       <Select.Option value={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
                     ))}
                   </Select.OptGroup>
+                </Select>
+              </div>
+            </div>
+            <div style={styles.searchRow}>
+              <div style={styles.searchTit}>经销商：</div>
+              <div style={{width: 300}}>
+                <Select
+                  defaultValue="请选择"
+                  style={{width: 300}}
+                  onChange={(value) => {
+                    this.getEquipmentsList(value.split(',')[0], value.split(',')[1]);
+                  }}
+                >
                   <Select.OptGroup label="经销商">
                     {dealersLists.map((item) => (
                       <Select.Option value={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
                     ))}
                   </Select.OptGroup>
                 </Select>
-              ) : ''}
+              </div>
             </div>
+          </div>
+        ) : ''}
+        <div style={{padding: 20, backgroundColor: '#fff'}}>
+          <div style={{marginTop: 15, textAlign: 'left'}}>
+            <Badge status="success" text={`已激活设备共${lists.length}台`} />
+            <Divider type="vertical" />
+            <Badge status="success" text={`在线设备共${onLine.length}台`} />
+            <Divider type="vertical" />
+            <Badge status="processing" text={`设备在线率${Math.ceil(onLine.length / lists.length * 100) || 0}%`} />
+            <Divider type="vertical" />
+            <Badge status="error" text={`未升级设备${notUpgraded.length}台`} />
           </div>
         </div>
         <div style={{padding: 20, backgroundColor: '#fff'}}>
@@ -386,9 +404,8 @@ class EquipmentsList extends PureComponent {
 const styles = {
   search: {
     width: '100%',
-    padding: 20,
+    padding: 10,
     backgroundColor: '#fff',
-    marginBottom: 15,
     display: 'flex',
   },
   searchRow: {
