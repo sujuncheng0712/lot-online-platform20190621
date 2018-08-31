@@ -1,9 +1,10 @@
 /* eslint-disable no-param-reassign,no-plusplus */
 import React, {PureComponent} from 'react';
-import {Button, Table, Icon} from 'antd';
+import {Button, Table, Icon, Select, message} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
+const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
 
 const columns = [
   {width: 80, title: '序号', dataIndex: 'id', align: 'center'},
@@ -12,7 +13,7 @@ const columns = [
   {width: 100, title: '联系人', dataIndex: 'contact', align: 'center'},
   {width: 120, title: '联系人电话', dataIndex: 'mobile', align: 'center'},
   {title: '所属区域', dataIndex: 'area', align: 'center'},
-  {width: 110, title: '所属代理商', dataIndex: 'superior', align: 'center'},
+  {width: 160, title: '所属代理商', dataIndex: 'superior', align: 'center'},
   {
     title: '操作',
     dataIndex: 'did',
@@ -36,7 +37,7 @@ class DealerList extends PureComponent {
     this.state = {
       lists: [],
       loading: true,
-      agentsList: [],
+      agentsLists: [],
     };
   }
 
@@ -51,41 +52,39 @@ class DealerList extends PureComponent {
     fetch(agentsListUrl).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) {
-            let k = 1;
-            info.data.forEach((val) => {
-              val.id = k;
-              k++;
-            });
-            this.setState({agentsList: info.data});
-          }
+          if (info.status) this.setState({agentsLists: info.data});
         });
       }
     });
   }
 
   // 获取经销商列表
-  getDealersList() {
-    const authData = JSON.parse(sessionStorage.getItem('dochen-auth'));
-    const authHref = authData.type === 'vendors' ? '' : authData.type === 'agents' ? `?aid=${authData.uuid}` : `?did=${authData.uuid}`;
+  getDealersList(type = '', uuid = '') {
+    let getDealersList = `${url}/dealers`;
+    let _type;
+    switch (type) {
+      case 'agents':
+        _type = `?aid=${uuid}`;
+        break;
+      case 'dealers':
+        _type = `?did=${uuid}`;
+        break;
+      default:
+        _type = '';
+    }
+    getDealersList += auth.type === 'vendors' ? _type : auth.type === 'agents' ? `?aid=${auth.uuid}` : `?did=${auth.uuid}`;
 
-    const dealersListUrl = `${url}/dealers${authHref}`;
-    fetch(dealersListUrl).then((res) => {
+    fetch(getDealersList).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
           if (info.status) {
-            let k = 1;
-            info.data.forEach((val) => {
-              this.state.agentsList.forEach((value) => {
-                if (val.superior === value.aid) {
-                  val.superior = value.contact;
-                }
-              });
-
-              val.id = k;
-              k++;
+            info.data.forEach((val,k) => {
+              val.id = k + 1;
             });
             this.setState({lists: info.data, loading: false});
+          } else {
+            this.setState({agentsLists: []});
+            message.warning(`提示：[${info.message}]`);
           }
         });
       }
@@ -93,10 +92,37 @@ class DealerList extends PureComponent {
   }
 
   render() {
-    const {lists, loading} = this.state;
+    const {lists, loading, agentsLists} = this.state;
+
+    lists.forEach((val) => {
+      agentsLists.forEach((Aval) => {
+        if (val.superior === Aval.aid) val.superior = Aval.contact;
+      });
+      if (!val.superior) val.superior = 'DGK 智能平台';
+    });
 
     return (
       <PageHeaderLayout title="经销商列表">
+        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
+          <div style={styles.search}>
+            <div style={styles.searchRow}>
+              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;代理商：</div>
+              <div style={{width: 300}}>
+                <Select
+                  defaultValue="请选择"
+                  style={{width: 300}}
+                  onChange={(value) => this.getDealersList(value.split(',')[0], value.split(',')[1])}
+                >
+                  <Select.OptGroup label="代理商">
+                    {agentsLists.map((item) => (
+                      <Select.Option value={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                </Select>
+              </div>
+            </div>
+          </div>
+        ) : ''}
         <div style={{padding: 20, backgroundColor: '#fff'}}>
           <Button
             type="primary"
@@ -119,4 +145,22 @@ class DealerList extends PureComponent {
     );
   }
 }
+
+const styles={
+  search: {
+    width: '100%',
+    padding: '10px 20px',
+    backgroundColor: '#fff',
+    display: 'flex',
+  },
+  searchRow: {
+    marginRight: 20,
+    display: 'flex',
+    alignItems: 'center',
+  },
+  searchTit: {
+    width: 80,
+  },
+};
+
 export default DealerList;

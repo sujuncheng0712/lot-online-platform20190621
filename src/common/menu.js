@@ -141,6 +141,10 @@ const menuData = [
         path: 'products-list',
       },
       {
+        name: '团购激活码',
+        path: 'group-list',
+      },
+      {
         name: '发布商品',
         path: 'product-add',
         authority: ['admin', 'vendors'],

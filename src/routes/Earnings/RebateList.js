@@ -1,9 +1,10 @@
 /* eslint-disable no-param-reassign,no-plusplus,no-const-assign,radix */
 import React, {PureComponent} from 'react';
-import {Input, Button, Icon, message, List, Divider} from 'antd';
+import {Input, Button, Icon, message, List, Divider, Select} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
+const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
 const stateBadge = ['','','','','#666','','','','','','#f5222d'];
 const stateMap = ['','','','待付款','已付款','','','','','','已退款'];
 
@@ -17,6 +18,7 @@ class SubsidyList extends PureComponent {
       lists: [],
       loading: true,
       orderId: '',
+      agentsName: '',
     };
   }
 
@@ -28,7 +30,7 @@ class SubsidyList extends PureComponent {
   }
 
   // 获取经销商列表
-  getDealers(){
+  getDealers() {
     const getDealers = `${url}/dealers`;
     fetch(getDealers).then((res) => {
       if (res.ok) {
@@ -40,7 +42,7 @@ class SubsidyList extends PureComponent {
   }
 
   // 获取代理商列表
-  getAgents(){
+  getAgents() {
     const getAgents = `${url}/agents`;
     fetch(getAgents).then((res) => {
       if (res.ok) {
@@ -52,7 +54,7 @@ class SubsidyList extends PureComponent {
   }
 
   // 获取订单列表
-  getOrders(){
+  getOrders() {
     const getOrders = `${url}/orders`;
     fetch(getOrders).then((res) => {
       if (res.ok) {
@@ -64,27 +66,33 @@ class SubsidyList extends PureComponent {
   }
 
   // 获取收益列表
-  getEarnings(){
-    const authData = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
+  getEarnings(type = '', uuid = '') {
     let getEarnings = `${url}/earnings`;
-    // getOrders += `?limit=${10}`;
-    // getOrders += `&offset=${0}`;
-    getEarnings += authData.type === 'vendors' ? '' : authData.type === 'agents' ? `?aid=${authData.uuid}` : `?did=${authData.uuid}`;
+    let _type;
+    switch (type) {
+      case 'agents':
+        _type = `?aid=${uuid}`;
+        break;
+      case 'dealers':
+        _type = `?did=${uuid}`;
+        break;
+      default:
+        _type = '';
+    }
+    getEarnings += auth.type === 'vendors' ? _type : auth.type === 'agents' ? `?aid=${auth.uuid}` : `?did=${auth.uuid}`;
 
     fetch(getEarnings).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
           if (info.status) {
             const data = [];
-            let k = 1;
             info.data.forEach((val) => {
-              if (val.type === 2) {
-                val.id = k;
-                data.push(val);
-                k++;
-              }
+              if (val.type === 2) data.push(val);
             });
             this.setState({lists: data, loading: false});
+          }else {
+            this.setState({lists: [], loading: false});
+            message.warning(`提示：[${info.message}]`);
           }
         });
       }
@@ -93,10 +101,10 @@ class SubsidyList extends PureComponent {
 
   // 搜索列表
   searchList() {
-    const {lists, orderId} = this.state;
+    const {lists, orderId, agentsName} = this.state;
     const arr = [];
     lists.forEach((val) => {
-      if (val.oid === orderId) {
+      if (val.oid === orderId || val.agents === agentsName) {
         arr.push(val);
       }
     });
@@ -114,12 +122,17 @@ class SubsidyList extends PureComponent {
     let thisMonth = 0;
     let lastMonth = 0;
 
+    let k = 1;
     lists.forEach((val) => {
       ordersLists.forEach((value) => {
         if (val.oid === value.oid) {
           val.consignee = value.consignee;
           val.pay_amount = value.pay_amount;
-          val.state = value.state;
+          if (val.agent_earning > 0 && value.state === 10) {
+            val.state = 4;
+          } else {
+            val.state = value.state;
+          }
         }
       });
       dealersLists.forEach((value) => {
@@ -177,32 +190,17 @@ class SubsidyList extends PureComponent {
           lastMonth += parseInt(val.dealer_earning);
         }
       }
+
+      val.id = k;
+      k++;
     });
 
     return (
       <PageHeaderLayout title="收益列表">
-        <div style={styles.count}>
-          <div style={styles.countRow}>
-            <div>今天收益</div>
-            <div>{nowadays}元</div>
-          </div>
-          <div style={styles.countRow}>
-            <div>昨天收益</div>
-            <div>{yesterday}元</div>
-          </div>
-          <div style={styles.countRow}>
-            <div>本月收益</div>
-            <div>{thisMonth}元</div>
-          </div>
-          <div style={styles.countRow}>
-            <div>上月收益</div>
-            <div>{lastMonth}元</div>
-          </div>
-        </div>
         <div style={styles.search}>
           <div style={styles.searchRow}>
             <div style={styles.searchTit}>订单编号：</div>
-            <div style={{width: 200}}>
+            <div style={{width: 300}}>
               <Input
                 placeholder="请输入需要查找的订单编号"
                 onChange={(e) => {
@@ -212,6 +210,48 @@ class SubsidyList extends PureComponent {
             </div>
           </div>
           <Button type="primary" onClick={this.searchList.bind(this)}><Icon type="search" /> 查找收益</Button>
+        </div>
+        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
+          <div style={styles.search}>
+            <div style={styles.searchRow}>
+              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;代理商：</div>
+              <div style={{width: 300}}>
+                <Select
+                  defaultValue="请选择"
+                  style={{width: 300}}
+                  onChange={(value) => this.getEarnings(value.split(',')[0], value.split(',')[1])}
+                >
+                  <Select.OptGroup label="代理商">
+                    {agentsLists.map((item) => (
+                      <Select.Option value={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                </Select>
+              </div>
+            </div>
+            <div style={styles.searchRow}>
+              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;经销商：</div>
+              <div style={{width: 300}}>
+                <Select
+                  defaultValue="请选择"
+                  style={{width: 300}}
+                  onChange={(value) => this.getEarnings(value.split(',')[0], value.split(',')[1])}
+                >
+                  <Select.OptGroup label="经销商">
+                    {dealersLists.map((item) => (
+                      <Select.Option value={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                </Select>
+              </div>
+            </div>
+          </div>
+        ) : ''}
+        <div style={styles.count}>
+          <div style={styles.countRow}><div>今天收益</div><div>{nowadays}元</div></div>
+          <div style={styles.countRow}><div>昨天收益</div><div>{yesterday}元</div></div>
+          <div style={styles.countRow}><div>本月收益</div><div>{thisMonth}元</div></div>
+          <div style={styles.countRow}><div>上月收益</div><div>{lastMonth}元</div></div>
         </div>
         <div style={{padding: 20, backgroundColor: '#fff'}}>
           <div style={styles.title}>
@@ -282,9 +322,6 @@ class SubsidyList extends PureComponent {
               )
             }
             pagination={{
-              onChange: (page) => {
-                console.log(page);
-              },
               pageSize: 10,
             }}
           />
@@ -302,8 +339,7 @@ const styles = {
   count: {
     width: '100%',
     padding: 20,
-    backgroundColor: '#fff',
-    marginBottom: 15,
+    backgroundColor: '#fafafa',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -317,9 +353,8 @@ const styles = {
 
   search: {
     width: '100%',
-    padding: 20,
+    padding: '10px 20px',
     backgroundColor: '#fff',
-    marginBottom: 15,
     display: 'flex',
   },
   searchRow: {

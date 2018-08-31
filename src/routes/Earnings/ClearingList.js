@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign,radix */
 import React, {PureComponent} from 'react';
-import {Tabs, Table, Card, Select} from 'antd';
+import {Tabs, Table, Card, Select, message} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
@@ -19,7 +19,7 @@ const columns = [
     align: 'center',
   },
 ];
-const typeMap = ['', '用户订单', '', '团购订单'];
+const typeMap = ['', '产品', '耗材', '团购', '套餐'];
 const columns2 = [
   {title: '日期', dataIndex: 'created_at'},
   {title: '订单编号', dataIndex: 'oid'},
@@ -81,38 +81,49 @@ class ClearingList extends PureComponent {
   }
 
   // 获取结算列表
-  getSummary(id) {
+  getSummary(uuid = '') {
     let getSummary = `${url}/earnings`;
-    getSummary += `/${id || auth.uuid}`;
+    getSummary += `/${uuid || auth.uuid}`;
     getSummary += `/summary`;
     fetch(getSummary).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) this.setState({lists: info.data});
+          if (info.status) {
+            this.setState({lists: info.data});
+          }else {
+            this.setState({lists: []});
+            message.warning(`提示：[${info.message}]`);
+          }
         });
       }
     });
   }
 
   // 获取收益列表
-  getEarnings(type, id) {
+  getEarnings(type = '', uuid = '') {
     let getEarnings = `${url}/earnings`;
-    if (auth.type === 'vendors') {
-      if (type === 'agents') {
-        getEarnings += `?aid=${id}`;
-      } else if (type === 'dealers') {
-        getEarnings += `?did=${id}`;
-      }
-    } else if (auth.type === 'agents') {
-      getEarnings += `?aid=${auth.uuid}`;
-    } else if (auth.type === 'dealers') {
-      getEarnings += `?did=${auth.uuid}`;
+    let _type;
+    switch (type) {
+      case 'agents':
+        _type = `?aid=${uuid}`;
+        break;
+      case 'dealers':
+        _type = `?did=${uuid}`;
+        break;
+      default:
+        _type = '';
     }
+    getEarnings += auth.type === 'vendors' ? _type : auth.type === 'agents' ? `?aid=${auth.uuid}` : `?did=${auth.uuid}`;
 
     fetch(getEarnings).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) this.setState({earningsLists: info.data});
+          if (info.status) {
+            this.setState({earningsLists: info.data});
+          } else {
+            this.setState({earningsLists: []});
+            message.warning(`提示：[${info.message}]`);
+          }
         });
       }
     });
@@ -161,6 +172,12 @@ class ClearingList extends PureComponent {
       userLists.forEach((Uval) => {
         if (val.uid === Uval.uid) val.mobile = Uval.mobile;
       });
+      dealersLists.forEach((Dval) => {
+        if (val.uid === Dval.did) val.mobile = Dval.contact;
+      });
+      agentsLists.forEach((Aval) => {
+        if (val.uid === Aval.aid) val.mobile = Aval.contact;
+      });
 
       if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate()) {
         if (localStorage.getItem('antd-pro-authority') === 'vendors') {
@@ -207,35 +224,53 @@ class ClearingList extends PureComponent {
     return (
       <PageHeaderLayout title="结算列表">
         {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
-          <Select
-            defaultValue="请选择"
-            style={{width: 200, marginBottom: 15}}
-            onChange={(value) => {
-              this.getSummary(value.split(',')[1]);
-              this.getEarnings(value.split(',')[0], value.split(',')[1]);
-            }}
-          >
-            <Select.OptGroup label="代理商">
-              {agentsLists.map((item) => (
-                <Select.Option value={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
-              ))}
-            </Select.OptGroup>
-            <Select.OptGroup label="经销商">
-              {dealersLists.map((item) => (
-                <Select.Option value={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
-              ))}
-            </Select.OptGroup>
-          </Select>
-        ) : ''}
-        <Card title={`待结算收益共 ${thisMonth} 元`} bordered={false}>
-          <div style={styles.count}>
-            <div style={styles.countRow}><div>今天</div><div>{nowadays}元</div></div>
-            <div style={styles.countRow}><div>昨天</div><div>{yesterday}元</div></div>
-            <div style={styles.countRow}><div>本月</div><div>{thisMonth}元</div></div>
-            <div style={styles.countRow}><div>上月</div><div>{lastMonth}元</div></div>
+          <div style={styles.search}>
+            <div style={styles.searchRow}>
+              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;代理商：</div>
+              <div style={{width: 300}}>
+                <Select
+                  defaultValue="请选择"
+                  style={{width: 300}}
+                  onChange={(value) => {
+                    this.getSummary(value.split(',')[1])
+                    this.getEarnings(value.split(',')[0], value.split(',')[1])
+                  }}
+                >
+                  <Select.OptGroup label="代理商">
+                    {agentsLists.map((item) => (
+                      <Select.Option value={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                </Select>
+              </div>
+            </div>
+            <div style={styles.searchRow}>
+              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;经销商：</div>
+              <div style={{width: 300}}>
+                <Select
+                  defaultValue="请选择"
+                  style={{width: 300}}
+                  onChange={(value) => {
+                    this.getSummary(value.split(',')[1])
+                    this.getEarnings(value.split(',')[0], value.split(',')[1])
+                  }}
+                >
+                  <Select.OptGroup label="经销商">
+                    {dealersLists.map((item) => (
+                      <Select.Option value={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                </Select>
+              </div>
+            </div>
           </div>
-        </Card>
-        <br />
+        ) : ''}
+        <div style={styles.count}>
+          <div style={styles.countRow}><div>今天收益</div><div>{nowadays}元</div></div>
+          <div style={styles.countRow}><div>昨天收益</div><div>{yesterday}元</div></div>
+          <div style={styles.countRow}><div>本月收益</div><div>{thisMonth}元</div></div>
+          <div style={styles.countRow}><div>上月收益</div><div>{lastMonth}元</div></div>
+        </div>
         <Card bordered={false}>
           <Tabs defaultActiveKey="1">
             <Tabs.TabPane tab="已结算概况" key="1">
@@ -266,6 +301,21 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
+  },
+
+  search: {
+    width: '100%',
+    padding: '10px 20px',
+    backgroundColor: '#fff',
+    display: 'flex',
+  },
+  searchRow: {
+    marginRight: 20,
+    display: 'flex',
+    alignItems: 'center',
+  },
+  searchTit: {
+    width: 80,
   },
 };
 

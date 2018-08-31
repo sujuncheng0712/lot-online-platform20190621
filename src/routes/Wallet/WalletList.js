@@ -1,6 +1,6 @@
 /* eslint-disable prefer-const,no-param-reassign,class-methods-use-this */
 import React, {PureComponent} from 'react';
-import {Button, Divider, Tabs, Table, List, Select} from 'antd';
+import {Button, Divider, Tabs, Table, List, Select, message} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 import banks from '../../models/banks';
 
@@ -51,13 +51,18 @@ class WalletList extends PureComponent {
   }
 
   // 获取余额信息
-  getWallet(id) {
+  getWallet(uuid) {
     let getWallet = `${url}/wallet`;
-    getWallet += `/${id || auth.uuid}`;
+    getWallet += `/${uuid || auth.uuid}`;
     fetch(getWallet).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) this.setState({lists: info.data, balance: info.data[0].balance});
+          if (info.status) {
+            this.setState({lists: info.data, balance: info.data[0].balance});
+          } else {
+            this.setState({lists: [], balance: 0});
+            message.warning(`提示：[${info.message}]`);
+          }
         });
       }
     });
@@ -133,22 +138,44 @@ class WalletList extends PureComponent {
     return (
       <PageHeaderLayout title="钱包账户">
         {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
-          <Select
-            defaultValue="请选择"
-            style={{width: 200, marginBottom: 15}}
-            onChange={(value) => this.getWallet(value)}
-          >
-            <Select.OptGroup label="代理商">
-              {agentsLists.map((item) => (
-                <Select.Option value={item.aid}>{item.contact}({item.mobile})</Select.Option>
-              ))}
-            </Select.OptGroup>
-            <Select.OptGroup label="经销商">
-              {dealersLists.map((item) => (
-                <Select.Option value={item.did}>{item.contact}({item.mobile})</Select.Option>
-              ))}
-            </Select.OptGroup>
-          </Select>
+          <div style={styles.search}>
+            <div style={styles.searchRow}>
+              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;代理商：</div>
+              <div style={{width: 300}}>
+                <Select
+                  defaultValue="请选择"
+                  style={{width: 300}}
+                  onChange={(value) => {
+                    this.getWallet(value.split(',')[1])
+                  }}
+                >
+                  <Select.OptGroup label="代理商">
+                    {agentsLists.map((item) => (
+                      <Select.Option value={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                </Select>
+              </div>
+            </div>
+            <div style={styles.searchRow}>
+              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;经销商：</div>
+              <div style={{width: 300}}>
+                <Select
+                  defaultValue="请选择"
+                  style={{width: 300}}
+                  onChange={(value) => {
+                    this.getWallet(value.split(',')[1])
+                  }}
+                >
+                  <Select.OptGroup label="经销商">
+                    {dealersLists.map((item) => (
+                      <Select.Option value={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                </Select>
+              </div>
+            </div>
+          </div>
         ) : ''}
         <div style={styles.content}>
           <div style={{marginBottom: 15}}>
@@ -177,6 +204,21 @@ const styles = {
     padding: 20,
     backgroundColor: '#fff',
     marginBottom: 15,
+  },
+
+  search: {
+    width: '100%',
+    padding: '10px 20px',
+    backgroundColor: '#fff',
+    display: 'flex',
+  },
+  searchRow: {
+    marginRight: 20,
+    display: 'flex',
+    alignItems: 'center',
+  },
+  searchTit: {
+    width: 80,
   },
   // 提现进度列表
   item: {

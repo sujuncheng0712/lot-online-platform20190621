@@ -40,7 +40,7 @@ class DealerAdd extends PureComponent {
     this.state = {
       options: Ares,
       area: '',
-      superior: '请选择',
+      superior: '',
       ADinfo: {},
       lists: [],
     };
@@ -181,10 +181,8 @@ class DealerAdd extends PureComponent {
             <Form.Item label={fieldLabels.area} {...formItemLayout} >
               {getFieldDecorator('area', {
                 initialValue: area,
-                rules: [{required: true, message: '*'}],
-              })(
-                <Input type="hidden" placeholder="*" />
-              )}
+                rules: [{required: true, message: '所在区域必须选择'}],
+              })(<Input type="hidden" />)}
               <Cascader
                 options={options}
                 value={area.split("/").length > 1 ? area.split("/") : ''}
@@ -197,23 +195,23 @@ class DealerAdd extends PureComponent {
                 placeholder="请选择"
               />
             </Form.Item>
-            <Form.Item label={fieldLabels.superior} {...formItemLayout} >
-              {getFieldDecorator('superior', {
-                initialValue: superior,
-              })(
-                <Input type="hidden" placeholder="*" />
-              )}
-              <Select
-                defaultValue={superior}
-                value={superior}
-                style={{width: '100%'}}
-                onChange={(value) => this.setState({superior: value})}
-              >
-                <Select.Option value="请选择">请选择</Select.Option>
-                <Select.Option value="DGK 智能平台">DGK 智能平台</Select.Option>
-                {aMenu}
-              </Select>
-            </Form.Item>
+            {role !== 'agents' ? (
+              <Form.Item label={fieldLabels.superior} {...formItemLayout} >
+                {getFieldDecorator('superior', {
+                  initialValue: superior,
+                  rules: [{required: true, message: '必须选择上级代理商'}],
+                })(<Input type="hidden" />)}
+                <Select
+                  defaultValue={superior}
+                  value={superior}
+                  style={{width: '100%'}}
+                  onChange={(value) => this.setState({superior: value})}
+                >
+                  <Select.Option value="">DGK 智能平台</Select.Option>
+                  {aMenu}
+                </Select>
+              </Form.Item>
+            ) : ''}
             <Form.Item label={fieldLabels.contact} {...formItemLayout} >
               {getFieldDecorator('contact', {
                 initialValue: ADinfo.contact,

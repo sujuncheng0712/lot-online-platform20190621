@@ -41,7 +41,7 @@ export default class LoginPage extends Component {
               localStorage.setItem('antd-pro-authority', type);
               sessionStorage.setItem('dochen-auth', JSON.stringify(info.data[0]));
               location.href = '/';
-            }else {
+            } else {
               message.error(`登录失败,账号或密码不正确。错误代码：${info.messgae}`);
             }
           });

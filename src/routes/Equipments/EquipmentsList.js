@@ -128,6 +128,10 @@ class EquipmentsList extends PureComponent {
         }
       });
 
+      if(!val.relation.aid){
+        val.agents = 'DGK智能平台';
+      }
+
       if (val.online_at && !val.offline_at) onLine.push(val);
 
       versionArr.push(val.version || '0.0.0');
@@ -307,24 +311,6 @@ class EquipmentsList extends PureComponent {
 
     return (
       <PageHeaderLayout title="已激活设备列表">
-        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
-          <Select
-            defaultValue="请选择"
-            style={{width: 200, marginBottom: 15}}
-            onChange={(value) => this.getEquipmentsList(value.split(',')[0], value.split(',')[1])}
-          >
-            <Select.OptGroup label="代理商">
-              {agentsLists.map((item) => (
-                <Select.Option value={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
-              ))}
-            </Select.OptGroup>
-            <Select.OptGroup label="经销商">
-              {dealersLists.map((item) => (
-                <Select.Option value={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
-              ))}
-            </Select.OptGroup>
-          </Select>
-        ) : ''}
         <div style={{padding: 20, backgroundColor: '#fff'}}>
           <div style={{marginTop: 15, textAlign: 'left'}}>
             <Badge status="success" text={`已激活设备共${lists.length}台`} />
@@ -360,6 +346,29 @@ class EquipmentsList extends PureComponent {
             </div>
           </div>
           <Button type="primary" onClick={this.searchList.bind(this)}><Icon type="search" /> 查找</Button>
+          <div style={styles.searchRow}>
+            <div style={styles.searchTit}>代理商：</div>
+            <div style={{width: 200}}>
+              {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
+                <Select
+                  defaultValue="请选择"
+                  style={{width: 200}}
+                  onChange={(value) => this.getEquipmentsList(value.split(',')[0], value.split(',')[1])}
+                >
+                  <Select.OptGroup label="代理商">
+                    {agentsLists.map((item) => (
+                      <Select.Option value={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                  <Select.OptGroup label="经销商">
+                    {dealersLists.map((item) => (
+                      <Select.Option value={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                </Select>
+              ) : ''}
+            </div>
+          </div>
         </div>
         <div style={{padding: 20, backgroundColor: '#fff'}}>
           <Table

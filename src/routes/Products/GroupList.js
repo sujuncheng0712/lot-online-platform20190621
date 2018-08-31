@@ -73,18 +73,12 @@ class ProductsList extends PureComponent {
 
   // 获取产品列表
   getProducts() {
-    const getProducts = `${url}/products`
+    const getProducts = `${url}/products?aid=898ce90c4b7d11e8bc9600163e0851fd&filter=services`;
     fetch(getProducts).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
           if (info.status) {
-            const lists = [];
-            info.data.forEach((val) => {
-              if (val.type !== 3) {
-                lists.push(val);
-              }
-            });
-            this.setState({lists, loading: false});
+            this.setState({lists: info.data, loading: false});
           }
         });
       }

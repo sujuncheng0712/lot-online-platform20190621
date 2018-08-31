@@ -1,9 +1,10 @@
-/* eslint-disable no-param-reassign,no-plusplus */
+/* eslint-disable no-param-reassign,no-plusplus,no-underscore-dangle */
 import React, {PureComponent} from 'react';
-import {Badge, Divider, Input, Icon, Button, message, List} from 'antd';
+import {Badge, Divider, Input, Icon, Button, message, List, Select} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
+const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
 
 class codesList extends PureComponent {
   constructor(...args) {
@@ -11,8 +12,8 @@ class codesList extends PureComponent {
     this.state = {
       lists: [],
       loading: true,
-      agentsList: [],
-      dealersList: [],
+      agentsLists: [],
+      dealersLists: [],
       orderId: '',
       orderConsignee: '',
       orderCode: '',
@@ -31,7 +32,7 @@ class codesList extends PureComponent {
     fetch(getDealers).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) this.setState({dealersList: info.data});
+          if (info.status) this.setState({dealersLists: info.data});
         });
       }
     });
@@ -43,19 +44,27 @@ class codesList extends PureComponent {
     fetch(getAgents).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) this.setState({agentsList: info.data});
+          if (info.status) this.setState({agentsLists: info.data});
         });
       }
     });
   }
 
   // 获取订单列表
-  getOrders(){
-    const authData = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
+  getOrders(type = '', uuid = '') {
     let getOrders = `${url}/orders`;
-    // getOrders += `?limit=${10}`;
-    // getOrders += `&offset=${0}`;
-    getOrders += authData.type === 'vendors' ? '' : authData.type === 'agents' ? `?aid=${authData.uuid}` : `?did=${authData.uuid}`;
+    let _type;
+    switch (type) {
+      case 'agents':
+        _type = `?aid=${uuid}`;
+        break;
+      case 'dealers':
+        _type = `?did=${uuid}`;
+        break;
+      default:
+        _type = '';
+    }
+    getOrders += auth.type === 'vendors' ? _type : auth.type === 'agents' ? `?aid=${auth.uuid}` : `?did=${auth.uuid}`;
 
     fetch(getOrders).then((res) => {
       if (res.ok) {
@@ -71,6 +80,9 @@ class codesList extends PureComponent {
               }
             });
             this.setState({lists, loading: false});
+          }else {
+            this.setState({lists: [], loading: false});
+            message.warning(`提示：[${info.message}]`);
           }
         });
       }
@@ -94,7 +106,7 @@ class codesList extends PureComponent {
   }
 
   render() {
-    const {lists, loading, agentsList, dealersList} = this.state;
+    const {lists, loading, agentsLists, dealersLists} = this.state;
 
     const ActivationCode = [];
     const activation = [];
@@ -108,11 +120,11 @@ class codesList extends PureComponent {
           if (v.confirm_at) activation.push(v);
         });
 
-        agentsList.forEach((v) => {
+        agentsLists.forEach((v) => {
           if (v.aid === val.uid) val.consignee = v.contact;
         });
 
-        dealersList.forEach((v) => {
+        dealersLists.forEach((v) => {
           if (v.did === val.uid) val.consignee = v.contact;
         });
 
@@ -126,19 +138,10 @@ class codesList extends PureComponent {
 
     return (
       <PageHeaderLayout title="激活码列表">
-        <div style={{padding: 20, backgroundColor: '#fff'}}>
-          <div style={{marginTop: 15, textAlign: 'left'}}>
-            <Badge status="default" text={`总购买数量${ActivationCode.length}个`} />
-            <Divider type="vertical" />
-            <Badge status="success" text={`已激活数量${activation.length}个`} />
-            <Divider type="vertical" />
-            <Badge status="processing" text={`未激活数量${(ActivationCode.length - activation.length)}个`} />
-          </div>
-        </div>
         <div style={styles.search}>
           <div style={styles.searchRow}>
             <div style={styles.searchTit}>订单编号：</div>
-            <div style={{width: 200}}>
+            <div style={{width: 300}}>
               <Input
                 placeholder="请输入需要查找的订单编号"
                 onChange={(e) => {
@@ -148,19 +151,8 @@ class codesList extends PureComponent {
             </div>
           </div>
           <div style={styles.searchRow}>
-            <div style={styles.searchTit}>买家姓名：</div>
-            <div style={{width: 200}}>
-              <Input
-                placeholder="请输入需要查找的买家姓名"
-                onChange={(e) => {
-                  this.setState({orderConsignee: e.target.value});
-                }}
-              />
-            </div>
-          </div>
-          <div style={styles.searchRow}>
-            <div style={styles.searchTit}>激活码：</div>
-            <div style={{width: 200}}>
+            <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;激活码：</div>
+            <div style={{width: 300}}>
               <Input
                 placeholder="请输入需要查找的激活码"
                 onChange={(e) => {
@@ -170,6 +162,51 @@ class codesList extends PureComponent {
             </div>
           </div>
           <Button type="primary" onClick={this.searchList.bind(this)}><Icon type="search" /> 查找</Button>
+        </div>
+        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
+          <div style={styles.search}>
+            <div style={styles.searchRow}>
+              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;代理商：</div>
+              <div style={{width: 300}}>
+                <Select
+                  defaultValue="请选择"
+                  style={{width: 300}}
+                  onChange={(value) => this.getOrders(value.split(',')[0], value.split(',')[1])}
+                >
+                  <Select.OptGroup label="代理商">
+                    {agentsLists.map((item) => (
+                      <Select.Option value={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                </Select>
+              </div>
+            </div>
+            <div style={styles.searchRow}>
+              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;经销商：</div>
+              <div style={{width: 300}}>
+                <Select
+                  defaultValue="请选择"
+                  style={{width: 300}}
+                  onChange={(value) => this.getOrders(value.split(',')[0], value.split(',')[1])}
+                >
+                  <Select.OptGroup label="经销商">
+                    {dealersLists.map((item) => (
+                      <Select.Option value={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                </Select>
+              </div>
+            </div>
+          </div>
+        ) : ''}
+        <div style={{padding: 20, backgroundColor: '#fff'}}>
+          <div style={{marginTop: 15, textAlign: 'left'}}>
+            <Badge status="default" text={`总购买数量${ActivationCode.length}个`} />
+            <Divider type="vertical" />
+            <Badge status="success" text={`已激活数量${activation.length}个`} />
+            <Divider type="vertical" />
+            <Badge status="processing" text={`未激活数量${(ActivationCode.length - activation.length)}个`} />
+          </div>
         </div>
         <div style={{padding: 20, backgroundColor: '#fff', marginTop: 20}}>
           <div style={styles.title}>
@@ -229,9 +266,8 @@ class codesList extends PureComponent {
 const styles = {
   search: {
     width: '100%',
-    padding: 20,
+    padding: '10px 20px',
     backgroundColor: '#fff',
-    marginBottom: 15,
     display: 'flex',
   },
   searchRow: {

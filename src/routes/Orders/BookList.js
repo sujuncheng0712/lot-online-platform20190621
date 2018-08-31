@@ -1,11 +1,12 @@
-/* eslint-disable no-param-reassign,no-plusplus */
+/* eslint-disable no-param-reassign,no-plusplus,no-undef,no-underscore-dangle */
 import React, {PureComponent} from 'react';
-import {Input, Button, Icon, message, List, Popconfirm, Popover, Divider} from 'antd';
+import {Input, Button, Icon, message, List, Popconfirm, Popover, Divider, Select} from 'antd';
 import Ellipsis from 'ant-design-pro/lib/Ellipsis';
 import 'ant-design-pro/dist/ant-design-pro.css';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
+const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
 const stateBadge = ['','','','','#666','','','','','','#f5222d'];
 const stateMap = ['','','','待付款','已付款','','','','','','已退款'];
 
@@ -67,12 +68,20 @@ class OrdersList extends PureComponent {
   }
 
   // 获取订单列表
-  getOrders() {
-    const authData = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
+  getOrders(type = '', uuid = '') {
     let getOrders = `${url}/orders`;
-    // getOrders += `?limit=${10}`;
-    // getOrders += `&offset=${0}`;
-    getOrders += authData.type === 'vendors' ? '' : authData.type === 'agents' ? `?aid=${authData.uuid}` : `?did=${authData.uuid}`;
+    let _type;
+    switch (type) {
+      case 'agents':
+        _type = `?aid=${uuid}`;
+        break;
+      case 'dealers':
+        _type = `?did=${uuid}`;
+        break;
+      default:
+        _type = '';
+    }
+    getOrders += auth.type === 'vendors' ? _type : auth.type === 'agents' ? `?aid=${auth.uuid}` : `?did=${auth.uuid}`;
 
     fetch(getOrders).then((res) => {
       if (res.ok) {
@@ -88,6 +97,9 @@ class OrdersList extends PureComponent {
               }
             });
             this.setState({lists, loading: false});
+          }else {
+            this.setState({lists: [], loading: false});
+            message.warning(`提示：[${info.message}]`);
           }
         });
       }
@@ -135,14 +147,75 @@ class OrdersList extends PureComponent {
           });
         }
       });
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() && val.type === 1) nowadays.push(val);
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() - 1 && val.type === 1) yesterday.push(val);
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && val.type === 1) thisMonth.push(val);
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() - 1 && val.type === 1) lastMonth.push(val);
+      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() && val.state === 4 && val.type === 1) nowadays.push(val);
+      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() - 1 && val.state === 4 && val.type === 1) yesterday.push(val);
+      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && val.state === 4 && val.type === 1) thisMonth.push(val);
+      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() - 1 && val.state === 4 && val.type === 1) lastMonth.push(val);
     });
 
     return (
-      <PageHeaderLayout title="订单列表">
+      <PageHeaderLayout title="产品订单列表">
+        <div style={styles.search}>
+          <div style={styles.searchRow}>
+            <div style={styles.searchTit}>订单编号：</div>
+            <div style={{width: 300}}>
+              <Input
+                placeholder="请输入需要查找的订单编号"
+                onChange={(e) => {
+                  this.setState({orderId: e.target.value});
+                }}
+              />
+            </div>
+          </div>
+          <div style={styles.searchRow}>
+            <div style={styles.searchTit}>买家姓名：</div>
+            <div style={{width: 300}}>
+              <Input
+                placeholder="请输入需要查找的买家姓名"
+                onChange={(e) => {
+                  this.setState({orderConsignee: e.target.value});
+                }}
+              />
+            </div>
+          </div>
+          <Button type="primary" onClick={this.searchList.bind(this)}><Icon type="search" /> 查找</Button>
+        </div>
+        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
+          <div style={styles.search}>
+            <div style={styles.searchRow}>
+              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;代理商：</div>
+              <div style={{width: 300}}>
+                <Select
+                  defaultValue="请选择"
+                  style={{width: 300}}
+                  onChange={(value) => this.getOrders(value.split(',')[0], value.split(',')[1])}
+                >
+                  <Select.OptGroup label="代理商">
+                    {agentsLists.map((item) => (
+                      <Select.Option value={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                </Select>
+              </div>
+            </div>
+            <div style={styles.searchRow}>
+              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;经销商：</div>
+              <div style={{width: 300}}>
+                <Select
+                  defaultValue="请选择"
+                  style={{width: 300}}
+                  onChange={(value) => this.getOrders(value.split(',')[0], value.split(',')[1])}
+                >
+                  <Select.OptGroup label="经销商">
+                    {dealersLists.map((item) => (
+                      <Select.Option value={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                </Select>
+              </div>
+            </div>
+          </div>
+        ) : ''}
         <div style={styles.count}>
           <div style={styles.countRow}>
             <div>今天订单数</div>
@@ -161,32 +234,7 @@ class OrdersList extends PureComponent {
             <div>{lastMonth.length}笔</div>
           </div>
         </div>
-        <div style={styles.search}>
-          <div style={styles.searchRow}>
-            <div style={styles.searchTit}>订单编号：</div>
-            <div style={{width: 200}}>
-              <Input
-                placeholder="请输入需要查找的订单编号"
-                onChange={(e) => {
-                  this.setState({orderId: e.target.value});
-                }}
-              />
-            </div>
-          </div>
-          <div style={styles.searchRow}>
-            <div style={styles.searchTit}>买家姓名：</div>
-            <div style={{width: 200}}>
-              <Input
-                placeholder="请输入需要查找的买家姓名"
-                onChange={(e) => {
-                  this.setState({orderConsignee: e.target.value});
-                }}
-              />
-            </div>
-          </div>
-          <Button type="primary" onClick={this.searchList.bind(this)}><Icon type="search" /> 查找</Button>
-        </div>
-        <div style={{padding: 20, backgroundColor: '#fff'}}>
+        <div style={{padding: 10, backgroundColor: '#fff'}}>
           <div style={styles.title}>
             <div style={styles.id}>序号</div>
             <div style={styles.consignee}>收货人</div>
@@ -274,7 +322,9 @@ class OrdersList extends PureComponent {
                       }
                     </div>
                     <div span={4} style={styles.pay_amount}>
-                      <span style={{color: stateBadge[item.state]}}>{stateMap[item.state]}</span>
+                      <span style={{color: stateBadge[item.state]}}>
+                        {item.message === 'book' ? '已预约' : stateMap[item.state]}
+                      </span>
                     </div>
                     <div style={styles.contact}>{item.name}</div>
                     <div style={styles.contact}>{item.contact}</div>
@@ -300,8 +350,7 @@ const styles = {
   count: {
     width: '100%',
     padding: 20,
-    backgroundColor: '#fff',
-    marginBottom: 15,
+    backgroundColor: '#fafafa',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -315,9 +364,8 @@ const styles = {
 
   search: {
     width: '100%',
-    padding: 20,
+    padding: '10px 20px',
     backgroundColor: '#fff',
-    marginBottom: 15,
     display: 'flex',
   },
   searchRow: {

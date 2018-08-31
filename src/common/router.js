@@ -157,10 +157,6 @@ export const getRouterData = app => {
     '/group/code-list': {
       component: dynamicWrapper(app, [], () => import('../routes/Group/CodeList')),
     },
-    // 退码列表
-    '/group/refunds-list': {
-      component: dynamicWrapper(app, [], () => import('../routes/Group/RefundsList')),
-    },
     // 用户列表
     '/users/users-list': {
       component: dynamicWrapper(app, [], () => import('../routes/Users/UsersList')),
@@ -173,6 +169,11 @@ export const getRouterData = app => {
     // 产品详情
     '/products/product-profile': {
       component: dynamicWrapper(app, [], () => import('../routes/Products/ProductProfile')),
+      authority: ['admin', 'vendors'],
+    },
+    // 产品管理
+    '/products/group-list': {
+      component: dynamicWrapper(app, [], () => import('../routes/Products/GroupList')),
       authority: ['admin', 'vendors'],
     },
     // 添加/编辑产品

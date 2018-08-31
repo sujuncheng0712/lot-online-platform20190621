@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 import React, {PureComponent} from 'react';
-import {Card, Select, Table, Input, Tag} from 'antd';
+import {Card, Select, Table, InputNumber, Tag} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
@@ -76,7 +76,16 @@ class Distribution extends PureComponent {
       {
         title: '补贴()',
         render: () => (
-          <Input placeholder="Basic usage" />
+          <InputNumber
+            defaultValue={10}
+            min={0}
+            max={100}
+            formatter={value => `${value}%`}
+            parser={value => value.replace('%', '')}
+            onChange={(value) => {
+              console.log('changed', value);
+            }}
+          />
         ),
       },
     ];

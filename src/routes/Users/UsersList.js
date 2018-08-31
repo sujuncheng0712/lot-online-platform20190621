@@ -1,9 +1,11 @@
 /* eslint-disable no-param-reassign,no-plusplus */
 import React, {PureComponent} from 'react';
-import {Table} from 'antd';
+import {Table, Select, message} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
+const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
+
 
 const columns = [
   {title: '序号', dataIndex: 'id'},
@@ -56,14 +58,30 @@ class UsersList extends PureComponent {
   }
 
   // 获取用户列表
-  getUsers() {
-    const authData = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
+  getUsers(type = '', uuid = '') {
     let getUser = `${url}/users`;
-    getUser += authData.type === 'vendors' ? '' : authData.type === 'agents' ? `?aid=${authData.uuid}` : `?did=${authData.uuid}`;
+    let _type;
+    switch (type) {
+      case 'agents':
+        _type = `?aid=${uuid}`;
+        break;
+      case 'dealers':
+        _type = `?did=${uuid}`;
+        break;
+      default:
+        _type = '';
+    }
+    getUser += auth.type === 'vendors' ? _type : auth.type === 'agents' ? `?aid=${auth.uuid}` : `?did=${auth.uuid}`;
+
     fetch(getUser).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) this.setState({lists: info.data, loading: false});
+          if (info.status) {
+            this.setState({lists: info.data, loading: false});
+          } else {
+            this.setState({lists: [], loading: false});
+            message.warning(`提示：[${info.message}]`);
+          }
         });
       }
     });
@@ -87,12 +105,53 @@ class UsersList extends PureComponent {
           val.phone = value.mobile;
         }
       });
+      if (!val.aid) val.agents = 'DGK 智能平台';
       val.id = k;
       k++;
     });
 
     return (
       <PageHeaderLayout title="用户列表">
+        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
+          <div style={styles.search}>
+            <div style={styles.searchRow}>
+              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;代理商：</div>
+              <div style={{width: 300}}>
+                <Select
+                  defaultValue="请选择"
+                  style={{width: 300}}
+                  onChange={(value) => {
+                    this.getUsers(value.split(',')[0], value.split(',')[1]);
+                  }}
+                >
+                  <Select.OptGroup label="代理商">
+                    {agentsLists.map((item) => (
+                      <Select.Option value={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                </Select>
+              </div>
+            </div>
+            <div style={styles.searchRow}>
+              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;经销商：</div>
+              <div style={{width: 300}}>
+                <Select
+                  defaultValue="请选择"
+                  style={{width: 300}}
+                  onChange={(value) => {
+                    this.getUsers(value.split(',')[0], value.split(',')[1]);
+                  }}
+                >
+                  <Select.OptGroup label="经销商">
+                    {dealersLists.map((item) => (
+                      <Select.Option value={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                </Select>
+              </div>
+            </div>
+          </div>
+        ) : ''}
         <div style={{padding: 20, backgroundColor: '#fff'}}>
           <Table
             columns={columns}
@@ -105,5 +164,22 @@ class UsersList extends PureComponent {
     );
   }
 }
+
+const styles={
+  search: {
+    width: '100%',
+    padding: '10px 20px',
+    backgroundColor: '#fff',
+    display: 'flex',
+  },
+  searchRow: {
+    marginRight: 20,
+    display: 'flex',
+    alignItems: 'center',
+  },
+  searchTit: {
+    width: 80,
+  },
+};
 
 export default UsersList;

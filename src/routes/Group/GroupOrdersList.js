@@ -1,9 +1,10 @@
-/* eslint-disable no-param-reassign,no-plusplus */
+/* eslint-disable no-param-reassign,no-plusplus,no-underscore-dangle */
 import React, {PureComponent} from 'react';
-import {Input, Button, Icon, message, List, Divider} from 'antd';
+import {Input, Button, Icon, message, List, Divider, Select} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
+const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
 const stateBadge = ['','','','','#666','','','','','','#f5222d'];
 const stateMap = ['','','','待付款','已付款','','','','','','已退款'];
 
@@ -13,8 +14,8 @@ class OrdersList extends PureComponent {
     this.state = {
       lists: [],
       loading: true,
-      agentsList: [],
-      dealersList: [],
+      agentsLists: [],
+      dealersLists: [],
       orderConsignee: '',
       orderId: '',
     };
@@ -32,7 +33,7 @@ class OrdersList extends PureComponent {
     fetch(getDealers).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) this.setState({dealersList: info.data});
+          if (info.status) this.setState({dealersLists: info.data});
         });
       }
     });
@@ -44,19 +45,27 @@ class OrdersList extends PureComponent {
     fetch(getAgents).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) this.setState({agentsList: info.data});
+          if (info.status) this.setState({agentsLists: info.data});
         });
       }
     });
   }
 
   // 获取订单列表
-  getOrders(){
-    const authData = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
+  getOrders(type = '', uuid = '') {
     let getOrders = `${url}/orders`;
-    // getOrders += `?limit=${10}`;
-    // getOrders += `&offset=${0}`;
-    getOrders += authData.type === 'vendors' ? '' : authData.type === 'agents' ? `?aid=${authData.uuid}` : `?did=${authData.uuid}`;
+    let _type;
+    switch (type) {
+      case 'agents':
+        _type = `?aid=${uuid}`;
+        break;
+      case 'dealers':
+        _type = `?did=${uuid}`;
+        break;
+      default:
+        _type = '';
+    }
+    getOrders += auth.type === 'vendors' ? _type : auth.type === 'agents' ? `?aid=${auth.uuid}` : `?did=${auth.uuid}`;
 
     fetch(getOrders).then((res) => {
       if (res.ok) {
@@ -67,12 +76,15 @@ class OrdersList extends PureComponent {
             info.data.forEach((val) => {
               if (val.type === 3 && val.state === 4) {
                 val.id = k;
-                val.consignee = authData.contact;
+                val.consignee = auth.contact;
                 lists.push(val);
                 k++;
               }
             });
             this.setState({lists, loading:false});
+          }else {
+            this.setState({lists: [], loading: false});
+            message.warning(`提示：[${info.message}]`);
           }
         });
       }
@@ -93,7 +105,7 @@ class OrdersList extends PureComponent {
   }
 
   render() {
-    const {lists, loading, agentsList, dealersList} = this.state;
+    const {lists, loading, agentsLists, dealersLists} = this.state;
 
     const nowadays = [];
     const yesterday = [];
@@ -101,18 +113,19 @@ class OrdersList extends PureComponent {
     const lastMonth = [];
 
     lists.forEach((val) => {
-      agentsList.forEach((v) => {
+      agentsLists.forEach((v) => {
         if (v.aid === val.uid) {
           val.consignee = v.contact;
           val.agents = v.contact;
         }
       });
-      dealersList.forEach((v) => {
+      dealersLists.forEach((v) => {
         if (v.did === val.uid) {
           val.consignee = v.contact;
-          agentsList.forEach((agents) => {
+          agentsLists.forEach((agents) => {
             if (v.superior === agents.aid) val.agents = agents.contact;
           });
+          if (!v.superior) val.agents = 'DGK 智能平台';
         }
       });
       if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() && val.state === 4 && val.type === 3) nowadays.push(val);
@@ -123,6 +136,56 @@ class OrdersList extends PureComponent {
 
     return (
       <PageHeaderLayout title="团购订单列表">
+        <div style={styles.search}>
+          <div style={styles.searchRow}>
+            <div style={styles.searchTit}>订单编号：</div>
+            <div style={{width: 300}}>
+              <Input
+                placeholder="请输入需要查找的订单编号"
+                onChange={(e) => {
+                  this.setState({orderId: e.target.value});
+                }}
+              />
+            </div>
+          </div>
+          <Button type="primary" onClick={this.searchList.bind(this)}><Icon type="search" /> 查找</Button>
+        </div>
+        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
+          <div style={styles.search}>
+            <div style={styles.searchRow}>
+              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;代理商：</div>
+              <div style={{width: 300}}>
+                <Select
+                  defaultValue="请选择"
+                  style={{width: 300}}
+                  onChange={(value) => this.getOrders(value.split(',')[0], value.split(',')[1])}
+                >
+                  <Select.OptGroup label="代理商">
+                    {agentsLists.map((item) => (
+                      <Select.Option value={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                </Select>
+              </div>
+            </div>
+            <div style={styles.searchRow}>
+              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;经销商：</div>
+              <div style={{width: 300}}>
+                <Select
+                  defaultValue="请选择"
+                  style={{width: 300}}
+                  onChange={(value) => this.getOrders(value.split(',')[0], value.split(',')[1])}
+                >
+                  <Select.OptGroup label="经销商">
+                    {dealersLists.map((item) => (
+                      <Select.Option value={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                </Select>
+              </div>
+            </div>
+          </div>
+        ) : ''}
         <div style={styles.count}>
           <div style={styles.countRow}>
             <div>今天订单数</div>
@@ -141,36 +204,7 @@ class OrdersList extends PureComponent {
             <div>{lastMonth.length}笔</div>
           </div>
         </div>
-        <div style={styles.search}>
-          <div style={styles.searchRow}>
-            <div style={styles.searchTit}>订单编号：</div>
-            <div style={{width: 200}}>
-              <Input
-                placeholder="请输入需要查找的订单编号"
-                onChange={(e) => {
-                  this.setState({orderId: e.target.value});
-                }}
-              />
-            </div>
-          </div>
-          {
-            (localStorage.getItem('antd-pro-authority') !== 'agents' && localStorage.getItem('antd-pro-authority') !== 'dealers') ? (
-              <div style={styles.searchRow}>
-                <div style={styles.searchTit}>买家姓名：</div>
-                <div style={{width: 200}}>
-                  <Input
-                    placeholder="请输入需要查找的买家姓名"
-                    onChange={(e) => {
-                      this.setState({orderConsignee: e.target.value});
-                    }}
-                  />
-                </div>
-              </div>
-            ) : ''
-          }
-          <Button type="primary" onClick={this.searchList.bind(this)}><Icon type="search" /> 查找</Button>
-        </div>
-        <div style={{padding: 20, backgroundColor: '#fff'}}>
+        <div style={{padding: 10, backgroundColor: '#fff'}}>
           <div style={styles.title}>
             <div style={styles.id}>序号</div>
             <div style={styles.consignee}>购买人</div>
@@ -228,8 +262,7 @@ const styles = {
   count: {
     width: '100%',
     padding: 20,
-    backgroundColor: '#fff',
-    marginBottom: 15,
+    backgroundColor: '#fafafa',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -243,9 +276,8 @@ const styles = {
 
   search: {
     width: '100%',
-    padding: 20,
+    padding: '10px 20px',
     backgroundColor: '#fff',
-    marginBottom: 15,
     display: 'flex',
   },
   searchRow: {
