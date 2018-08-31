@@ -1,4 +1,4 @@
-/* eslint-disable no-param-reassign,radix */
+/* eslint-disable no-param-reassign,radix,no-underscore-dangle */
 import React, {PureComponent} from 'react';
 import {Tabs, Table, Card, Select, message} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';

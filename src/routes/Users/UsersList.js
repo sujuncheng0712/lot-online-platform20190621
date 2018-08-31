@@ -1,4 +1,4 @@
-/* eslint-disable no-param-reassign,no-plusplus */
+/* eslint-disable no-param-reassign,no-plusplus,no-underscore-dangle */
 import React, {PureComponent} from 'react';
 import {Table, Select, message} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';

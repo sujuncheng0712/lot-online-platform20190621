@@ -74,14 +74,25 @@ class Distribution extends PureComponent {
       {title: '价格', dataIndex: 'price', render: (val) => `¥${val}.00`},
       {title: '标签', dataIndex: 'tags', render: (val) => val ? (<Tag color="blue">{val}</Tag>) : ''},
       {
-        title: '补贴()',
-        render: () => (
+        title: '补贴/返点',
+        render: (info) => info.type === 2 ? (
           <InputNumber
-            defaultValue={10}
+            defaultValue={30}
             min={0}
             max={100}
             formatter={value => `${value}%`}
             parser={value => value.replace('%', '')}
+            onChange={(value) => {
+              console.log('changed', value);
+            }}
+          />
+        ) : (
+          <InputNumber
+            defaultValue={200}
+            min={0}
+            max={100}
+            formatter={value => `${value}元`}
+            parser={value => value.replace('元', '')}
             onChange={(value) => {
               console.log('changed', value);
             }}
@@ -92,24 +103,46 @@ class Distribution extends PureComponent {
 
     return (
       <PageHeaderLayout title="收益分配">
-        <Select
-          defaultValue="请选择"
-          style={{width: 200, marginBottom: 15}}
-          onChange={(value) => {
-            console.log(`selected ${value}`);
-          }}
-        >
-          <Select.OptGroup label="代理商">
-            {agentsLists.map((item) => (
-              <Select.Option value={item.aid}>{item.contact}</Select.Option>
-            ))}
-          </Select.OptGroup>
-          <Select.OptGroup label="经销商">
-            {dealersLists.map((item) => (
-              <Select.Option value={item.did}>{item.contact}</Select.Option>
-            ))}
-          </Select.OptGroup>
-        </Select>
+        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
+          <div style={styles.search}>
+            <div style={styles.searchRow}>
+              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;代理商：</div>
+              <div style={{width: 300}}>
+                <Select
+                  defaultValue="请选择"
+                  style={{width: 300}}
+                  onChange={(value) => {
+                    console.log(value);
+                  }}
+                >
+                  <Select.OptGroup label="代理商">
+                    {agentsLists.map((item) => (
+                      <Select.Option value={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                </Select>
+              </div>
+            </div>
+            <div style={styles.searchRow}>
+              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;经销商：</div>
+              <div style={{width: 300}}>
+                <Select
+                  defaultValue="请选择"
+                  style={{width: 300}}
+                  onChange={(value) => {
+                    console.log(value);
+                  }}
+                >
+                  <Select.OptGroup label="经销商">
+                    {dealersLists.map((item) => (
+                      <Select.Option value={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                </Select>
+              </div>
+            </div>
+          </div>
+        ) : ''}
         <Card title="产品 补贴/返点" bordered={false}>
           <Table columns={columns} dataSource={productsLists} />
         </Card>
@@ -117,5 +150,22 @@ class Distribution extends PureComponent {
     );
   }
 }
+
+const styles = {
+  search: {
+    width: '100%',
+    padding: 10,
+    backgroundColor: '#fff',
+    display: 'flex',
+  },
+  searchRow: {
+    marginRight: 20,
+    display: 'flex',
+    alignItems: 'center',
+  },
+  searchTit: {
+    paddingRight: 5,
+  },
+};
 
 export default Distribution;
