@@ -152,8 +152,14 @@ class SubsidyList extends PureComponent {
 
       if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate()) {
         if (localStorage.getItem('antd-pro-authority') === 'vendors') {
-          nowadays += parseInt(val.agent_earning);
-          nowadays += parseInt(val.dealer_earning);
+          if (sessionStorage.getItem('authType') === 'agents') {
+            nowadays += parseInt(val.agent_earning);
+          } else if (sessionStorage.getItem('authType') === 'dealers') {
+            nowadays += parseInt(val.dealer_earning);
+          } else {
+            nowadays += parseInt(val.agent_earning);
+            nowadays += parseInt(val.dealer_earning);
+          }
         } else if (localStorage.getItem('antd-pro-authority') === 'agents') {
           nowadays += parseInt(val.agent_earning);
         } else if (localStorage.getItem('antd-pro-authority') === 'dealers') {
@@ -162,8 +168,14 @@ class SubsidyList extends PureComponent {
       }
       if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() - 1) {
         if (localStorage.getItem('antd-pro-authority') === 'vendors') {
-          yesterday += parseInt(val.agent_earning);
-          yesterday += parseInt(val.dealer_earning);
+          if (sessionStorage.getItem('authType') === 'agents') {
+            yesterday += parseInt(val.agent_earning);
+          } else if (sessionStorage.getItem('authType') === 'dealers') {
+            yesterday += parseInt(val.dealer_earning);
+          } else {
+            yesterday += parseInt(val.agent_earning);
+            yesterday += parseInt(val.dealer_earning);
+          }
         } else if (localStorage.getItem('antd-pro-authority') === 'agents') {
           yesterday += parseInt(val.agent_earning);
         } else if (localStorage.getItem('antd-pro-authority') === 'dealers') {
@@ -172,8 +184,14 @@ class SubsidyList extends PureComponent {
       }
       if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth()) {
         if (localStorage.getItem('antd-pro-authority') === 'vendors') {
-          thisMonth += parseInt(val.agent_earning);
-          thisMonth += parseInt(val.dealer_earning);
+          if (sessionStorage.getItem('authType') === 'agents') {
+            thisMonth += parseInt(val.agent_earning);
+          } else if (sessionStorage.getItem('authType') === 'dealers') {
+            thisMonth += parseInt(val.dealer_earning);
+          } else {
+            thisMonth += parseInt(val.agent_earning);
+            thisMonth += parseInt(val.dealer_earning);
+          }
         } else if (localStorage.getItem('antd-pro-authority') === 'agents') {
           thisMonth += parseInt(val.agent_earning);
         } else if (localStorage.getItem('antd-pro-authority') === 'dealers') {
@@ -182,8 +200,14 @@ class SubsidyList extends PureComponent {
       }
       if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() - 1) {
         if (localStorage.getItem('antd-pro-authority') === 'vendors') {
-          lastMonth += parseInt(val.agent_earning);
-          lastMonth += parseInt(val.dealer_earning);
+          if (sessionStorage.getItem('authType') === 'agents') {
+            lastMonth += parseInt(val.agent_earning);
+          } else if (sessionStorage.getItem('authType') === 'dealers') {
+            lastMonth += parseInt(val.dealer_earning);
+          } else {
+            lastMonth += parseInt(val.agent_earning);
+            lastMonth += parseInt(val.dealer_earning);
+          }
         } else if (localStorage.getItem('antd-pro-authority') === 'agents') {
           lastMonth += parseInt(val.agent_earning);
         } else if (localStorage.getItem('antd-pro-authority') === 'dealers') {
@@ -219,7 +243,10 @@ class SubsidyList extends PureComponent {
                 <Select
                   defaultValue="请选择"
                   style={{width: 300}}
-                  onChange={(value) => this.getEarnings(value.split(',')[0], value.split(',')[1])}
+                  onChange={(value) => {
+                    sessionStorage.setItem('authType', value.split(',')[0]);
+                    this.getEarnings(value.split(',')[0], value.split(',')[1]);
+                  }}
                 >
                   <Select.OptGroup label="代理商">
                     {agentsLists.map((item) => (
@@ -235,7 +262,10 @@ class SubsidyList extends PureComponent {
                 <Select
                   defaultValue="请选择"
                   style={{width: 300}}
-                  onChange={(value) => this.getEarnings(value.split(',')[0], value.split(',')[1])}
+                  onChange={(value) => {
+                    sessionStorage.setItem('authType', value.split(',')[0]);
+                    this.getEarnings(value.split(',')[0], value.split(',')[1])
+                  }}
                 >
                   <Select.OptGroup label="经销商">
                     {dealersLists.map((item) => (
