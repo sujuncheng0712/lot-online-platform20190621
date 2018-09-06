@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 import React, {PureComponent} from 'react';
-import {Card, Select, Table, InputNumber, Tag} from 'antd';
+import {Card, Select, Table, Input, InputNumber, Tag, Icon} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
@@ -12,6 +12,7 @@ class Distribution extends PureComponent {
       dealersLists: [],
       agentsLists: [],
       productsLists: [],
+      allowanceLists: [],
     };
   }
 
@@ -64,8 +65,22 @@ class Distribution extends PureComponent {
     });
   }
 
+  // 获取收益分配
+  getAllowance(uuid) {
+    const getAllowance = `${url}/agents/${uuid}/allowance`;
+    fetch(getAllowance).then((res) => {
+      if (res.ok) {
+        res.json().then((info) => {
+          if (info.status) this.setState({allowanceLists:info.date});
+        });
+      }
+    });
+  }
+
   render() {
-    const {dealersLists, agentsLists, productsLists} = this.state;
+    const {dealersLists, agentsLists, productsLists, allowanceLists} = this.state;
+
+    console.log(allowanceLists)
 
     const columns = [
       {title: '缩略图', dataIndex: 'prev_image', render: (val) => (<img src={val} alt="" width={60} />)},
@@ -77,25 +92,58 @@ class Distribution extends PureComponent {
         title: '补贴/返点',
         render: (info) => info.type === 2 ? (
           <InputNumber
-            defaultValue={30}
+            defaultValue={info.allowance_free || 0}
             min={0}
             max={100}
             formatter={value => `${value}%`}
             parser={value => value.replace('%', '')}
-            onChange={(value) => {
-              console.log('changed', value);
+            onPressEnter={(value) => {
+              const getAllowance = `${url}/agents/${sessionStorage.getItem('authUuid')}/allowance`;
+              const data = JSON.stringify({
+                eptags: info.tags,
+                pid: info.pid,
+                allowance_free: value,
+              });
+              fetch(getAllowance, {
+                method: 'POST',
+                body: JSON.stringify({data}),
+              }).then((res) => {
+                if (res.ok) {
+                  res.json().then((_info) => {
+                    if (_info.status) {
+                      console.log(_info.date);
+                    }
+                  });
+                }
+              });
             }}
           />
         ) : (
-          <InputNumber
-            defaultValue={200}
-            min={0}
-            max={100}
-            formatter={value => `${value}元`}
-            parser={value => value.replace('元', '')}
-            onChange={(value) => {
-              console.log('changed', value);
+          <Input.Search
+            placeholder="input search text"
+            defaultValue={info.commission_rate || 0}
+            onSearch={value => {
+              const getAllowance = `${url}/agents/${sessionStorage.getItem('authUuid')}/allowance`;
+              const data = JSON.stringify({
+                eptags: info.tags,
+                pid: info.pid,
+                commission_rate: value,
+              });
+              fetch(getAllowance, {
+                method: 'POST',
+                body: JSON.stringify({data}),
+              }).then((res) => {
+                if (res.ok) {
+                  res.json().then((_info) => {
+                    if (_info.status) {
+                      console.log(_info.date);
+                    }
+                  });
+                }
+              });
             }}
+            enterButton={<Icon type="form" theme="outlined" />}
+            style={{ width: 200 }}
           />
         ),
       },
@@ -112,12 +160,13 @@ class Distribution extends PureComponent {
                   defaultValue="请选择"
                   style={{width: 300}}
                   onChange={(value) => {
-                    console.log(value);
+                    sessionStorage.setItem('authUuid', value);
+                    this.getAllowance(value);
                   }}
                 >
                   <Select.OptGroup label="代理商">
                     {agentsLists.map((item) => (
-                      <Select.Option value={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
+                      <Select.Option value={item.aid}>{item.contact}({item.mobile})</Select.Option>
                     ))}
                   </Select.OptGroup>
                 </Select>
@@ -130,12 +179,13 @@ class Distribution extends PureComponent {
                   defaultValue="请选择"
                   style={{width: 300}}
                   onChange={(value) => {
-                    console.log(value);
+                    sessionStorage.setItem('authUuid', value);
+                    this.getAllowance(value);
                   }}
                 >
                   <Select.OptGroup label="经销商">
                     {dealersLists.map((item) => (
-                      <Select.Option value={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
+                      <Select.Option value={item.did}>{item.contact}({item.mobile})</Select.Option>
                     ))}
                   </Select.OptGroup>
                 </Select>
