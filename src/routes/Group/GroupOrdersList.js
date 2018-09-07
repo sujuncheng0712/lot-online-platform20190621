@@ -162,7 +162,7 @@ class OrdersList extends PureComponent {
                 >
                   <Select.OptGroup label="代理商">
                     {agentsLists.map((item) => (
-                      <Select.Option value={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
+                      <Select.Option key={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
                     ))}
                   </Select.OptGroup>
                 </Select>
@@ -178,7 +178,7 @@ class OrdersList extends PureComponent {
                 >
                   <Select.OptGroup label="经销商">
                     {dealersLists.map((item) => (
-                      <Select.Option value={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
+                      <Select.Option key={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
                     ))}
                   </Select.OptGroup>
                 </Select>

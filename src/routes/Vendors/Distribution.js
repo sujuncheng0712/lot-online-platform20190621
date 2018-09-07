@@ -1,6 +1,6 @@
-/* eslint-disable no-param-reassign */
+/* eslint-disable no-param-reassign,class-methods-use-this */
 import React, {PureComponent} from 'react';
-import {Card, Select, Table, Input, InputNumber, Tag, Icon} from 'antd';
+import {Card, Select, Table, Input, Tag, Icon, message} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
@@ -54,8 +54,12 @@ class Distribution extends PureComponent {
         res.json().then((info) => {
           if (info.status) {
             const lists = [];
-            info.data.forEach((val) => {
-              val.distribution = '0%';
+            info.data.forEach((val, key) => {
+              val.allowance_fee = '0';
+              val.commission_rate = '0';
+              val.edit = false;
+              val.editType = 'POST';
+              val.key = key;
               lists.push(val);
             });
             this.setState({productsLists: lists});
@@ -71,7 +75,48 @@ class Distribution extends PureComponent {
     fetch(getAllowance).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) this.setState({allowanceLists:info.date});
+          if (info.status) this.setState({allowanceLists: info.data});
+        });
+      }
+    });
+  }
+
+  // 修改分配
+  editAllowance(value, parameter) {
+    const {productsLists} = this.state;
+    let getAllowance = `${url}/agents/${sessionStorage.getItem('authUuid')}/allowance`;
+    getAllowance += parameter.editType === 'PUT' ? `/${parameter.editUuid}` : '';
+    const data = {
+      eptags: parameter.tags,
+      pid: parameter.pid,
+    };
+
+    if (parameter.type === 2) {
+      data.allowance_fee = value;
+    } else {
+      data.commission_rate = value;
+    }
+
+    fetch(getAllowance, {
+      method: parameter.editType,
+      body: JSON.stringify({data: JSON.stringify(data)}),
+    }).then((res) => {
+      if (res.ok) {
+        res.json().then((info) => {
+          if (info.status) {
+            const lists = [];
+            productsLists.forEach(val => {
+              if (val.pid === parameter.pid) {
+                val.edit = !val.edit;
+              }
+              lists.push(val);
+            });
+            this.setState({productsLists: lists});
+            this.getAllowance(sessionStorage.getItem('authUuid'));
+            message.success(`修改成功`);
+          } else {
+            message.error(`错误：[${info.message}]`);
+          }
         });
       }
     });
@@ -80,7 +125,18 @@ class Distribution extends PureComponent {
   render() {
     const {dealersLists, agentsLists, productsLists, allowanceLists} = this.state;
 
-    console.log(allowanceLists)
+    productsLists.forEach(item => {
+      if (allowanceLists) {
+        allowanceLists.forEach(val => {
+          if (item.pid === val.pid) {
+            item.allowance_fee = val.allowance_fee || 0;
+            item.commission_rate = val.commission_rate || 0;
+            item.editType = 'PUT';
+            item.editUuid = val.uuid;
+          }
+        });
+      }
+    });
 
     const columns = [
       {title: '缩略图', dataIndex: 'prev_image', render: (val) => (<img src={val} alt="" width={60} />)},
@@ -89,61 +145,36 @@ class Distribution extends PureComponent {
       {title: '价格', dataIndex: 'price', render: (val) => `¥${val}.00`},
       {title: '标签', dataIndex: 'tags', render: (val) => val ? (<Tag color="blue">{val}</Tag>) : ''},
       {
-        title: '补贴/返点',
-        render: (info) => info.type === 2 ? (
-          <InputNumber
-            defaultValue={info.allowance_free || 0}
-            min={0}
-            max={100}
-            formatter={value => `${value}%`}
-            parser={value => value.replace('%', '')}
-            onPressEnter={(value) => {
-              const getAllowance = `${url}/agents/${sessionStorage.getItem('authUuid')}/allowance`;
-              const data = JSON.stringify({
-                eptags: info.tags,
-                pid: info.pid,
-                allowance_free: value,
-              });
-              fetch(getAllowance, {
-                method: 'POST',
-                body: JSON.stringify({data}),
-              }).then((res) => {
-                if (res.ok) {
-                  res.json().then((_info) => {
-                    if (_info.status) {
-                      console.log(_info.date);
-                    }
-                  });
-                }
-              });
-            }}
-          />
+        align: 'center',
+        title: '补贴/返点（元/%）',
+        render: (info) => !info.edit ? (
+          <div>
+            <span style={{paddingRight: 15}}>
+              {info.type === 2 ? `${info.allowance_fee} %` : `${info.commission_rate} 元`}
+            </span>
+            <Icon
+              type="form"
+              theme="outlined"
+              onClick={() => {
+                const lists = [];
+                productsLists.forEach(val => {
+                  if (val.pid === info.pid) {
+                    val.edit = !val.edit;
+                  }
+                  lists.push(val);
+                });
+                this.setState({productsLists: lists});
+              }}
+            />
+          </div>
         ) : (
           <Input.Search
-            placeholder="input search text"
-            defaultValue={info.commission_rate || 0}
+            defaultValue={info.type === 2 ? info.allowance_fee : info.commission_rate}
             onSearch={value => {
-              const getAllowance = `${url}/agents/${sessionStorage.getItem('authUuid')}/allowance`;
-              const data = JSON.stringify({
-                eptags: info.tags,
-                pid: info.pid,
-                commission_rate: value,
-              });
-              fetch(getAllowance, {
-                method: 'POST',
-                body: JSON.stringify({data}),
-              }).then((res) => {
-                if (res.ok) {
-                  res.json().then((_info) => {
-                    if (_info.status) {
-                      console.log(_info.date);
-                    }
-                  });
-                }
-              });
+              this.editAllowance(value, info);
             }}
-            enterButton={<Icon type="form" theme="outlined" />}
-            style={{ width: 200 }}
+            enterButton={<Icon type="check" theme="outlined" />}
+            style={{width: 100}}
           />
         ),
       },
@@ -160,13 +191,15 @@ class Distribution extends PureComponent {
                   defaultValue="请选择"
                   style={{width: 300}}
                   onChange={(value) => {
-                    sessionStorage.setItem('authUuid', value);
+                    this.setState({productsLists: [], allowanceLists: []});
+                    this.getProducts();
                     this.getAllowance(value);
+                    sessionStorage.setItem('authUuid', value);
                   }}
                 >
                   <Select.OptGroup label="代理商">
                     {agentsLists.map((item) => (
-                      <Select.Option value={item.aid}>{item.contact}({item.mobile})</Select.Option>
+                      <Select.Option key={item.aid}>{item.contact}({item.mobile})</Select.Option>
                     ))}
                   </Select.OptGroup>
                 </Select>
@@ -179,13 +212,15 @@ class Distribution extends PureComponent {
                   defaultValue="请选择"
                   style={{width: 300}}
                   onChange={(value) => {
-                    sessionStorage.setItem('authUuid', value);
+                    this.setState({productsLists: [], allowanceLists: []});
+                    this.getProducts();
                     this.getAllowance(value);
+                    sessionStorage.setItem('authUuid', value);
                   }}
                 >
                   <Select.OptGroup label="经销商">
                     {dealersLists.map((item) => (
-                      <Select.Option value={item.did}>{item.contact}({item.mobile})</Select.Option>
+                      <Select.Option key={item.did}>{item.contact}({item.mobile})</Select.Option>
                     ))}
                   </Select.OptGroup>
                 </Select>
@@ -194,7 +229,11 @@ class Distribution extends PureComponent {
           </div>
         ) : ''}
         <Card title="产品 补贴/返点" bordered={false}>
-          <Table columns={columns} dataSource={productsLists} />
+          <Table
+            rowKey="id"
+            columns={columns}
+            dataSource={productsLists}
+          />
         </Card>
       </PageHeaderLayout>
     );

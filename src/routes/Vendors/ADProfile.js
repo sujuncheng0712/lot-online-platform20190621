@@ -91,10 +91,9 @@ class ADProfile extends PureComponent {
   getDealList() {
     const {location: {search}} = this.props;
     const ad = search.slice(1).split('&');
-    const role = ad[0].slice(1).split('=')[1];
     const roleId = ad[1].slice(1).split('=')[1];
 
-    const dealListUrl = `${url}/${role}/${roleId}/deal`;
+    const dealListUrl = `${url}/agents/${roleId}/deal`;
     fetch(dealListUrl).then((res) => {
       if (res.ok) {
         res.json().then((info) => {

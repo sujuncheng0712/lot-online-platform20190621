@@ -115,7 +115,7 @@ class DealerList extends PureComponent {
                 >
                   <Select.OptGroup label="代理商">
                     {agentsLists.map((item) => (
-                      <Select.Option value={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
+                      <Select.Option key={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
                     ))}
                   </Select.OptGroup>
                 </Select>
