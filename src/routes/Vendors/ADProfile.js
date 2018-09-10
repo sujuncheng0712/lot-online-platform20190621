@@ -1,11 +1,9 @@
-/* eslint-disable no-param-reassign,no-plusplus,radix */
+/* eslint-disable no-param-reassign,no-plusplus,radix,no-shadow */
 import React, {PureComponent} from 'react';
-import {Card, Col, Row, Button, Tabs, Table, List, Divider} from 'antd';
+import {Card, Col, Row, Button, Tabs, Table, message, Input, Tag, Icon} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
-const stateBadge = ['','','','','#666','','','','','','#f5222d'];
-const stateMap = ['','','','待付款','已付款','','','','','','已退款'];
 
 const goodsColumns = [
   {title: '合同约定押金(元)', dataIndex: 'month'},
@@ -35,11 +33,8 @@ class ADProfile extends PureComponent {
       info: {},
       dealList: [],
       agentsList: [],
-      earningsList: [],
-      loading: true,
-      ordersLists: [],
-      dealersLists: [],
-      agentsLists: [],
+      productsLists: [],
+      allowanceLists: [],
     };
   }
 
@@ -47,10 +42,8 @@ class ADProfile extends PureComponent {
     this.getAgentsList();
     this.getDealList();
     this.getAgentsInfo();
-    this.getEarnings();
-    this.getOrders();
-    this.getDealers();
-    this.getAgents();
+    this.getProducts();
+    this.getAllowance();
   }
 
   // 获取代理商列表
@@ -103,64 +96,80 @@ class ADProfile extends PureComponent {
     });
   }
 
-  // 获取收益列表
-  getEarnings() {
-    const {location: {search}} = this.props;
-    const ad = search.slice(1).split('&');
-    const roleId = ad[1].slice(1).split('=')[1];
-
-    const getEarnings = `${url}/earnings`;
-    fetch(getEarnings).then((res) => {
+  // 获取产品列表
+  getProducts() {
+    const getProducts = `${url}/products`;
+    fetch(getProducts).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
           if (info.status) {
-            const data = [];
-            let k = 1;
-            info.data.forEach((val) => {
-              if (val.aid === roleId || val.did === roleId) {
-                val.id = k;
-                data.push(val);
-                k++;
-              }
+            const lists = [];
+            info.data.forEach((val, key) => {
+              val.allowance_fee = '0';
+              val.commission_rate = '0';
+              val.edit = false;
+              val.editType = 'POST';
+              val.key = key;
+              lists.push(val);
             });
-            this.setState({earningsList: data, loading: false});
+            this.setState({productsLists: lists});
           }
         });
       }
     });
   }
 
-  // 获取订单列表
-  getOrders() {
-    const getOrders = `${url}/orders`;
-    fetch(getOrders).then((res) => {
+  // 获取收益分配
+  getAllowance() {
+    const {location: {search}} = this.props;
+    const ad = search.slice(1).split('&');
+    const roleId = ad[1].slice(1).split('=')[1];
+    const getAllowance = `${url}/agents/${roleId}/allowance`;
+    fetch(getAllowance).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) this.setState({ordersLists: info.data});
+          if (info.status) this.setState({allowanceLists: info.data});
         });
       }
     });
   }
 
-  // 获取经销商列表
-  getDealers() {
-    const getDealers = `${url}/dealers`;
-    fetch(getDealers).then((res) => {
-      if (res.ok) {
-        res.json().then((info) => {
-          if (info.status) this.setState({dealersLists: info.data});
-        });
-      }
-    });
-  }
+  // 修改分配
+  editAllowance(value, parameter) {
+    const {productsLists} = this.state;
+    let getAllowance = `${url}/agents/${sessionStorage.getItem('authUuid')}/allowance`;
+    getAllowance += parameter.editType === 'PUT' ? `/${parameter.editUuid}` : '';
+    const data = {
+      eptags: parameter.tags,
+      pid: parameter.pid,
+    };
 
-  // 获取代理商列表
-  getAgents() {
-    const getAgents = `${url}/agents`;
-    fetch(getAgents).then((res) => {
+    if (parameter.type === 2) {
+      data.allowance_fee = value;
+    } else {
+      data.commission_rate = value;
+    }
+
+    fetch(getAllowance, {
+      method: parameter.editType,
+      body: JSON.stringify({data: JSON.stringify(data)}),
+    }).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) this.setState({agentsLists: info.data});
+          if (info.status) {
+            const lists = [];
+            productsLists.forEach(val => {
+              if (val.pid === parameter.pid) {
+                val.edit = !val.edit;
+              }
+              lists.push(val);
+            });
+            this.setState({productsLists: lists});
+            this.getAllowance(sessionStorage.getItem('authUuid'));
+            message.success(`修改成功`);
+          } else {
+            message.error(`错误：[${info.message}]`);
+          }
         });
       }
     });
@@ -172,74 +181,18 @@ class ADProfile extends PureComponent {
     const role = ad[0].slice(1).split('=')[1];
     const roleId = ad[1].slice(1).split('=')[1];
 
-    const {info, dealList, earningsList, loading, ordersLists, dealersLists, agentsLists} = this.state;
-
-    let nowadays = 0;
-    let yesterday = 0;
-    let thisMonth = 0;
-    let lastMonth = 0;
-
-    earningsList.forEach((val) => {
-      ordersLists.forEach((value) => {
-        if (val.oid === value.oid) {
-          val.consignee = value.consignee;
-          val.pay_amount = value.pay_amount;
-          val.state = value.state;
-        }
-      });
-      if (val.type === 3) {
-        dealersLists.forEach((value) => {
-          if (val.uid === value.did) val.consignee = value.contact;
-        });
-        agentsLists.forEach((value) => {
-          if (val.uid === value.aid) val.consignee = value.contact;
-        });
-      }
-      dealersLists.forEach((value) => {
-        if (val.did === value.did) val.dealers = value.contact;
-      });
-      agentsLists.forEach((value) => {
-        if (val.aid === value.aid) val.agents = value.contact;
-      });
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate()) {
-        if (role === 'agents') {
-          nowadays += parseInt(val.agent_earning);
-        } else if (role === 'dealers') {
-          nowadays += parseInt(val.dealer_earning);
-        }
-      }
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() - 1) {
-        if (role === 'agents') {
-          yesterday += parseInt(val.agent_earning);
-        } else if (role === 'dealers') {
-          yesterday += parseInt(val.dealer_earning);
-        }
-      }
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth()) {
-        if (role === 'agents') {
-          thisMonth += parseInt(val.agent_earning);
-        } else if (role === 'dealers') {
-          thisMonth += parseInt(val.dealer_earning);
-        }
-      }
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() - 1) {
-        if (role === 'agents') {
-          lastMonth += parseInt(val.agent_earning);
-        } else if (role === 'dealers') {
-          lastMonth += parseInt(val.dealer_earning);
-        }
-      }
-    });
+    const {info, dealList, productsLists, allowanceLists} = this.state;
 
     const columns = [
       {title: '起始时间', dataIndex: 'begin_at'},
       {title: '共已缴金额(元)', dataIndex: 'pledge', align: 'center'},
       {title: '保证金(元)', dataIndex: 'deposit', align: 'center'},
       {title: '应配发货额度(台)', dataIndex: 'goods', align: 'center'},
-      {title: '补贴金额(元)', dataIndex: 'allowance_fee', align: 'center'},
-      {title: '滤芯返点(%)', dataIndex: 'commission_rate', align: 'center'},
-      {title: '售后返点(%)', dataIndex: 'service_rate', align: 'center'},
+      // {title: '补贴金额(元)', dataIndex: 'allowance_fee', align: 'center'},
+      // {title: '滤芯返点(%)', dataIndex: 'commission_rate', align: 'center'},
+      // {title: '售后返点(%)', dataIndex: 'service_rate', align: 'center'},
       localStorage.getItem("antd-pro-authority") === "vendors" ? {
+        align: 'center',
         title: '操作',
         dataIndex: 'uuid',
         render: val => (
@@ -252,6 +205,63 @@ class ADProfile extends PureComponent {
           </Button>
         ),
       } : {},
+    ];
+
+    productsLists.forEach(item => {
+      if (allowanceLists) {
+        allowanceLists.forEach(val => {
+          if (item.pid === val.pid) {
+            item.allowance_fee = val.allowance_fee || 0;
+            item.commission_rate = val.commission_rate || 0;
+            item.editType = 'PUT';
+            item.editUuid = val.uuid;
+          }
+        });
+      }
+    });
+
+    const allowanceColumns = [
+      {title: '缩略图', dataIndex: 'prev_image', render: (val) => (<img src={val} alt="" width={60} />)},
+      {title: '标题', dataIndex: 'title'},
+      {title: '描述', dataIndex: 'desc'},
+      {title: '价格', dataIndex: 'price', render: (val) => `¥${val}.00`},
+      {title: '标签', dataIndex: 'tags', render: (val) => val ? (<Tag color="blue">{val}</Tag>) : ''},
+      {
+        align: 'center',
+        title: '补贴/返点（元/%）',
+        render: (info) => !info.edit ? (
+          <div>
+            <span style={{paddingRight: 15}}>
+              {info.type === 2 ? `${info.allowance_fee} %` : `${info.commission_rate} 元`}
+            </span>
+            {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
+              <Icon
+                type="form"
+                theme="outlined"
+                onClick={() => {
+                  const lists = [];
+                  productsLists.forEach(val => {
+                    if (val.pid === info.pid) {
+                      val.edit = !val.edit;
+                    }
+                    lists.push(val);
+                  });
+                  this.setState({productsLists: lists});
+                }}
+              />
+            ) : ''}
+          </div>
+        ) : (
+          <Input.Search
+            defaultValue={info.type === 2 ? info.allowance_fee : info.commission_rate}
+            onSearch={value => {
+              this.editAllowance(value, info);
+            }}
+            enterButton={<Icon type="check" theme="outlined" />}
+            style={{width: 100}}
+          />
+        ),
+      },
     ];
 
     return (
@@ -302,14 +312,18 @@ class ADProfile extends PureComponent {
           }
           bordered={false}
         >
-          <Tabs defaultActiveKey="1">
-            <Tabs.TabPane tab="当前签约" key="1">
-              <Table rowKey="id" columns={columns} dataSource={dealList} />
-            </Tabs.TabPane>
-            <Tabs.TabPane tab="历史签约" key="2">
-              <Table rowKey="id" columns={columns} dataSource={dealList} />
-            </Tabs.TabPane>
-          </Tabs>
+          <Table rowKey="id" columns={columns} dataSource={dealList} />
+        </Card>
+        <br />
+        <Card
+          title="产品收益/返点"
+          bordered={false}
+        >
+          <Table
+            rowKey="id"
+            columns={allowanceColumns}
+            dataSource={productsLists}
+          />
         </Card>
         <br />
         <Card title="发货信息" bordered={false}>
@@ -322,213 +336,9 @@ class ADProfile extends PureComponent {
             </Tabs.TabPane>
           </Tabs>
         </Card>
-        <br />
-        <Card title="收益统计" bordered={false}>
-          <div style={styles.count}>
-            <div style={styles.countRow}>
-              <div>今天收益</div>
-              <div>{nowadays}元</div>
-            </div>
-            <div style={styles.countRow}>
-              <div>昨天收益</div>
-              <div>{yesterday}元</div>
-            </div>
-            <div style={styles.countRow}>
-              <div>本月收益</div>
-              <div>{thisMonth}元</div>
-            </div>
-            <div style={styles.countRow}>
-              <div>上月收益</div>
-              <div>{lastMonth}元</div>
-            </div>
-          </div>
-          <div style={{padding: 20, backgroundColor: '#fff'}}>
-            <div style={styles.title}>
-              <div style={styles.id}>序号</div>
-              <div style={styles.type}>订单类型</div>
-              <div style={styles.pay_amount}>付款金额</div>
-              <div style={styles.pay_amount}>订单状态</div>
-              <div style={styles.consignee}>付款人</div>
-              {
-                localStorage.getItem('antd-pro-authority') !== 'dealers' ? (
-                  <div style={styles.agents}>代理商</div>
-                ) : ''
-              }
-              {
-                localStorage.getItem('antd-pro-authority') !== 'dealers' ? (
-                  <div style={styles.agent_earning}>代理商收益</div>
-                ) : ''
-              }
-              <div style={styles.dealers}>经销商</div>
-              <div style={styles.dealer_earning}>经销商收益</div>
-            </div>
-
-            <List
-              split={false}
-              bordered={false}
-              dataSource={earningsList}
-              loading={loading}
-              renderItem={
-                item => (
-                  <div key={item.oid} style={styles.item}>
-                    <div style={styles.rowT}>
-                      <div>
-                        订单编号：{item.oid}
-                        <Divider type="vertical" />
-                        {(parseInt(item.agent_earning) > 0 || parseInt(item.dealer_earning) > 0) ? '成交' : '退款'}时间：{item.created_at}
-                      </div>
-                    </div>
-                    <div style={styles.row}>
-                      <div style={styles.id}>{item.id}</div>
-                      <div style={styles.type}><span>{item.type === 3 ? '团购订单' : '用户订单'}</span></div>
-                      <div style={styles.pay_amount}>{item.pay_amount}元</div>
-                      <div style={styles.pay_amount}>
-                        <span style={{color: stateBadge[item.state]}}>{stateMap[item.state]}</span>
-                      </div>
-                      <div style={styles.consignee}>{item.consignee}</div>
-                      {
-                        localStorage.getItem('antd-pro-authority') !== 'dealers' ? (
-                          <div style={styles.agents}>{item.agents || '-'}</div>
-                        ) : ''
-                      }
-                      {
-                        localStorage.getItem('antd-pro-authority') !== 'dealers' ? (
-                          <div style={styles.agent_earning}>
-                            <span style={{color: parseInt(item.agent_earning) > 0 ? '#666' : '#f5222d'}}>
-                              {item.agent_earning === undefined ? '-' : `${item.agent_earning}元`}
-                            </span>
-                          </div>
-                        ) : ''
-                      }
-                      <div style={styles.dealers}>{item.dealers || '-'}</div>
-                      <div style={styles.dealer_earning}>
-                        <span style={{color: stateBadge[item.state]}}>
-                          {item.dealer_earning === '0' ? '-' : `${item.dealer_earning}元`}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )
-              }
-              pagination={{
-                onChange: (page) => {
-                  console.log(page);
-                },
-                pageSize: 10,
-              }}
-            />
-          </div>
-        </Card>
       </PageHeaderLayout>
     );
   }
 }
-
-const styles = {
-  alignCenter: {
-    textAlign: 'center',
-  },
-
-  count: {
-    width: '100%',
-    padding: 20,
-    backgroundColor: '#fff',
-    marginBottom: 15,
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  countRow: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-
-  search: {
-    width: '100%',
-    padding: 20,
-    backgroundColor: '#fff',
-    marginBottom: 15,
-    display: 'flex',
-  },
-  searchRow: {
-    marginRight: 20,
-    display: 'flex',
-    alignItems: 'center',
-  },
-  searchTit: {
-    width: 80,
-  },
-
-  title: {
-    display: 'flex',
-    backgroundColor: '#eee',
-    padding: '10px 0px',
-    marginBottom: 10,
-    boxShadow: '0 1px 4px rgba(0,21,41,.12)',
-  },
-  item: {
-    marginBottom: 15,
-    paddingBottom: 10,
-    boxShadow: '0 1px 4px rgba(0,21,41,.12)',
-  },
-  row: {
-    display: 'flex',
-    paddingTop: 15,
-  },
-  rowT: {
-    padding: '3px 15px',
-    backgroundColor: '#f6f6f6',
-    display: 'flex',
-    justifyContent:'space-between',
-  },
-  oid: {
-    padding: '0px 10px',
-  },
-  created_at: {
-    padding: '0px 10px',
-  },
-  id: {
-    width: 100,
-    padding: '0px 10px',
-    textAlign: 'center',
-  },
-  type: {
-    width: 200,
-    padding: '0px 10px',
-    textAlign: 'center',
-  },
-  consignee: {
-    width: 200,
-    padding: '0px 10px',
-    textAlign: 'center',
-  },
-  pay_amount: {
-    width: 200,
-    padding: '0px 10px',
-    textAlign: 'center',
-  },
-  agents: {
-    width: 200,
-    padding: '0px 10px',
-    textAlign: 'center',
-  },
-  agent_earning: {
-    width: 200,
-    padding: '0px 10px',
-    textAlign: 'center',
-  },
-  dealers: {
-    width: 200,
-    padding: '0px 10px',
-    textAlign: 'center',
-  },
-  dealer_earning: {
-    width: 200,
-    padding: '0px 10px',
-    textAlign: 'center',
-  },
-};
 
 export default ADProfile;
