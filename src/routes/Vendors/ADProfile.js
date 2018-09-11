@@ -136,8 +136,11 @@ class ADProfile extends PureComponent {
 
   // 修改分配
   editAllowance(value, parameter) {
+    const {location: {search}} = this.props;
+    const ad = search.slice(1).split('&');
+    const roleId = ad[1].slice(1).split('=')[1];
     const {productsLists} = this.state;
-    let getAllowance = `${url}/agents/${sessionStorage.getItem('authUuid')}/allowance`;
+    let getAllowance = `${url}/agents/${roleId}/allowance`;
     getAllowance += parameter.editType === 'PUT' ? `/${parameter.editUuid}` : '';
     const data = {
       eptags: parameter.tags,
