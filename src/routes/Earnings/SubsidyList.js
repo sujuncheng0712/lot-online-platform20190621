@@ -1,19 +1,16 @@
-/* eslint-disable no-param-reassign,no-plusplus,no-const-assign,radix,no-underscore-dangle */
+/* eslint-disable no-param-reassign,no-plusplus,no-const-assign,radix,no-underscore-dangle,one-var */
 import React, {PureComponent} from 'react';
-import {Input, Button, Icon, message, List, Divider, Select} from 'antd';
+import {Input, Button, Badge, message, List, Divider, Select, Row, Col} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
 const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
-const stateBadge = ['','','','','#666','','','','','','#f5222d'];
-const stateMap = ['','','','待付款','已付款','','','','','','已退款'];
 
 class SubsidyList extends PureComponent {
   constructor(...args) {
     super(...args);
     this.state = {
-      agentsLists: [],
-      dealersLists: [],
+      merchantsList: [],
       ordersLists: [],
       lists: [],
       loading: true,
@@ -23,34 +20,9 @@ class SubsidyList extends PureComponent {
   }
 
   componentDidMount() {
-    this.getDealers();
-    this.getAgents();
+    this.getMerchantsList();
     this.getOrders();
-    this.getEarnings();
-  }
-
-  // 获取经销商列表
-  getDealers() {
-    const getDealers = `${url}/dealers`;
-    fetch(getDealers).then((res) => {
-      if (res.ok) {
-        res.json().then((info) => {
-          if (info.status) this.setState({dealersLists: info.data});
-        });
-      }
-    });
-  }
-
-  // 获取代理商列表
-  getAgents() {
-    const getAgents = `${url}/agents`;
-    fetch(getAgents).then((res) => {
-      if (res.ok) {
-        res.json().then((info) => {
-          if (info.status) this.setState({agentsLists: info.data});
-        });
-      }
-    });
+    this.getEarnings(auth.mid || '');
   }
 
   // 获取订单列表
@@ -65,21 +37,22 @@ class SubsidyList extends PureComponent {
     });
   }
 
+  // 获取商家列表
+  getMerchantsList() {
+    const getMerchants = `${url}/merchants`;
+    fetch(getMerchants).then((res) => {
+      if (res.ok) {
+        res.json().then((info) => {
+          if (info.status) this.setState({merchantsList: info.data});
+        });
+      }
+    });
+  }
+
   // 获取收益列表
-  getEarnings(type = '', uuid = '') {
+  getEarnings(mid = '') {
     let getEarnings = `${url}/earnings`;
-    let _type;
-    switch (type) {
-      case 'agents':
-        _type = `?aid=${uuid}`;
-        break;
-      case 'dealers':
-        _type = `?did=${uuid}`;
-        break;
-      default:
-        _type = '';
-    }
-    getEarnings += auth.type === 'vendors' ? _type : auth.type === 'agents' ? `?aid=${auth.uuid}` : `?did=${auth.uuid}`;
+    getEarnings += mid ? `?mid=${mid}` : '';
 
     fetch(getEarnings).then((res) => {
       if (res.ok) {
@@ -87,10 +60,10 @@ class SubsidyList extends PureComponent {
           if (info.status) {
             const data = [];
             info.data.forEach((val) => {
-              if (val.type === 1 || val.type === 3) data.push(val);
+              if (val.type === 1 || val.type === 3 || val.type === 4) data.push(val);
             });
             this.setState({lists: data, loading: false});
-          }else {
+          } else {
             this.setState({lists: [], loading: false});
             message.warning(`提示：[${info.message}]`);
           }
@@ -111,199 +84,183 @@ class SubsidyList extends PureComponent {
 
     if (arr.length === 0) message.error('没找到对应的数据');
 
-    this.setState({lists: arr.length>0?arr:lists});
+    this.setState({lists: arr.length > 0 ? arr : lists});
+  }
+
+  // 搜索商家的机器
+  searchMerchantsList() {
+    const {merchantsList, merchantsContact} = this.state;
+    merchantsList.forEach((val) => {
+      if (val.contact === merchantsContact) {
+        message.info(`正在搜索${merchantsContact}的订单，请稍后`);
+        this.getEarnings(val.uuid);
+      }
+    });
   }
 
   render() {
-    const {lists, loading, ordersLists, dealersLists, agentsLists} = this.state;
+    const {lists, loading, ordersLists, merchantsList} = this.state;
 
-    let nowadays = 0;
-    let yesterday = 0;
-    let thisMonth = 0;
-    let lastMonth = 0;
+    const nowadays = {m1: 0, m2: 0, m3: 0};
+    const yesterday = {m1: 0, m2: 0, m3: 0};
+    const thisMonth = {m1: 0, m2: 0, m3: 0};
+    const lastMonth = {m1: 0, m2: 0, m3: 0};
 
-    let k = 1;
-    lists.forEach((val) => {
+    lists.forEach((val, key) => {
       ordersLists.forEach((value) => {
-        if (val.oid === value.oid) {
-          val.consignee = value.consignee;
+        if (val.oid === value.uuid) {
+          const merchant = value.merchant.m3 || value.merchant.m2 || value.merchant.m1;
+          const contact = merchant ? merchant.contact : '--';
+          val.contact = contact;
+          val.consignee = value.consignee || '--';
           val.pay_amount = value.pay_amount;
-          if (val.agent_earning > 0 && value.state === 10) {
-            val.state = 4;
-          } else {
-            val.state = value.state;
-          }
         }
       });
-      dealersLists.forEach((value) => {
-        if (val.did === value.did) val.dealers = value.contact;
+      merchantsList.forEach((value) => {
+        if (val.m1id === value.uuid) val.m1 = value.contact;
+        if (val.m2id === value.uuid) val.m2 = value.contact;
+        if (val.m3id === value.uuid) val.m3 = value.contact;
       });
-      agentsLists.forEach((value) => {
-        if (val.aid === value.aid) val.agents = value.contact;
-      });
-      if (val.type === 3) {
-        dealersLists.forEach((value) => {
-          if (val.uid === value.did) val.consignee = value.contact;
-        });
-        agentsLists.forEach((value) => {
-          if (val.uid === value.aid) val.consignee = value.contact;
-        });
-      }
 
       if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate()) {
-        if (localStorage.getItem('antd-pro-authority') === 'vendors') {
-          if (sessionStorage.getItem('authType') === 'agents') {
-            nowadays += parseInt(val.agent_earning);
-          } else if (sessionStorage.getItem('authType') === 'dealers') {
-            nowadays += parseInt(val.dealer_earning);
-          } else {
-            nowadays += parseInt(val.agent_earning);
-            nowadays += parseInt(val.dealer_earning);
-          }
-        } else if (localStorage.getItem('antd-pro-authority') === 'agents') {
-          nowadays += parseInt(val.agent_earning);
-        } else if (localStorage.getItem('antd-pro-authority') === 'dealers') {
-          nowadays += parseInt(val.dealer_earning);
-        }
+        nowadays.m1 += val.m1earning !== 'None' ? parseInt(val.m1earning) : 0;
+        nowadays.m2 += val.m2earning !== 'None' ? parseInt(val.m2earning) : 0;
+        nowadays.m3 += val.m3earning !== 'None' ? parseInt(val.m3earning) : 0;
       }
       if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() - 1) {
-        if (localStorage.getItem('antd-pro-authority') === 'vendors') {
-          if (sessionStorage.getItem('authType') === 'agents') {
-            yesterday += parseInt(val.agent_earning);
-          } else if (sessionStorage.getItem('authType') === 'dealers') {
-            yesterday += parseInt(val.dealer_earning);
-          } else {
-            yesterday += parseInt(val.agent_earning);
-            yesterday += parseInt(val.dealer_earning);
-          }
-        } else if (localStorage.getItem('antd-pro-authority') === 'agents') {
-          yesterday += parseInt(val.agent_earning);
-        } else if (localStorage.getItem('antd-pro-authority') === 'dealers') {
-          yesterday += parseInt(val.dealer_earning);
-        }
+        yesterday.m1 += val.m1earning !== 'None' ? parseInt(val.m1earning) : 0;
+        yesterday.m2 += val.m2earning !== 'None' ? parseInt(val.m2earning) : 0;
+        yesterday.m3 += val.m3earning !== 'None' ? parseInt(val.m3earning) : 0;
       }
       if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth()) {
-        if (localStorage.getItem('antd-pro-authority') === 'vendors') {
-          if (sessionStorage.getItem('authType') === 'agents') {
-            thisMonth += parseInt(val.agent_earning);
-          } else if (sessionStorage.getItem('authType') === 'dealers') {
-            thisMonth += parseInt(val.dealer_earning);
-          } else {
-            thisMonth += parseInt(val.agent_earning);
-            thisMonth += parseInt(val.dealer_earning);
-          }
-        } else if (localStorage.getItem('antd-pro-authority') === 'agents') {
-          thisMonth += parseInt(val.agent_earning);
-        } else if (localStorage.getItem('antd-pro-authority') === 'dealers') {
-          thisMonth += parseInt(val.dealer_earning);
-        }
+        thisMonth.m1 += val.m1earning !== 'None' ? parseInt(val.m1earning) : 0;
+        thisMonth.m2 += val.m2earning !== 'None' ? parseInt(val.m2earning) : 0;
+        thisMonth.m3 += val.m3earning !== 'None' ? parseInt(val.m3earning) : 0;
       }
       if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() - 1) {
-        if (localStorage.getItem('antd-pro-authority') === 'vendors') {
-          if (sessionStorage.getItem('authType') === 'agents') {
-            lastMonth += parseInt(val.agent_earning);
-          } else if (sessionStorage.getItem('authType') === 'dealers') {
-            lastMonth += parseInt(val.dealer_earning);
-          } else {
-            lastMonth += parseInt(val.agent_earning);
-            lastMonth += parseInt(val.dealer_earning);
-          }
-        } else if (localStorage.getItem('antd-pro-authority') === 'agents') {
-          lastMonth += parseInt(val.agent_earning);
-        } else if (localStorage.getItem('antd-pro-authority') === 'dealers') {
-          lastMonth += parseInt(val.dealer_earning);
-        }
+        lastMonth.m1 += val.m1earning !== 'None' ? parseInt(val.m1earning) : 0;
+        lastMonth.m2 += val.m2earning !== 'None' ? parseInt(val.m2earning) : 0;
+        lastMonth.m3 += val.m3earning !== 'None' ? parseInt(val.m3earning) : 0;
       }
 
-      val.id = k;
-      k++;
+      val.id = key + 1;
     });
 
     return (
       <PageHeaderLayout title="收益列表">
-        <div style={styles.search}>
-          <div style={styles.searchRow}>
-            <div style={styles.searchTit}>订单编号：</div>
-            <div style={{width: 300}}>
-              <Input
-                placeholder="请输入需要查找的订单编号"
-                onChange={(e) => {
-                  this.setState({orderId: e.target.value});
-                }}
-              />
-            </div>
-          </div>
-          <Button type="primary" onClick={this.searchList.bind(this)}><Icon type="search" /> 查找收益</Button>
+        <div style={styles.content}>
+          <Row>
+            <Col span={10}>
+              <Row>
+                <Col span={6} style={styles.tit}>订单编号：</Col>
+                <Col span={17}>
+                  <Input placeholder="请输入需要查找的订单编号" onChange={(e) => this.setState({orderId: e.target.value})} />
+                </Col>
+              </Row>
+            </Col>
+            <Col span={4}>
+              <Button type="primary" onClick={this.searchList.bind(this)}>查找收益</Button>
+            </Col>
+          </Row>
+          <br />
+          <Row hidden={!(localStorage.getItem("antd-pro-authority") === "vendors") || false}>
+            <Col span={10}>
+              <Row>
+                <Col span={6} style={styles.tit}>商家：</Col>
+                <Col span={17}>
+                  <Select defaultValue="请选择" style={{width: '100%'}} onChange={(value) => this.getEarnings(value)}>
+                    <Select.OptGroup label="代理商">
+                      {merchantsList.map((item) => (
+                        <Select.Option key={item.uuid}>{item.contact}({item.mobile})</Select.Option>
+                      ))}
+                    </Select.OptGroup>
+                  </Select>
+                </Col>
+              </Row>
+            </Col>
+            <Col span={10}>
+              <Row>
+                <Col span={6} style={styles.tit}>按商家姓名搜索：</Col>
+                <Col span={17}>
+                  <Input placeholder="请输入商家姓名" onChange={(e) => this.setState({merchantsContact: e.target.value})} />
+                </Col>
+              </Row>
+            </Col>
+            <Col span={4}>
+              <Button type="primary" onClick={this.searchMerchantsList.bind(this)}>搜索商家</Button>
+            </Col>
+          </Row>
         </div>
-        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
-          <div style={styles.search}>
-            <div style={styles.searchRow}>
-              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;代理商：</div>
-              <div style={{width: 300}}>
-                <Select
-                  defaultValue="请选择"
-                  style={{width: 300}}
-                  onChange={(value) => {
-                    sessionStorage.setItem('authType', value.split(',')[0]);
-                    this.getEarnings(value.split(',')[0], value.split(',')[1]);
-                  }}
-                >
-                  <Select.OptGroup label="代理商">
-                    {agentsLists.map((item) => (
-                      <Select.Option key={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
-                    ))}
-                  </Select.OptGroup>
-                </Select>
-              </div>
-            </div>
-            <div style={styles.searchRow}>
-              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;经销商：</div>
-              <div style={{width: 300}}>
-                <Select
-                  defaultValue="请选择"
-                  style={{width: 300}}
-                  onChange={(value) => {
-                    sessionStorage.setItem('authType', value.split(',')[0]);
-                    this.getEarnings(value.split(',')[0], value.split(',')[1])
-                  }}
-                >
-                  <Select.OptGroup label="经销商">
-                    {dealersLists.map((item) => (
-                      <Select.Option key={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
-                    ))}
-                  </Select.OptGroup>
-                </Select>
-              </div>
-            </div>
+        <div style={styles.content}>
+          <div
+            style={{marginBottom: 15, textAlign: 'left'}}
+            hidden={(localStorage.getItem('antd-pro-authority') === 'merchants_02' || localStorage.getItem('antd-pro-authority') === 'merchants_02')}
+          >
+            一级运营商：
+            <Badge status="success" text={`今天收益：${nowadays.m1}元`} />
+            <Divider type="vertical" />
+            <Badge status="success" text={`昨天收益：${yesterday.m1}元`} />
+            <Divider type="vertical" />
+            <Badge status="processing" text={`本月收益：${thisMonth.m1}元`} />
+            <Divider type="vertical" />
+            <Badge status="processing" text={`上月收益：${lastMonth.m1}元`} />
           </div>
-        ) : ''}
-        <div style={styles.count}>
-          <div style={styles.countRow}><div>今天收益</div><div>{nowadays}元</div></div>
-          <div style={styles.countRow}><div>昨天收益</div><div>{yesterday}元</div></div>
-          <div style={styles.countRow}><div>本月收益</div><div>{thisMonth}元</div></div>
-          <div style={styles.countRow}><div>上月收益</div><div>{lastMonth}元</div></div>
-        </div>
-        <div style={{padding: 20, backgroundColor: '#fff'}}>
+          <div
+            style={{marginBottom: 15, textAlign: 'left'}}
+            hidden={localStorage.getItem('antd-pro-authority') === 'merchants_03'}
+          >
+            二级运营商：
+            <Badge status="success" text={`今天收益：${nowadays.m2}元`} />
+            <Divider type="vertical" />
+            <Badge status="success" text={`昨天收益：${yesterday.m2}元`} />
+            <Divider type="vertical" />
+            <Badge status="processing" text={`本月收益：${thisMonth.m2}元`} />
+            <Divider type="vertical" />
+            <Badge status="processing" text={`上月收益：${lastMonth.m2}元`} />
+          </div>
+          <div style={{marginBottom: 15, textAlign: 'left'}}>
+            代理商：
+            <Badge status="success" text={`今天收益：${nowadays.m3}元`} />
+            <Divider type="vertical" />
+            <Badge status="success" text={`昨天收益：${yesterday.m3}元`} />
+            <Divider type="vertical" />
+            <Badge status="processing" text={`本月收益：${thisMonth.m3}元`} />
+            <Divider type="vertical" />
+            <Badge status="processing" text={`上月收益：${lastMonth.m3}元`} />
+          </div>
           <div style={styles.title}>
             <div style={styles.id}>序号</div>
             <div style={styles.type}>订单类型</div>
             <div style={styles.pay_amount}>付款金额</div>
             <div style={styles.pay_amount}>订单状态</div>
             <div style={styles.consignee}>付款人</div>
-            {
-              localStorage.getItem('antd-pro-authority') !== 'dealers' ? (
-                <div style={styles.agents}>代理商</div>
-              ) : ''
-            }
-            {
-              localStorage.getItem('antd-pro-authority') !== 'dealers' ? (
-                <div style={styles.agent_earning}>代理商收益</div>
-              ) : ''
-            }
-            <div style={styles.dealers}>经销商</div>
-            <div style={styles.dealer_earning}>经销商收益</div>
+            <div
+              style={styles.agents}
+              hidden={(localStorage.getItem('antd-pro-authority') === 'merchants_02' || localStorage.getItem('antd-pro-authority') === 'merchants_03')}
+            >
+              一级运营商
+            </div>
+            <div
+              style={styles.agent_earning}
+              hidden={(localStorage.getItem('antd-pro-authority') === 'merchants_02' || localStorage.getItem('antd-pro-authority') === 'merchants_03')}
+            >
+              一级收益
+            </div>
+            <div
+              style={styles.dealers}
+              hidden={localStorage.getItem('antd-pro-authority') === 'merchants_03'}
+            >
+              二级运营商
+            </div>
+            <div
+              style={styles.dealer_earning}
+              hidden={localStorage.getItem('antd-pro-authority') === 'merchants_03'}
+            >
+              二级收益
+            </div>
+            <div style={styles.dealers}>代理商</div>
+            <div style={styles.dealer_earning}>代理收益</div>
           </div>
-
           <List
             split={false}
             bordered={false}
@@ -314,46 +271,52 @@ class SubsidyList extends PureComponent {
                 <div key={item.oid} style={styles.item}>
                   <div style={styles.rowT}>
                     <div>
-                      订单编号：{item.oid}
-                      <Divider type="vertical" />
-                      {(parseInt(item.agent_earning) > 0 || parseInt(item.dealer_earning) > 0) ? '成交' : '退款'}时间：{item.created_at}
+                      订单编号：{item.oid}<Divider type="vertical" />成交时间：{item.created_at}
                     </div>
                   </div>
                   <div style={styles.row}>
                     <div style={styles.id}>{item.id}</div>
-                    <div style={styles.type}><span>{item.type === 3 ? '团购订单' : '用户订单'}</span></div>
-                    <div style={styles.pay_amount}>{item.pay_amount}元</div>
-                    <div style={styles.pay_amount}>
-                      <span style={{color: stateBadge[item.state]}}>{stateMap[item.state]}</span>
+                    <div style={styles.type}>
+                      {item.type === 3 ? '团购订单' : '用户订单'}
                     </div>
-                    <div style={styles.consignee}>{item.consignee}</div>
-                    {
-                      localStorage.getItem('antd-pro-authority') !== 'dealers' ? (
-                        <div style={styles.agents}>{item.agents || '-'}</div>
-                      ) : ''
-                    }
-                    {
-                      localStorage.getItem('antd-pro-authority') !== 'dealers' ? (
-                        <div style={styles.agent_earning}>
-                          <span style={{color: parseInt(item.agent_earning) > 0 ? '#666' : '#f5222d'}}>
-                            {item.agent_earning === undefined ? '-' : `${item.agent_earning}元`}
-                          </span>
-                        </div>
-                      ) : ''
-                    }
-                    <div style={styles.dealers}>{item.dealers || '-'}</div>
+                    <div style={styles.pay_amount}>{item.total}元</div>
+                    <div style={styles.pay_amount}>已付款</div>
+                    <div style={styles.consignee}>
+                      {item.type === 3 ? item.contact : item.consignee}
+                    </div>
+                    <div
+                      style={styles.agents}
+                      hidden={localStorage.getItem('antd-pro-authority') === 'merchants_02'}
+                    >
+                      {item.m1 || '--'}
+                    </div>
+                    <div
+                      style={styles.agent_earning}
+                      hidden={(localStorage.getItem('antd-pro-authority') === 'merchants_02' || localStorage.getItem('antd-pro-authority') === 'merchants_03')}
+                    >
+                      {item.m1earning !== 'None' ? `${item.m1earning}元` : '--'}
+                    </div>
+                    <div
+                      style={styles.dealers}
+                      hidden={(localStorage.getItem('antd-pro-authority') === 'merchants_02' || localStorage.getItem('antd-pro-authority') === 'merchants_03')}
+                    >
+                      {item.m2 || '--'}
+                    </div>
+                    <div
+                      style={styles.dealer_earning}
+                      hidden={localStorage.getItem('antd-pro-authority') === 'merchants_02'}
+                    >
+                      {item.m2earning !== 'None' ? `${item.m2earning}元` : '--'}
+                    </div>
+                    <div style={styles.dealers}>{item.m3 || '--'}</div>
                     <div style={styles.dealer_earning}>
-                      <span style={{color: stateBadge[item.state]}}>
-                        {item.dealer_earning === '0' ? '-' : `${item.dealer_earning}元`}
-                      </span>
+                      {item.m3earning !== 'None' ? `${item.m3earning}元` : '--'}
                     </div>
                   </div>
                 </div>
               )
             }
-            pagination={{
-              pageSize: 10,
-            }}
+            pagination={{pageSize: 10}}
           />
         </div>
       </PageHeaderLayout>
@@ -362,38 +325,19 @@ class SubsidyList extends PureComponent {
 }
 
 const styles = {
+  content: {
+    backgroundColor: '#fff',
+    padding: '20px',
+    marginBottom: 15,
+  },
+  tit: {
+    minWidth: 115,
+    textAlign: 'right',
+    lineHeight: '32px',
+  },
+
   alignCenter: {
     textAlign: 'center',
-  },
-
-  count: {
-    width: '100%',
-    padding: 20,
-    backgroundColor: '#fafafa',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  countRow: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-
-  search: {
-    width: '100%',
-    padding: '10px 20px',
-    backgroundColor: '#fff',
-    display: 'flex',
-  },
-  searchRow: {
-    marginRight: 20,
-    display: 'flex',
-    alignItems: 'center',
-  },
-  searchTit: {
-    width: 80,
   },
 
   title: {
@@ -416,7 +360,7 @@ const styles = {
     padding: '3px 15px',
     backgroundColor: '#f6f6f6',
     display: 'flex',
-    justifyContent:'space-between',
+    justifyContent: 'space-between',
   },
   oid: {
     padding: '0px 10px',

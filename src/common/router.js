@@ -120,34 +120,29 @@ export const getRouterData = app => {
     '/finance/finance-list': {
       component: dynamicWrapper(app, [], () => import('../routes/Finance/FinanceList')),
     },
-    // 代理商列表
-    '/vendors/agents-list': {
-      component: dynamicWrapper(app, [], () => import('../routes/Vendors/AgentsList')),
-      authority: ['admin', 'vendors'],
+    // 商家列表
+    '/merchants/merchants-list': {
+      component: dynamicWrapper(app, [], () => import('../routes/Merchants/MerchantsList')),
+      authority: ['vendors', 'merchants_01', 'merchants_02'],
     },
-    // 经销商列表
-    '/vendors/dealers-list': {
-      component: dynamicWrapper(app, [], () => import('../routes/Vendors/DealerList')),
-      authority: ['admin', 'vendors', 'agents'],
-    },
-    // 添加 编辑 代理商 经销商
-    '/vendors/ad-add': {
-      component: dynamicWrapper(app, [], () => import('../routes/Vendors/ADAdd')),
-      authority: ['admin', 'vendors'],
+    // 添加/编辑商家
+    '/merchants/add-edit-merchants': {
+      component: dynamicWrapper(app, [], () => import('../routes/Merchants/AddEditMerchants')),
+      authority: ['vendors'],
     },
     // 代理商 经销商 详情
-    '/vendors/ad-profile': {
-      component: dynamicWrapper(app, [], () => import('../routes/Vendors/ADProfile')),
+    '/merchants/merchants-profile': {
+      component: dynamicWrapper(app, [], () => import('../routes/Merchants/MerchantsProfile')),
     },
     // 新增签约信息
-    '/vendors/deal-add': {
-      component: dynamicWrapper(app, [], () => import('../routes/Vendors/DealAdd')),
-      authority: ['admin', 'vendors'],
+    '/merchants/add-edit-subscription': {
+      component: dynamicWrapper(app, [], () => import('../routes/Merchants/AddEditSubscription')),
+      authority: ['vendors'],
     },
-    // 新增签约信息
-    '/vendors/distribution': {
-      component: dynamicWrapper(app, [], () => import('../routes/Vendors/Distribution')),
-      authority: ['admin', 'vendors'],
+    // 收益分配
+    '/merchants/distribution': {
+      component: dynamicWrapper(app, [], () => import('../routes/Merchants/Distribution')),
+      authority: ['vendors'],
     },
     // 团购订单列表
     '/group/group-orders-list': {
@@ -164,57 +159,25 @@ export const getRouterData = app => {
     // 产品管理
     '/products/products-list': {
       component: dynamicWrapper(app, [], () => import('../routes/Products/ProductsList')),
-      authority: ['admin', 'vendors'],
+      authority: ['vendors'],
     },
     // 产品详情
     '/products/product-profile': {
       component: dynamicWrapper(app, [], () => import('../routes/Products/ProductProfile')),
-      authority: ['admin', 'vendors'],
-    },
-    // 产品管理
-    '/products/group-list': {
-      component: dynamicWrapper(app, [], () => import('../routes/Products/GroupList')),
-      authority: ['admin', 'vendors'],
+      authority: ['vendors'],
     },
     // 添加/编辑产品
-    '/products/product-add': {
-      component: dynamicWrapper(app, [], () => import('../routes/Products/ProductAdd')),
-      authority: ['admin', 'vendors'],
-    },
-    // 产品ID管理
-    '/ids/machine': {
-      component: dynamicWrapper(app, [], () => import('../routes/Ids/Machines')),
-    },
-    '/ids/machine-list': {
-      component: dynamicWrapper(app, [], () => import('../routes/Ids/MachinesList')),
-    },
-    // 滤芯ID管理
-    '/ids/element': {
-      component: dynamicWrapper(app, [], () => import('../routes/Ids/Element')),
+    '/products/add-edit-product': {
+      component: dynamicWrapper(app, [], () => import('../routes/Products/AddEditProduct')),
+      authority: ['vendors'],
     },
     // 个人中心
     '/info/profile': {
       component: dynamicWrapper(app, [], () => import('../routes/Info/Profile')),
     },
-    // 发货额度
-    '/info/delivery-quota': {
-      component: dynamicWrapper(app, [], () => import('../routes/Info/DeliveryQuota')),
-    },
-    // 登陆密码
+    // 重置密码
     '/info/reset-password': {
       component: dynamicWrapper(app, [], () => import('../routes/Info/ResetPassword')),
-    },
-    // 支付密码
-    '/info/pay-password': {
-      component: dynamicWrapper(app, [], () => import('../routes/Info/PayPassword')),
-    },
-    // 银行卡
-    '/info/bank-card': {
-      component: dynamicWrapper(app, [], () => import('../routes/Info/BankCard')),
-    },
-    // 退出登录
-    '/info/sign-out': {
-      component: dynamicWrapper(app, [], () => import('../routes/Info/SignOut')),
     },
 
     // 框架自带

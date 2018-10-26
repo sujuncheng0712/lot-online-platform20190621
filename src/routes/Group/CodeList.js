@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign,no-plusplus,no-underscore-dangle */
 import React, {PureComponent} from 'react';
-import {Badge, Divider, Input, Icon, Button, message, List, Select} from 'antd';
+import {Badge, Divider, Input, Icon, Button, message, List, Select, Row, Col} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
@@ -12,59 +12,35 @@ class codesList extends PureComponent {
     this.state = {
       lists: [],
       loading: true,
-      agentsLists: [],
-      dealersLists: [],
+      merchantsList: [],
       orderId: '',
       orderConsignee: '',
       orderCode: '',
+      merchantsContact: '',
     };
   }
 
   componentWillMount() {
-    this.getDealers();
-    this.getAgents();
-    this.getOrders();
+    this.getMerchantsList();
+    this.getOrders(auth.mid);
   }
 
-  // 获取经销商列表
-  getDealers(){
-    const getDealers = `${url}/dealers`;
-    fetch(getDealers).then((res) => {
+  // 获取商家列表
+  getMerchantsList() {
+    const getMerchants = `${url}/merchants`;
+    fetch(getMerchants).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) this.setState({dealersLists: info.data});
-        });
-      }
-    });
-  }
-
-  // 获取代理商列表
-  getAgents(){
-    const getAgents = `${url}/agents`;
-    fetch(getAgents).then((res) => {
-      if (res.ok) {
-        res.json().then((info) => {
-          if (info.status) this.setState({agentsLists: info.data});
+          if (info.status) this.setState({merchantsList: info.data});
         });
       }
     });
   }
 
   // 获取订单列表
-  getOrders(type = '', uuid = '') {
+  getOrders(mid) {
     let getOrders = `${url}/orders`;
-    let _type;
-    switch (type) {
-      case 'agents':
-        _type = `?aid=${uuid}`;
-        break;
-      case 'dealers':
-        _type = `?did=${uuid}`;
-        break;
-      default:
-        _type = '';
-    }
-    getOrders += auth.type === 'vendors' ? _type : auth.type === 'agents' ? `?aid=${auth.uuid}` : `?did=${auth.uuid}`;
+    getOrders += mid ? `?mid=${mid}` : '';
 
     fetch(getOrders).then((res) => {
       if (res.ok) {
@@ -80,7 +56,7 @@ class codesList extends PureComponent {
               }
             });
             this.setState({lists, loading: false});
-          }else {
+          } else {
             this.setState({lists: [], loading: false});
             message.warning(`提示：[${info.message}]`);
           }
@@ -94,7 +70,7 @@ class codesList extends PureComponent {
     const {lists, orderId, orderConsignee, orderCode} = this.state;
     const arr = [];
     lists.forEach((val) => {
-      if (val.oid === orderId || val.consignee === orderConsignee) arr.push(val);
+      if (val.uuid === orderId || val.consignee === orderConsignee) arr.push(val);
       val.activations.forEach((v) => {
         if (v.code === orderCode) arr.push(val);
       });
@@ -105,8 +81,19 @@ class codesList extends PureComponent {
     this.setState({lists: arr.length > 0 ? arr : lists});
   }
 
+  // 搜索商家的机器
+  searchMerchantsList() {
+    const {merchantsList, merchantsContact} = this.state;
+    merchantsList.forEach((val) => {
+      if (val.contact === merchantsContact) {
+        message.info(`正在搜索${merchantsContact}的订单，请稍后`);
+        this.getOrders(val.uuid);
+      }
+    });
+  }
+
   render() {
-    const {lists, loading, agentsLists, dealersLists} = this.state;
+    const {lists, loading, merchantsList} = this.state;
 
     const ActivationCode = [];
     const activation = [];
@@ -119,96 +106,112 @@ class codesList extends PureComponent {
           ActivationCode.push(v.code);
           if (v.confirm_at) activation.push(v);
         });
-
-        agentsLists.forEach((v) => {
-          if (v.aid === val.uid) val.consignee = v.contact;
-        });
-
-        dealersLists.forEach((v) => {
-          if (v.did === val.uid) val.consignee = v.contact;
-        });
-
         let i = 1;
         val.activations.forEach((activationsVal) => {
           activationsVal.id = i;
           i++;
         });
       }
+      const merchant = val.merchant.m3 || val.merchant.m2 || val.merchant.m1;
+      val.referrer = merchant ? merchant.contact : '--';
     });
 
     return (
       <PageHeaderLayout title="激活码列表">
-        <div style={styles.search}>
-          <div style={styles.searchRow}>
-            <div style={styles.searchTit}>订单编号：</div>
-            <div style={{width: 300}}>
-              <Input
-                placeholder="请输入需要查找的订单编号"
-                onChange={(e) => {
-                  this.setState({orderId: e.target.value});
-                }}
-              />
-            </div>
-          </div>
-          <div style={styles.searchRow}>
-            <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;激活码：</div>
-            <div style={{width: 300}}>
-              <Input
-                placeholder="请输入需要查找的激活码"
-                onChange={(e) => {
-                  this.setState({orderCode: e.target.value});
-                }}
-              />
-            </div>
-          </div>
-          <Button type="primary" onClick={this.searchList.bind(this)}><Icon type="search" /> 查找</Button>
+        <div style={styles.content}>
+          <Row>
+            <Col span={10}>
+              <Row>
+                <Col span={6} style={styles.tit}>
+                  订单编号：
+                </Col>
+                <Col span={17}>
+                  <Input
+                    placeholder="请输入需要查找的订单编号"
+                    onChange={(e) => {
+                      this.setState({orderId: e.target.value});
+                    }}
+                  />
+                </Col>
+              </Row>
+            </Col>
+            <Col span={10}>
+              <Row>
+                <Col span={6} style={styles.tit}>
+                  激活码：
+                </Col>
+                <Col span={17}>
+                  <Input
+                    placeholder="请输入需要查找的买家姓名"
+                    onChange={(e) => {
+                      this.setState({orderCode: e.target.value});
+                    }}
+                  />
+                </Col>
+              </Row>
+            </Col>
+            <Col span={4}>
+              <Button
+                type="primary"
+                onClick={this.searchList.bind(this)}
+              >
+                搜索订单
+              </Button>
+            </Col>
+          </Row>
+          <br />
+          <Row hidden={!(localStorage.getItem("antd-pro-authority") === "vendors") || false}>
+            <Col span={10}>
+              <Row>
+                <Col span={6} style={styles.tit}>
+                  商家：
+                </Col>
+                <Col span={17}>
+                  <Select
+                    defaultValue="请选择"
+                    style={{width: '100%'}}
+                    onChange={(value) => this.getOrders(value)}
+                  >
+                    <Select.OptGroup label="代理商">
+                      {merchantsList.map((item) => (
+                        <Select.Option key={item.uuid}>{item.contact}({item.mobile})</Select.Option>
+                      ))}
+                    </Select.OptGroup>
+                  </Select>
+                </Col>
+              </Row>
+            </Col>
+            <Col span={10}>
+              <Row>
+                <Col span={6} style={styles.tit}>
+                  按商家姓名搜索：
+                </Col>
+                <Col span={17}>
+                  <Input
+                    placeholder="请输入商家姓名"
+                    onChange={(e) => this.setState({merchantsContact: e.target.value})}
+                  />
+                </Col>
+              </Row>
+            </Col>
+            <Col span={4}>
+              <Button
+                type="primary"
+                onClick={this.searchMerchantsList.bind(this)}
+              >
+                搜索商家
+              </Button>
+            </Col>
+          </Row>
         </div>
-        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
-          <div style={styles.search}>
-            <div style={styles.searchRow}>
-              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;代理商：</div>
-              <div style={{width: 300}}>
-                <Select
-                  defaultValue="请选择"
-                  style={{width: 300}}
-                  onChange={(value) => this.getOrders(value.split(',')[0], value.split(',')[1])}
-                >
-                  <Select.OptGroup label="代理商">
-                    {agentsLists.map((item) => (
-                      <Select.Option key={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
-                    ))}
-                  </Select.OptGroup>
-                </Select>
-              </div>
-            </div>
-            <div style={styles.searchRow}>
-              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;经销商：</div>
-              <div style={{width: 300}}>
-                <Select
-                  defaultValue="请选择"
-                  style={{width: 300}}
-                  onChange={(value) => this.getOrders(value.split(',')[0], value.split(',')[1])}
-                >
-                  <Select.OptGroup label="经销商">
-                    {dealersLists.map((item) => (
-                      <Select.Option key={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
-                    ))}
-                  </Select.OptGroup>
-                </Select>
-              </div>
-            </div>
-          </div>
-        ) : ''}
-        <div style={{padding: 20, backgroundColor: '#fff'}}>
-          <div style={{marginTop: 15, textAlign: 'left'}}>
+        <div style={styles.content}>
+          <div style={{marginBottom: 15, textAlign: 'left'}}>
             <Badge status="default" text={`总购买数量${ActivationCode.length}个`} />
             <Divider type="vertical" />
             <Badge status="success" text={`已激活数量${activation.length}个`} />
             <Divider type="vertical" />
             <Badge status="processing" text={`未激活数量${(ActivationCode.length - activation.length)}个`} />
           </div>
-        </div>
-        <div style={{padding: 20, backgroundColor: '#fff', marginTop: 20}}>
           <div style={styles.title}>
             <div style={styles.id}>序号</div>
             <div style={styles.consignee}>购买人</div>
@@ -226,16 +229,16 @@ class codesList extends PureComponent {
                 <div key={item.oid} style={styles.item}>
                   <div style={styles.rowT}>
                     <div>
-                      订单编号：{item.oid}
+                      订单编号：{item.uuid}
                       <Divider type="vertical" />
-                      {item.state !== 10?'成交':'退款'}时间：{item.created_at}
+                      {item.state !== 10 ? '成交' : '退款'}时间：{item.created_at}
                     </div>
                   </div>
                   {
                     item.activations.map((val) => (
                       <div key={val.code} style={styles.row}>
                         <div style={styles.id}>{val.id}</div>
-                        <div style={styles.consignee}>{item.consignee || '-'}</div>
+                        <div style={styles.consignee}>{item.referrer}</div>
                         <div style={styles.code}>{val.code}</div>
                         <div style={styles.confirm_at}>
                           <Badge
@@ -243,7 +246,7 @@ class codesList extends PureComponent {
                             text={val.confirm_at ? '已激活' : '未激活'}
                           />
                         </div>
-                        <div style={styles.confirm_at}>{val.confirm_at || '-'}</div>
+                        <div style={styles.confirm_at}>{val.confirm_at || '--'}</div>
                       </div>
                     ))
                   }
@@ -264,19 +267,15 @@ class codesList extends PureComponent {
 }
 
 const styles = {
-  search: {
-    width: '100%',
-    padding: '10px 20px',
+  content: {
     backgroundColor: '#fff',
-    display: 'flex',
+    padding: '20px',
+    marginBottom: 15,
   },
-  searchRow: {
-    marginRight: 20,
-    display: 'flex',
-    alignItems: 'center',
-  },
-  searchTit: {
-    width: 80,
+  tit: {
+    minWidth: 110,
+    textAlign: 'right',
+    lineHeight: '32px',
   },
 
   alignCenter: {
@@ -302,7 +301,7 @@ const styles = {
     padding: '3px 15px',
     backgroundColor: '#f6f6f6',
     display: 'flex',
-    justifyContent:'space-between',
+    justifyContent: 'space-between',
   },
   oid: {
     padding: '0px 10px',

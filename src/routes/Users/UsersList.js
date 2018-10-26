@@ -1,19 +1,18 @@
 /* eslint-disable no-param-reassign,no-plusplus,no-underscore-dangle */
 import React, {PureComponent} from 'react';
-import {Table, Select, message} from 'antd';
+import {Table, Select, message, Row, Col, Input, Button} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
 const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
 
-
 const columns = [
   {title: '序号', dataIndex: 'id'},
-  {title: '注册时间', dataIndex: 'created_at', align: 'left'},
-  {title: '注册手机号', dataIndex: 'mobile', align: 'left'},
-  {title: '姓名', dataIndex: 'name', align: 'left', render: val => val || '-'},
-  {title: '推荐人', dataIndex: 'contact', align: 'left'},
-  {title: '代理商', dataIndex: 'agents', align: 'left'},
+  {title: '注册时间', dataIndex: 'created_at'},
+  {title: '注册手机号', dataIndex: 'mobile'},
+  {title: '姓名', dataIndex: 'name', render: val => val || '-'},
+  {title: '推荐人', dataIndex: 'merchant', render: val => (val.m3 || val.m2 || val.m1).contact},
+  {title: '代理商', dataIndex: 'merchant', render: val => val.m1.contact},
 ];
 
 class UsersList extends PureComponent {
@@ -22,56 +21,32 @@ class UsersList extends PureComponent {
     this.state = {
       lists: [],
       loading: true,
-      dealersLists: [],
-      agentsLists: [],
+      merchantsList: [],
+      merchantsContact: '',
     };
   }
 
   componentDidMount() {
-    this.getDealers();
-    this.getAgents();
-    this.getUsers();
+    this.getUsers(auth.mid);
+    this.getMerchantsList();
   }
 
-  // 获取经销商列表
-  getDealers() {
-    const getDealers = `${url}/dealers`;
-    fetch(getDealers).then((res) => {
+  // 获取商家列表
+  getMerchantsList() {
+    const getMerchants = `${url}/merchants`;
+    fetch(getMerchants).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) this.setState({dealersLists: info.data});
-        });
-      }
-    });
-  }
-
-  // 获取代理商列表
-  getAgents() {
-    const getAgents = `${url}/agents`;
-    fetch(getAgents).then((res) => {
-      if (res.ok) {
-        res.json().then((info) => {
-          if (info.status) this.setState({agentsLists: info.data});
+          if (info.status) this.setState({merchantsList: info.data});
         });
       }
     });
   }
 
   // 获取用户列表
-  getUsers(type = '', uuid = '') {
+  getUsers(mid) {
     let getUser = `${url}/users`;
-    let _type;
-    switch (type) {
-      case 'agents':
-        _type = `?aid=${uuid}`;
-        break;
-      case 'dealers':
-        _type = `?did=${uuid}`;
-        break;
-      default:
-        _type = '';
-    }
-    getUser += auth.type === 'vendors' ? _type : auth.type === 'agents' ? `?aid=${auth.uuid}` : `?did=${auth.uuid}`;
+    getUser += mid ? `?mid=${mid}` : '';
 
     fetch(getUser).then((res) => {
       if (res.ok) {
@@ -87,71 +62,75 @@ class UsersList extends PureComponent {
     });
   }
 
-  render() {
-    const {lists, loading, dealersLists, agentsLists} = this.state;
+  // 搜索商家的机器
+  searchMerchantsList() {
+    const {merchantsList, merchantsContact} = this.state;
+    merchantsList.forEach((val) => {
+      if (val.contact === merchantsContact) {
+        message.info(`正在搜索${merchantsContact}的用户，请稍后`);
+        this.getUsers(val.uuid);
+      }
+    });
+  }
 
-    let k = 1;
+  render() {
+    const {lists, loading, merchantsList} = this.state;
+
     lists.forEach((val) => {
-      agentsLists.forEach((value) => {
-        if (val.aid === value.aid) {
-          val.contact = value.contact;
-          val.phone = value.mobile;
-          val.agents = value.contact;
+      merchantsList.forEach((merchant) => {
+        if (val.mid === merchant.uuid) {
+          val.mid = merchant.contact;
         }
       });
-      dealersLists.forEach((value) => {
-        if (val.did === value.did) {
-          val.contact = value.contact;
-          val.phone = value.mobile;
-        }
-      });
-      if (!val.aid) val.agents = 'DGK 智能平台';
-      val.id = k;
-      k++;
     });
 
     return (
       <PageHeaderLayout title="用户列表">
-        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
-          <div style={styles.search}>
-            <div style={styles.searchRow}>
-              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;代理商：</div>
-              <div style={{width: 300}}>
-                <Select
-                  defaultValue="请选择"
-                  style={{width: 300}}
-                  onChange={(value) => {
-                    this.getUsers(value.split(',')[0], value.split(',')[1]);
-                  }}
-                >
-                  <Select.OptGroup label="代理商">
-                    {agentsLists.map((item) => (
-                      <Select.Option value={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
-                    ))}
-                  </Select.OptGroup>
-                </Select>
-              </div>
-            </div>
-            <div style={styles.searchRow}>
-              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;经销商：</div>
-              <div style={{width: 300}}>
-                <Select
-                  defaultValue="请选择"
-                  style={{width: 300}}
-                  onChange={(value) => {
-                    this.getUsers(value.split(',')[0], value.split(',')[1]);
-                  }}
-                >
-                  <Select.OptGroup label="经销商">
-                    {dealersLists.map((item) => (
-                      <Select.Option value={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
-                    ))}
-                  </Select.OptGroup>
-                </Select>
-              </div>
-            </div>
-          </div>
-        ) : ''}
+        <div style={styles.content} hidden={!(localStorage.getItem("antd-pro-authority") === "vendors") || false}>
+          <Row>
+            <Col span={10}>
+              <Row>
+                <Col span={6} style={styles.tit}>
+                  商家：
+                </Col>
+                <Col span={17}>
+                  <Select
+                    defaultValue="请选择"
+                    style={{width: '100%'}}
+                    onChange={(value) => this.getUsers(value)}
+                  >
+                    <Select.OptGroup label="代理商">
+                      {merchantsList.map((item) => (
+                        <Select.Option key={item.uuid}>{item.contact}({item.mobile})</Select.Option>
+                      ))}
+                    </Select.OptGroup>
+                  </Select>
+                </Col>
+              </Row>
+            </Col>
+            <Col span={10}>
+              <Row>
+                <Col span={6} style={styles.tit}>
+                  按商家姓名搜索：
+                </Col>
+                <Col span={17}>
+                  <Input
+                    placeholder="请输入商家姓名"
+                    onChange={(e) => this.setState({merchantsContact: e.target.value})}
+                  />
+                </Col>
+              </Row>
+            </Col>
+            <Col span={4}>
+              <Button
+                type="primary"
+                onClick={this.searchMerchantsList.bind(this)}
+              >
+                搜索商家
+              </Button>
+            </Col>
+          </Row>
+        </div>
         <div style={{padding: 20, backgroundColor: '#fff'}}>
           <Table
             columns={columns}
@@ -165,20 +144,16 @@ class UsersList extends PureComponent {
   }
 }
 
-const styles={
-  search: {
-    width: '100%',
-    padding: '10px 20px',
+const styles = {
+  content: {
     backgroundColor: '#fff',
-    display: 'flex',
+    padding: '20px',
+    marginBottom: 15,
   },
-  searchRow: {
-    marginRight: 20,
-    display: 'flex',
-    alignItems: 'center',
-  },
-  searchTit: {
-    width: 80,
+  tit: {
+    minWidth: 110,
+    textAlign: 'right',
+    lineHeight: '32px',
   },
 };
 

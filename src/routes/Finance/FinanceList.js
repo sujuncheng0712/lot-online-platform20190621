@@ -12,36 +12,22 @@ class FinanceList extends PureComponent {
     super(...args);
     this.state = {
       lists: [],
-      dealersLists: [],
-      agentsLists: [],
+      merchantsList: [],
     };
   }
 
   componentDidMount() {
-    this.getDealers();
-    this.getAgents();
+    this.getMerchantsList();
     this.getWalletApply();
   }
 
-  // 获取经销商列表
-  getDealers() {
-    const getDealers = `${url}/dealers`;
-    fetch(getDealers).then((res) => {
+  // 获取商家列表
+  getMerchantsList() {
+    const getMerchants = `${url}/merchants`;
+    fetch(getMerchants).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) this.setState({dealersLists: info.data});
-        });
-      }
-    });
-  }
-
-  // 获取代理商列表
-  getAgents() {
-    const getAgents = `${url}/agents`;
-    fetch(getAgents).then((res) => {
-      if (res.ok) {
-        res.json().then((info) => {
-          if (info.status) this.setState({agentsLists: info.data});
+          if (info.status) this.setState({merchantsList: info.data});
         });
       }
     });
@@ -62,15 +48,14 @@ class FinanceList extends PureComponent {
   }
 
   // 提现审核
-  postWalletApply(uid, uuid, type) {
-    const data = JSON.stringify({verdict: type});
+  postWalletApply(mid, uuid, type) {
     let postWalletApply = `${url}/wallet`;
-    postWalletApply += `/${uid}`;
+    postWalletApply += `/${mid}`;
     postWalletApply += `/apply`;
     postWalletApply += `/${uuid}`;
     fetch(postWalletApply, {
       method: 'POST',
-      body: JSON.stringify({data}),
+      body: JSON.stringify({verdict: type}),
     }).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
@@ -81,20 +66,19 @@ class FinanceList extends PureComponent {
   }
 
   render() {
-    const {lists, dealersLists, agentsLists} = this.state;
+    const {lists, merchantsList} = this.state;
 
     const lists1 = [];
     const lists2 = [];
     const lists3 = [];
     lists.forEach((val)=>{
-      banks.forEach((Bval) => {
-        if (Bval.code === val.bank) val.bank = Bval.name;
-      });
-      dealersLists.forEach((Dval)=>{
-        if (Dval.did === val.uid) val.contact = Dval.contact;
-      });
-      agentsLists.forEach((Aval)=>{
-        if (Aval.aid === val.uid) val.contact = Aval.contact;
+      if(val.withdraw){
+        banks.forEach((value) => {
+          if (value.code === val.withdraw.bank) val.bank = value.name;
+        });
+      }
+      merchantsList.forEach((value)=>{
+        if (value.uuid === val.mid) val.contact = value.contact;
       });
 
       if (val.state && val.state === 1) lists1.push(val);
@@ -127,24 +111,24 @@ class FinanceList extends PureComponent {
                 <div>
                   发起时间：{item.created_at}
                   <Divider type="vertical" />
-                  银行账户：{item.account}
+                  银行账户：{item.withdraw ? item.withdraw.account : '--'}
                 </div>
               </div>
               <div style={styles.column}>
                 <div style={styles.order}>{key + 1}</div>
-                <div style={styles.col}>{item.contact}</div>
+                <div style={styles.col}>{item.contact || '--'}</div>
                 <div style={styles.col}>{item.amount}元</div>
                 <div style={styles.col}>
                   {((Math.round(item.amount * 0.1) / 100) <= 2 ? 2 : Math.round(item.amount * 0.1) / 100).toFixed(2)}元
                 </div>
                 <div style={styles.bank}>{item.bank}</div>
-                <div style={styles.col}>{item.name}</div>{
-                item.state === 1 ? (
+                <div style={styles.col}>{item.withdraw ? item.withdraw.name : '--'}</div>
+                {item.state === 1 ? (
                   <div style={styles.tool}>
                     <Popconfirm
                       placement="topRight"
                       title="确认要通过这笔提现吗？"
-                      onConfirm={this.postWalletApply.bind(this, item.uid, item.uuid, 1)}
+                      onConfirm={this.postWalletApply.bind(this, item.mid, item.uuid, 1)}
                       okText="确认"
                       cancelText="取消"
                     >
@@ -154,15 +138,14 @@ class FinanceList extends PureComponent {
                     <Button
                       type="primary"
                       size="small"
-                      onClick={this.postWalletApply.bind(this, item.uid, item.uuid, 0)}
+                      onClick={this.postWalletApply.bind(this, item.mid, item.uuid, 0)}
                     >
                       拒绝
                     </Button>
                   </div>
                 ) : (
                   <div style={styles.tool}>{stateMap[item.state]}</div>
-                )
-              }
+                )}
               </div>
             </div>
           )

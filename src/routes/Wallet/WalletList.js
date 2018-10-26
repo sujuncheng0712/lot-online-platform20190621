@@ -1,6 +1,6 @@
 /* eslint-disable prefer-const,no-param-reassign,class-methods-use-this */
 import React, {PureComponent} from 'react';
-import {Button, Divider, Tabs, Table, List, Select, message} from 'antd';
+import {Button, Divider, Tabs, Table, List, Select, message, Row, Col, Input} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 import banks from '../../models/banks';
 
@@ -15,52 +15,43 @@ class WalletList extends PureComponent {
     this.state = {
       lists: [],
       balance: 0,
-      dealersLists: [],
-      agentsLists: [],
+      merchantsList: [],
+      loading: true,
     };
   }
 
   componentDidMount() {
-    this.getDealers();
-    this.getAgents();
-    this.getWallet();
+    this.getMerchantsList();
+    this.getWallet(auth.mid || '');
   }
 
-  // 获取经销商列表
-  getDealers() {
-    const getDealers = `${url}/dealers`;
-    fetch(getDealers).then((res) => {
+  // 获取商家列表
+  getMerchantsList() {
+    const getMerchants = `${url}/merchants`;
+    fetch(getMerchants).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) this.setState({dealersLists: info.data});
-        });
-      }
-    });
-  }
-
-  // 获取代理商列表
-  getAgents() {
-    const getAgents = `${url}/agents`;
-    fetch(getAgents).then((res) => {
-      if (res.ok) {
-        res.json().then((info) => {
-          if (info.status) this.setState({agentsLists: info.data});
+          if (info.status) this.setState({merchantsList: info.data});
         });
       }
     });
   }
 
   // 获取余额信息
-  getWallet(uuid) {
+  getWallet(mid = '') {
+    if (!mid) {
+
+      return false;
+    }
     let getWallet = `${url}/wallet`;
-    getWallet += `/${uuid || auth.uuid}`;
+    getWallet += `/${mid}`;
     fetch(getWallet).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
           if (info.status) {
-            this.setState({lists: info.data, balance: info.data[0].balance});
+            this.setState({lists: info.data, balance: info.data[0].balance, loading: false});
           } else {
-            this.setState({lists: [], balance: 0});
+            this.setState({lists: [], balance: 0, loading: false});
             message.warning(`提示：[${info.message}]`);
           }
         });
@@ -68,22 +59,37 @@ class WalletList extends PureComponent {
     });
   }
 
+  // 搜索商家的机器
+  searchMerchantsList() {
+    const {merchantsList, merchantsContact} = this.state;
+    merchantsList.forEach((val) => {
+      if (val.contact === merchantsContact) {
+        message.info(`正在搜索${merchantsContact}的结算情况，请稍后`);
+        this.getWallet(val.uuid);
+      }
+    });
+  }
+
   render() {
-    const {lists, balance, dealersLists, agentsLists} = this.state;
+    const {lists, balance, merchantsList, loading} = this.state;
 
     const columns = [
-      {title: '时间', dataIndex: 'created_at', width:'20%'},
+      {title: '时间', dataIndex: 'created_at', width: '20%'},
       {title: '类型', dataIndex: 'type', render: val => typeMap[val]},
-      {title: '收入/支出金额', dataIndex: 'amount', width:'20%', render: val => `${val} 元`},
-      {title: '账户余额', dataIndex: 'balance', width:'20%', render: val => `${val || 0} 元`},
-      {title: '备注', dataIndex: 'purpose', width:'20%', render: val => val || '无'},
+      {title: '收入/支出金额', dataIndex: 'amount', width: '20%', render: val => `${val} 元`},
+      {title: '账户余额', dataIndex: 'balance', width: '20%', render: val => `${val || 0} 元`},
+      {title: '备注', dataIndex: 'reference', width: '20%', render: val => val || '无'},
     ];
 
     let schedules = [];
     lists.forEach((val, k) => {
-      banks.forEach((Bval) => {
-        if (Bval.code === val.bank) val.bank = Bval.name;
-      });
+      if (val.withdraw) {
+        banks.forEach((value) => {
+          if (value.code === val.withdraw.bank) val.bank = value.name;
+        });
+      } else {
+        val.bank = '--';
+      }
       if (val.state) {
         val.id = k + 1;
         schedules.push(val);
@@ -107,15 +113,15 @@ class WalletList extends PureComponent {
         bordered={false}
         dataSource={data}
         pagination={{pageSize: 10}}
-        loading={false}
+        loading={loading}
         renderItem={
           item => (
             <div key={item.oid} style={styles.item}>
               <div style={styles.row}>
                 <div>
                   发起时间：{item.created_at}
-                  <Divider type="vertical" />
-                  银行账户：{item.account}
+                  <Divider type="vertical"/>
+                  银行账户：{item.withdraw ? item.withdraw.account : '--'}
                 </div>
               </div>
               <div style={styles.column}>
@@ -126,7 +132,7 @@ class WalletList extends PureComponent {
                   {item.fee || (((Math.round(item.amount * 0.1) / 100) <= 2 ? 2 : Math.round(item.amount * 0.1) / 100)).toFixed(2)}元
                 </div>
                 <div style={styles.bank}>{item.bank}</div>
-                <div style={styles.col}>{item.name}</div>
+                <div style={styles.col}>{item.withdraw ? item.withdraw.name : '--'}</div>
                 <div style={styles.col}>{stateMap[item.state]}</div>
               </div>
             </div>
@@ -137,51 +143,40 @@ class WalletList extends PureComponent {
 
     return (
       <PageHeaderLayout title="钱包账户">
-        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
-          <div style={styles.search}>
-            <div style={styles.searchRow}>
-              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;代理商：</div>
-              <div style={{width: 300}}>
-                <Select
-                  defaultValue="请选择"
-                  style={{width: 300}}
-                  onChange={(value) => {
-                    this.getWallet(value.split(',')[1])
-                  }}
-                >
-                  <Select.OptGroup label="代理商">
-                    {agentsLists.map((item) => (
-                      <Select.Option key={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
-                    ))}
-                  </Select.OptGroup>
-                </Select>
-              </div>
-            </div>
-            <div style={styles.searchRow}>
-              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;经销商：</div>
-              <div style={{width: 300}}>
-                <Select
-                  defaultValue="请选择"
-                  style={{width: 300}}
-                  onChange={(value) => {
-                    this.getWallet(value.split(',')[1])
-                  }}
-                >
-                  <Select.OptGroup label="经销商">
-                    {dealersLists.map((item) => (
-                      <Select.Option key={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
-                    ))}
-                  </Select.OptGroup>
-                </Select>
-              </div>
-            </div>
-          </div>
-        ) : ''}
+        <div style={styles.content} hidden={!(localStorage.getItem("antd-pro-authority") === "vendors") || false}>
+          <Row>
+            <Col span={10}>
+              <Row>
+                <Col span={6} style={styles.tit}>商家：</Col>
+                <Col span={17}>
+                  <Select defaultValue="请选择" style={{width: '100%'}} onChange={(value) => this.getWallet(value)}>
+                    <Select.OptGroup label="代理商">
+                      {merchantsList.map((item) => (
+                        <Select.Option key={item.uuid}>{item.contact}({item.mobile})</Select.Option>
+                      ))}
+                    </Select.OptGroup>
+                  </Select>
+                </Col>
+              </Row>
+            </Col>
+            <Col span={10}>
+              <Row>
+                <Col span={6} style={styles.tit}>按商家姓名搜索：</Col>
+                <Col span={17}>
+                  <Input placeholder="请输入商家姓名" onChange={(e) => this.setState({merchantsContact: e.target.value})}/>
+                </Col>
+              </Row>
+            </Col>
+            <Col span={4}>
+              <Button type="primary" onClick={this.searchMerchantsList.bind(this)}>搜索商家</Button>
+            </Col>
+          </Row>
+        </div>
         <div style={styles.content}>
           <div style={{marginBottom: 15}}>
             <span>账户余额 <span>{balance}</span> 元</span>&nbsp;&nbsp;
             <a href="#/wallet/withdrawal"><Button type="primary" size="small">提现</Button></a>
-            <Divider type="vertical" />
+            <Divider type="vertical"/>
             <span>手续费 0.1%，最低2元，72小时内到账</span>
           </div>
           <Tabs defaultActiveKey="1">
@@ -190,7 +185,7 @@ class WalletList extends PureComponent {
               {htmlBody(schedules)}
             </Tabs.TabPane>
             <Tabs.TabPane tab="账户收支明细" key="2">
-              <Table rowKey="id" columns={columns} dataSource={lists} />
+              <Table rowKey="id" columns={columns} dataSource={lists}/>
             </Tabs.TabPane>
           </Tabs>
         </div>
@@ -201,9 +196,14 @@ class WalletList extends PureComponent {
 
 const styles = {
   content: {
-    padding: 20,
     backgroundColor: '#fff',
+    padding: '20px',
     marginBottom: 15,
+  },
+  tit: {
+    minWidth: 115,
+    textAlign: 'right',
+    lineHeight: '32px',
   },
 
   search: {
@@ -222,7 +222,7 @@ const styles = {
   },
   // 提现进度列表
   item: {
-    margin:'0px 5px',
+    margin: '0px 5px',
     marginTop: 10,
     boxShadow: '0 1px 4px rgba(0,21,41,.12)',
   },
@@ -232,8 +232,8 @@ const styles = {
     justifyContent: 'space-between',
   },
   colBk: {
-    margin:'0px 5px',
-    backgroundColor:'#f1f1f1',
+    margin: '0px 5px',
+    backgroundColor: '#f1f1f1',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',

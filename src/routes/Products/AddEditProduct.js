@@ -1,8 +1,9 @@
 import React, {PureComponent} from 'react';
-import {Card, Button, Form, Icon, Input, Popover,InputNumber, Select} from 'antd';
+import {Card, Button, Form, Input, InputNumber, Select} from 'antd';
 import {connect} from 'dva';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
-import styles from './style.less';
+
+const url = 'http://iot.dochen.cn/api';
 
 // 输入框
 const fieldLabels = {
@@ -36,40 +37,44 @@ class ProductAdd extends PureComponent {
   }
 
   componentDidMount() {
+    this.getProducts();
+  }
+
+  // 获取商品详情
+  getProducts() {
     const {location: {search}} = this.props;
     const pid = search.slice(1).split('=')[1];
-    if(pid){
-      fetch(`http://iot.dochen.cn/api/products/${pid}`).then((res) => {
-        if (res.ok) {
-          res.json().then((info) => {
-            if (info.status) this.setState({info: info.data[0]});
-          });
-        }
-      });
-    }
+    const getProducts = `${url}/products/${pid}`;
+    fetch(getProducts).then((res) => {
+      if (res.ok) {
+        res.json().then((info) => {
+          if (info.status) this.setState({info: info.data[0]});
+        });
+      }
+    });
   }
 
   render() {
-    const {form, submitting} = this.props;
-    const {getFieldDecorator, validateFieldsAndScroll, getFieldsError} = form;
-    const {location: {search}} = this.props;
+    const {form, submitting, location: {search}} = this.props;
+    const {getFieldDecorator, validateFieldsAndScroll} = form;
     const pid = search.slice(1).split('=')[1];
 
     // 请求服务器
     const validate = () => {
       validateFieldsAndScroll((error, values) => {
+        values.price = parseFloat(values.price);
+        values.freight = parseFloat(values.freight);
         if (!error) {
-          const data = JSON.stringify(values);
-          fetch(`http://iot.dochen.cn/api/products${pid ? `/${pid}` : ``}`, {
-            method: `${pid ? 'PUT' : 'POST'}`,
-            body: JSON.stringify({
-              data,
-            }),
+          let postProducts = `${url}/products`;
+          postProducts += pid ? `/${pid}` : '';
+          fetch(postProducts, {
+            method: pid ? 'PUT' : 'POST',
+            body: JSON.stringify(values),
           }).then((res) => {
             if (res.ok) {
               res.json().then((info) => {
                 if (info.status) {
-                  location.href = `#/products/product-profile/?pid=${info.data[0].uuid}`;
+                  location.hash = `/products/products-list`;
                 }
               });
             }
@@ -78,92 +83,59 @@ class ProductAdd extends PureComponent {
       });
     };
 
-    const errors = getFieldsError();
-    const getErrorInfo = () => {
-      const errorCount = Object.keys(errors).filter(key => errors[key]).length;
-      if (!errors || errorCount === 0) {
-        return null;
-      }
-      const scrollToField = (fieldKey) => {
-        const labelNode = document.querySelector(`label[for="${fieldKey}"]`);
-        if (labelNode) {
-          labelNode.scrollIntoView(true);
-        }
-      };
-      const errorList = Object.keys(errors).map((key) => {
-        if (!errors[key]) {
-          return null;
-        }
-        return (
-          <li key={key} className={styles.errorListItem} onClick={() => scrollToField(key)}>
-            <Icon type="cross-circle-o" className={styles.errorIcon} />
-            <div className={styles.errorMessage}>{errors[key][0]}</div>
-            <div className={styles.errorField}>{fieldLabels[key]}</div>
-          </li>
-        );
-      });
-      return (
-        <span className={styles.errorIcon} style={{float: 'right'}}>
-          <Popover
-            title="表单校验信息"
-            content={errorList}
-            overlayClassName={styles.errorPopover}
-            trigger="click"
-            getPopupContainer={trigger => trigger.parentNode}
-          >
-            <Icon type="exclamation-circle" />
-          </Popover>
-          {errorCount}
-        </span>
-      );
-    };
-
     return (
-      <PageHeaderLayout
-        title="发布商品"
-        wrapperClassName={styles.advancedForm}
-      >
-        <Card title="基本信息" className={styles.card} bordered={false}>
+      <PageHeaderLayout title={`${pid ? '编辑' : '发布'}商品`}>
+        <Card title="基本信息" bordered={false}>
           <Form>
             <Form.Item label={fieldLabels.title} {...formItemLayout} >
               {getFieldDecorator('title', {
                 initialValue: this.state.info.title,
                 rules: [{required: true, message: '产品标题必须填写'}],
               })(
-                <Input placeholder="请输入产品标题" />
+                <Input
+                  placeholder="请输入产品标题"
+                />
               )}
             </Form.Item>
             <Form.Item label={fieldLabels.desc} {...formItemLayout} >
               {getFieldDecorator('desc', {
                 initialValue: this.state.info.desc,
               })(
-                <Input placeholder="请描述产品的卖点" />
+                <Input
+                  placeholder="请描述产品的卖点"
+                />
               )}
             </Form.Item>
             <Form.Item label={fieldLabels.tags} {...formItemLayout} >
               {getFieldDecorator('tags', {
                 initialValue: this.state.info.tags,
               })(
-                <Input placeholder="请描述产品的卖点" />
+                <Input
+                  placeholder="请描述产品的卖点"
+                />
               )}
             </Form.Item>
             <Form.Item label={fieldLabels.type} {...formItemLayout} >
               {getFieldDecorator('type', {
                 initialValue: this.state.info.type || this.state.typeValue,
               })(
-                <Input type="hidden" placeholder="*" />
+                <Input
+                  type="hidden"
+                />
               )}
               <Select
-                style={{ width: '100%' }}
+                style={{width: '100%'}}
                 value={`${this.state.info.type || this.state.typeValue}`}
-                onChange={(value)=>{
+                onChange={(value) => {
                   this.setState({typeValue: value});
                 }}
               >
-                <Select.Option value="1">产品</Select.Option>
-                <Select.Option value="2">耗材</Select.Option>
-                <Select.Option value="3">团购</Select.Option>
-                <Select.Option value="4">套餐</Select.Option>
+                <Select.Option value="1">产品（补贴）</Select.Option>
+                <Select.Option value="2">耗材（返点）</Select.Option>
+                <Select.Option value="3">团购（发码+补贴）</Select.Option>
+                <Select.Option value="4">产品套餐（活动+补贴）</Select.Option>
+                <Select.Option value="5">耗材套餐（活动+返点）</Select.Option>
+                <Select.Option value="8">激活代理</Select.Option>
               </Select>
             </Form.Item>
             <Form.Item label={fieldLabels.coding} {...formItemLayout} >
@@ -171,7 +143,9 @@ class ProductAdd extends PureComponent {
                 initialValue: this.state.info.coding,
                 rules: [{required: true, message: '商家编码必须填写'}],
               })(
-                <Input placeholder="请输入商家编码" />
+                <Input
+                  placeholder="请输入商家编码"
+                />
               )}
             </Form.Item>
             <Form.Item label={fieldLabels.price} {...formItemLayout} >
@@ -234,34 +208,39 @@ class ProductAdd extends PureComponent {
             </Form.Item>
           </Form>
         </Card>
-        <Card title="资源信息" className={styles.card} bordered={false}>
+        <Card title="资源信息" bordered={false}>
           <Form>
             <Form.Item label={fieldLabels.prev_image} {...formItemLayout} >
               {getFieldDecorator('prev_image', {
                 initialValue: this.state.info.prev_image || 'http://gw.dochen.cn/assets/images/Installation_main.jpg',
               })(
-                <Input placeholder="请输入装修主图地址" />
+                <Input
+                  placeholder="请输入装修主图地址"
+                />
               )}
             </Form.Item>
             <Form.Item label={fieldLabels.intro_image} {...formItemLayout} >
               {getFieldDecorator('intro_image', {
                 initialValue: this.state.info.intro_image || 'http://gw.dochen.cn/assets/images/Installation_main.jpg',
               })(
-                <Input placeholder="请输入宝贝图片地址" />
+                <Input
+                  placeholder="请输入宝贝图片地址"
+                />
               )}
             </Form.Item>
             <Form.Item label={fieldLabels.detail_res} {...formItemLayout} >
               {getFieldDecorator('detail_res', {
                 initialValue: this.state.info.detail_res || 'http://gw.dochen.cn/assets/images/Installation_main.jpg',
               })(
-                <Input placeholder="宝贝描述(详情)" />
+                <Input
+                  placeholder="宝贝描述(详情)"
+                />
               )}
             </Form.Item>
           </Form>
         </Card>
         <div style={{display: `flex`, alignItems: `center`, flexDirection: `row-reverse`}}>
           <Button type="primary" onClick={validate} loading={submitting}>提交</Button>
-          {getErrorInfo()}
         </div>
       </PageHeaderLayout>
     );

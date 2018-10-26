@@ -1,6 +1,6 @@
+/* eslint-disable default-case,no-shadow,no-unused-vars */
 import React, {Component} from 'react';
 import {connect} from 'dva';
-import {Link} from 'dva/router';
 import {Checkbox, Alert, message} from 'antd';
 import Login from 'components/Login';
 import styles from './Login.less';
@@ -15,8 +15,8 @@ export default class LoginPage extends Component {
   constructor(...args) {
     super(...args);
     this.state = {
-      type: 'agents',
-      autoLogin: true,
+      type: 'merchants',
+      autoLogin: false,
     }
   }
 
@@ -38,6 +38,24 @@ export default class LoginPage extends Component {
         if (res.ok) {
           res.json().then((info) => {
             if (info.status) {
+              message.success(`登陆成功`);
+              let type = 0;
+              switch (info.data[0].type) {
+                case 0:
+                  type = 'vendors';
+                  break;
+                case 1:
+                  type = 'merchants_01';
+                  break;
+                case 2:
+                  type = 'merchants_02';
+                  break;
+                case 3:
+                  type = 'merchants_03';
+                  break;
+                default:
+                  type = 'guest';
+              }
               localStorage.setItem('antd-pro-authority', type);
               sessionStorage.setItem('dochen-auth', JSON.stringify(info.data[0]));
               location.href = '/';
@@ -58,7 +76,12 @@ export default class LoginPage extends Component {
 
   renderMessage = (content) => {
     return (
-      <Alert style={{marginBottom: 24}} message={content} type="error" showIcon />
+      <Alert
+        style={{marginBottom: 24}}
+        message={content}
+        type="error"
+        showIcon
+      />
     );
   };
 
@@ -73,25 +96,21 @@ export default class LoginPage extends Component {
           onTabChange={this.onTabChange.bind(this)}
           onSubmit={this.handleSubmit.bind(this)}
         >
-          <Tab key="agents" tab="代理商">
+          <Tab key="merchants" tab="商家登录">
             {
               login.status === 'error' &&
-              login.type === 'agents' &&
+              login.type === 'merchants' &&
               !login.submitting &&
               this.renderMessage('账户或密码错误')
             }
-            <UserName name="userName" placeholder="请输入代理商账号" />
-            <Password name="password" placeholder="请输入8-16位的密码" />
-          </Tab>
-          <Tab key="dealers" tab="经销商">
-            {
-              login.status === 'error' &&
-              login.type === 'dealers' &&
-              !login.submitting &&
-              this.renderMessage('账户或密码错误')
-            }
-            <UserName name="userName" placeholder="请输入经销商账号" />
-            <Password name="password" placeholder="请输入8-16位的密码" />
+            <UserName
+              name="userName"
+              placeholder="请输入代理商账号"
+            />
+            <Password
+              name="password"
+              placeholder="请输入8-16位的密码"
+            />
           </Tab>
           <Tab key="vendors" tab="员工登录">
             {
@@ -100,17 +119,19 @@ export default class LoginPage extends Component {
               !login.submitting &&
               this.renderMessage('账户或密码错误')
             }
-            <UserName name="userName" placeholder="请输入运营商账号" />
-            <Password name="password" placeholder="请输入8-16位的密码" />
+            <UserName
+              name="userName"
+              placeholder="请输入运营商账号"
+            />
+            <Password
+              name="password"
+              placeholder="请输入8-16位的密码"
+            />
           </Tab>
           <div>
-            <Checkbox checked={this.state.autoLogin} onChange={this.changeAutoLogin.bind(this)}>自动登录</Checkbox>
-            <a style={{float: 'right'}} href="">忘记密码</a>
+            <Checkbox checked={this.state.autoLogin} onChange={this.changeAutoLogin.bind(this)}>记住账号密码</Checkbox>
           </div>
           <Submit loading={submitting}>登录</Submit>
-          <div className={styles.other}>
-            <Link className={styles.register} to="/user/register">注册账户</Link>
-          </div>
         </Login>
       </div>
     );

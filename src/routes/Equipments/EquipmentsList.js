@@ -1,52 +1,38 @@
 /* eslint-disable no-param-reassign,no-plusplus,no-script-url,no-undef */
 import React, {PureComponent} from 'react';
-import {Table, Badge, Divider, Input, Button, Icon, message, Popconfirm, Menu, Dropdown, Popover, Select} from 'antd';
+import {Table, Badge, Divider, Input, Button, Icon, message, Popconfirm, Menu, Dropdown, Popover, Select, Row, Col} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
+const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
 
 class EquipmentsList extends PureComponent {
   constructor(...args) {
     super(...args);
     this.state = {
-      lists: [],
+      merchantsList: [],
       userLists: [],
-      dealersLists: [],
-      agentsLists: [],
+      lists: [],
       loading: true,
-
-      codeId: '',
       deviceId: '',
-      agentsName: '',
+      codeId: '',
+      merchantsContact: '',
     };
   }
 
   componentWillMount() {
-    this.getAgentsList();
-    this.getDealersList();
+    this.getMerchantsList();
     this.getUsersList();
-    this.getEquipmentsList();
+    this.getEquipmentsList(auth.mid);
   }
 
-  // 获取代理商列表
-  getAgentsList() {
-    const agentsListUrl = `${url}/agents`;
-    fetch(agentsListUrl).then((res) => {
+  // 获取商家列表
+  getMerchantsList() {
+    const getMerchants = `${url}/merchants`;
+    fetch(getMerchants).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
-          if (info.status) this.setState({agentsLists: info.data});
-        });
-      }
-    });
-  }
-
-  // 获取经销商列表
-  getDealersList() {
-    const dealersListUrl = `${url}/dealers`;
-    fetch(dealersListUrl).then((res) => {
-      if (res.ok) {
-        res.json().then((info) => {
-          if (info.status) this.setState({dealersLists: info.data});
+          if (info.status) this.setState({merchantsList: info.data});
         });
       }
     });
@@ -67,14 +53,10 @@ class EquipmentsList extends PureComponent {
   }
 
   // 获取设备列表
-  getEquipmentsList(type = '', uuid = '') {
-
-    const authData = JSON.parse(sessionStorage.getItem('dochen-auth'));
-
-    let equipmentsListUrl = `${url}/equipments`;
-    equipmentsListUrl += authData.type === 'vendors' ? type === 'agents' ? `?aid=${uuid}` : `?did=${uuid}` : authData.type === 'agents' ? `?aid=${authData.uuid}` : `?did=${authData.uuid}`;
-
-    fetch(equipmentsListUrl).then((res) => {
+  getEquipmentsList(mid) {
+    let getEquipments = `${url}/equipments`;
+    getEquipments += mid ? `?mid=${mid}` : '';
+    fetch(getEquipments).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
           if (info.status) {
@@ -94,10 +76,10 @@ class EquipmentsList extends PureComponent {
 
   // 获取搜索后的列表
   searchList() {
-    const {lists, codeId, deviceId, agentsName} = this.state;
+    const {lists, codeId, deviceId} = this.state;
     const arr = [];
     lists.forEach((val) => {
-      if (val.activation_code === codeId || val.eid === deviceId || val.agents === agentsName) arr.push(val);
+      if (val.activation_code === codeId || val.uuid === deviceId) arr.push(val);
     });
 
     if (arr.length === 0) message.error('没找到对应的数据');
@@ -105,47 +87,38 @@ class EquipmentsList extends PureComponent {
     this.setState({lists: arr.length > 0 ? arr : lists});
   }
 
-  render() {
-    const {lists, userLists, dealersLists, agentsLists, loading} = this.state;
+  // 搜索商家的机器
+  searchMerchantsList() {
+    const {merchantsList, merchantsContact} = this.state;
+    merchantsList.forEach((val) => {
+      if (val.contact === merchantsContact) {
+        message.info(`正在搜索${merchantsContact}的设备，请稍后`);
+        this.getEquipmentsList(val.uuid);
+      }
+    });
+  }
 
+  render() {
+    const {merchantsList, userLists, lists, loading} = this.state;
+
+    // 翻译使用用户
     const onLine = [];
     const versionArr = [];
-    let k = 1;
     lists.forEach((val) => {
       userLists.forEach((user) => {
-        if (val.uid === user.uid) val.mobile = user.mobile;
+        if (val.uid === user.uuid) val.mobile = user.mobile;
       });
-
-      dealersLists.forEach((dealers) => {
-        if (val.relation.did === dealers.did) val.contact = dealers.contact;
-      });
-
-      agentsLists.forEach((agents) => {
-        if (val.relation.aid === agents.aid) {
-          val.agents = agents.contact;
-          if (!val.relation.did) {
-            val.contact = agents.contact;
-          }
-        }
-      });
-
-      if(!val.relation.aid){
-        val.agents = 'DGK智能平台';
-      }
-
       if (val.online_at && !val.offline_at) onLine.push(val);
-
       versionArr.push(val.version || '0.0.0');
-
-      val.id = k;
-      k++;
     });
 
+    // 检索版本号
     const notUpgraded = [];
     versionArr.forEach((val) => {
       if (val < versionArr.sort()[versionArr.length - 1]) notUpgraded.push(val);
     });
 
+    // 功能按钮
     const menu = (info) => (
       <Menu>
         <Menu.Item>
@@ -157,12 +130,12 @@ class EquipmentsList extends PureComponent {
             onConfirm={() => {
 
               let returnUrl = `${url}/equipments`;
-              returnUrl += `/${info.eid}`;
+              returnUrl += `/${info.uuid}`;
               returnUrl += `/return`;
 
               fetch(returnUrl, {
                 method: 'POST',
-                body: JSON.stringify({eid: info.eid}),
+                body: JSON.stringify({eid: info.uuid}),
               }).then((res) => {
                 if (res.ok) {
                   res.json().then((data) => {
@@ -189,15 +162,14 @@ class EquipmentsList extends PureComponent {
                 okText="确认"
                 cancelText="取消"
                 onConfirm={() => {
-
                   let returnUrl = `${url}/equipments`;
-                  returnUrl += `/${info.eid}`;
+                  returnUrl += `/${info.uuid}`;
                   returnUrl += `/replace`;
 
                   fetch(returnUrl, {
                     method: 'POST',
                     body: JSON.stringify({
-                      eid: info.eid,
+                      eid: info.uuid,
                       oid: info.activation_code,
                     }),
                   }).then((res) => {
@@ -222,10 +194,11 @@ class EquipmentsList extends PureComponent {
       </Menu>
     );
 
+    // 表格列的配置描述
     const columns = [
       {title: '序号', dataIndex: 'id', align: 'center'},
       {title: '激活时间', dataIndex: 'activation_at', align: 'center'},
-      {title: '设备ID', dataIndex: 'eid', align: 'center'},
+      {title: '设备ID', dataIndex: 'uuid', align: 'center'},
       {title: '型号', dataIndex: 'model', align: 'center'},
       {
         title: '版本号',
@@ -294,11 +267,14 @@ class EquipmentsList extends PureComponent {
           </Popover>
         ),
       } : {title: '使用人', dataIndex: 'mobile', align: 'center'},
-      {title: '推荐人', dataIndex: 'contact', align: 'center'},
-      {title: '代理商', dataIndex: 'agents', align: 'center'},
+      {title: '推荐人', dataIndex: 'merchant', align: 'center', render: val => {
+        const merchant = val.m3 || val.m2 || val.m1;
+        const contact = merchant ? merchant.contact : '--';
+        return contact;
+      }},
+      {title: '代理商', dataIndex: 'merchant', align: 'center', render: val => val.m1 ? val.m1.contact : '--'},
       localStorage.getItem('antd-pro-authority') === 'vendors' ? {
         title: '操作',
-        dataIndex: '',
         align: 'center',
         render: info => (
           <Dropdown overlay={menu(info)}>
@@ -312,71 +288,88 @@ class EquipmentsList extends PureComponent {
 
     return (
       <PageHeaderLayout title="已激活设备列表">
-        <div style={styles.search}>
-          <div style={styles.searchRow}>
-            <div style={styles.searchTit}>激活码/订单号：</div>
-            <div style={{width: 300}}>
-              <Input
-                placeholder="请输入激活码或订单编号"
-                onChange={(e) => {
-                  this.setState({codeId: e.target.value});
-                }}
-              />
-            </div>
-          </div>
-          <div style={styles.searchRow}>
-            <div style={styles.searchTit}>设备ID：</div>
-            <div style={{width: 300}}>
-              <Input
-                placeholder="请输入需要查找的设备ID"
-                onChange={(e) => {
-                  this.setState({deviceId: e.target.value});
-                }}
-              />
-            </div>
-          </div>
-          <Button type="primary" onClick={this.searchList.bind(this)}><Icon type="search" /> 查找</Button>
+        <div style={styles.content}>
+          <Row>
+            <Col span={10}>
+              <Row>
+                <Col span={6} style={styles.tit}>
+                  设备ID：
+                </Col>
+                <Col span={17}>
+                  <Input
+                    placeholder="请输入需要查找的设备ID"
+                    onChange={(e) => this.setState({deviceId: e.target.value})}
+                  />
+                </Col>
+              </Row>
+            </Col>
+            <Col span={10}>
+              <Row>
+                <Col span={6} style={styles.tit}>
+                  激活码/订单号：
+                </Col>
+                <Col span={17}>
+                  <Input
+                    placeholder="请输入激活码或订单编号"
+                    onChange={(e) => this.setState({codeId: e.target.value})}
+                  />
+                </Col>
+              </Row>
+            </Col>
+            <Col span={4}>
+              <Button
+                type="primary"
+                onClick={this.searchList.bind(this)}
+              >
+                搜索设备
+              </Button>
+            </Col>
+          </Row>
+          <br />
+          <Row hidden={!(localStorage.getItem("antd-pro-authority") === "vendors") || false}>
+            <Col span={10}>
+              <Row>
+                <Col span={6} style={styles.tit}>
+                  商家：
+                </Col>
+                <Col span={17}>
+                  <Select
+                    defaultValue="请选择"
+                    style={{width: '100%'}}
+                    onChange={(value) => this.getEquipmentsList(value)}
+                  >
+                    <Select.OptGroup label="代理商">
+                      {merchantsList.map((item) => (
+                        <Select.Option key={item.uuid}>{item.contact}({item.mobile})</Select.Option>
+                      ))}
+                    </Select.OptGroup>
+                  </Select>
+                </Col>
+              </Row>
+            </Col>
+            <Col span={10}>
+              <Row>
+                <Col span={6} style={styles.tit}>
+                  按商家姓名搜索：
+                </Col>
+                <Col span={17}>
+                  <Input
+                    placeholder="请输入商家姓名"
+                    onChange={(e) => this.setState({merchantsContact: e.target.value})}
+                  />
+                </Col>
+              </Row>
+            </Col>
+            <Col span={4}>
+              <Button
+                type="primary"
+                onClick={this.searchMerchantsList.bind(this)}
+              >
+                搜索商家
+              </Button>
+            </Col>
+          </Row>
         </div>
-        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
-          <div style={styles.search}>
-            <div style={styles.searchRow}>
-              <div style={styles.searchTit}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;代理商：</div>
-              <div style={{width: 300}}>
-                <Select
-                  defaultValue="请选择"
-                  style={{width: 300}}
-                  onChange={(value) => {
-                    this.getEquipmentsList(value.split(',')[0], value.split(',')[1]);
-                  }}
-                >
-                  <Select.OptGroup label="代理商">
-                    {agentsLists.map((item) => (
-                      <Select.Option key={`agents,${item.aid}`}>{item.contact}({item.mobile})</Select.Option>
-                    ))}
-                  </Select.OptGroup>
-                </Select>
-              </div>
-            </div>
-            <div style={styles.searchRow}>
-              <div style={styles.searchTit}>经销商：</div>
-              <div style={{width: 300}}>
-                <Select
-                  defaultValue="请选择"
-                  style={{width: 300}}
-                  onChange={(value) => {
-                    this.getEquipmentsList(value.split(',')[0], value.split(',')[1]);
-                  }}
-                >
-                  <Select.OptGroup label="经销商">
-                    {dealersLists.map((item) => (
-                      <Select.Option key={`dealers,${item.did}`}>{item.contact}({item.mobile})</Select.Option>
-                    ))}
-                  </Select.OptGroup>
-                </Select>
-              </div>
-            </div>
-          </div>
-        ) : ''}
         <div style={{padding: 20, backgroundColor: '#fff'}}>
           <div style={{marginTop: 15, textAlign: 'left'}}>
             <Badge status="success" text={`已激活设备共${lists.length}台`} />
@@ -388,7 +381,7 @@ class EquipmentsList extends PureComponent {
             <Badge status="error" text={`未升级设备${notUpgraded.length}台`} />
           </div>
         </div>
-        <div style={{padding: 20, backgroundColor: '#fff'}}>
+        <div style={styles.content}>
           <Table
             rowKey="id"
             loading={loading}
@@ -402,19 +395,15 @@ class EquipmentsList extends PureComponent {
 }
 
 const styles = {
-  search: {
-    width: '100%',
-    padding: 10,
+  content: {
     backgroundColor: '#fff',
-    display: 'flex',
+    padding: '20px',
+    marginBottom: 15,
   },
-  searchRow: {
-    marginRight: 20,
-    display: 'flex',
-    alignItems: 'center',
-  },
-  searchTit: {
-    paddingRight: 5,
+  tit: {
+    minWidth: 110,
+    textAlign: 'right',
+    lineHeight: '32px',
   },
 };
 

@@ -9,20 +9,7 @@ class ProductsProfile extends PureComponent {
   constructor(...args) {
     super(...args);
     this.state = {
-      info: {
-        title: 'A13 RO反渗透纯水机',
-        desc: 'A13 RO反渗透纯水机...',
-        price: 699,
-        stock: 100,
-        coding: '商家编码',
-        freight: 0,
-        order: '排序',
-        bonus: 699,
-
-        prev_image: 'http://dochen.cn/product/A13/A13_02.jpg',
-        intro_image: 'http://dochen.cn/product/A13/A13_02.jpg',
-        detail_res: 'http://dochen.cn/product/A13/A13_02.jpg',
-      },
+      info: {},
     };
   }
 
@@ -30,10 +17,11 @@ class ProductsProfile extends PureComponent {
     this.getProducts();
   }
 
+  // 获取商品信息
   getProducts() {
     const {location: {search}} = this.props;
-    let getProducts = `${url}/products/${search.slice(5)}`;
-    getProducts += search.slice(5);
+    const pid = search.slice(1).split('=')[1];
+    const getProducts = `${url}/products/${pid}`;
     fetch(getProducts).then((res) => {
       if (res.ok) {
         res.json().then((data) => {
