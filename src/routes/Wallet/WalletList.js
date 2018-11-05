@@ -9,11 +9,25 @@ const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.g
 const typeMap = ['支出', '收入'];
 const stateMap = ['', '处理中', '已处理', '', '', '', '', '', '', '', '未通过'];
 
+const columnsSummary = [
+  {title: '月份', dataIndex: 'cycle', align: 'center'},
+  {title: '补贴收入', dataIndex: 'allowance', render: val => `${val}元`, align: 'center'},
+  {title: '返点收入', dataIndex: 'commission', render: val => `${val}元`, align: 'center'},
+  {title: '退款补扣金额', dataIndex: 'refund', render: val => `${val}元`, align: 'center'},
+  {
+    title: '月结发钱',
+    dataIndex: '',
+    render: info => `${parseFloat(info.allowance) + parseFloat(info.commission) + parseFloat(info.refund)}元`,
+    align: 'center',
+  },
+];
+
 class WalletList extends PureComponent {
   constructor(...args) {
     super(...args);
     this.state = {
       lists: [],
+      summaryLists: [],
       balance: 0,
       merchantsList: [],
       loading: true,
@@ -23,35 +37,53 @@ class WalletList extends PureComponent {
   componentDidMount() {
     this.getMerchantsList();
     this.getWallet(auth.mid || '');
+    this.getSummary(auth.mid || '');
   }
 
   // 获取商家列表
   getMerchantsList() {
     const getMerchants = `${url}/merchants`;
     fetch(getMerchants).then((res) => {
-      if (res.ok) {
-        res.json().then((info) => {
-          if (info.status) this.setState({merchantsList: info.data});
-        });
-      }
+      if (!res.ok) return false;
+      res.json().then((info) => {
+        if (!info.status) return false;
+        this.setState({merchantsList: info.data});
+      });
     });
   }
 
   // 获取余额信息
   getWallet(mid = '') {
     if (!mid) {
-
+      this.setState({loading: false});
       return false;
     }
-    let getWallet = `${url}/wallet`;
-    getWallet += `/${mid}`;
-    fetch(getWallet).then((res) => {
+    fetch(`${url}/wallet/${mid}`).then((res) => {
+      if (!res.ok) return false;
+      res.json().then((info) => {
+        if (!info.status) {
+          this.setState({lists: [], balance: 0, loading: false});
+          message.warning(`提示：[${info.message}]`);
+          return false;
+        }
+        this.setState({lists: info.data, balance: info.data[0].balance, loading: false});
+      });
+    });
+  }
+
+  // 获取结算列表
+  getSummary(mid = '') {
+    if (!mid) return false;
+    let getSummary = `${url}/earnings`;
+    getSummary += `/${mid}`;
+    getSummary += `/summary`;
+    fetch(getSummary).then((res) => {
       if (res.ok) {
         res.json().then((info) => {
           if (info.status) {
-            this.setState({lists: info.data, balance: info.data[0].balance, loading: false});
+            this.setState({summaryLists: info.data});
           } else {
-            this.setState({lists: [], balance: 0, loading: false});
+            this.setState({summaryLists: []});
             message.warning(`提示：[${info.message}]`);
           }
         });
@@ -66,12 +98,13 @@ class WalletList extends PureComponent {
       if (val.contact === merchantsContact) {
         message.info(`正在搜索${merchantsContact}的结算情况，请稍后`);
         this.getWallet(val.uuid);
+        this.getSummary(val.uuid);
       }
     });
   }
 
   render() {
-    const {lists, balance, merchantsList, loading} = this.state;
+    const {lists, balance, summaryLists, merchantsList, loading} = this.state;
 
     const columns = [
       {title: '时间', dataIndex: 'created_at', width: '20%'},
@@ -120,7 +153,7 @@ class WalletList extends PureComponent {
               <div style={styles.row}>
                 <div>
                   发起时间：{item.created_at}
-                  <Divider type="vertical"/>
+                  <Divider type="vertical" />
                   银行账户：{item.withdraw ? item.withdraw.account : '--'}
                 </div>
               </div>
@@ -149,7 +182,14 @@ class WalletList extends PureComponent {
               <Row>
                 <Col span={6} style={styles.tit}>商家：</Col>
                 <Col span={17}>
-                  <Select defaultValue="请选择" style={{width: '100%'}} onChange={(value) => this.getWallet(value)}>
+                  <Select
+                    defaultValue="请选择"
+                    style={{width: '100%'}}
+                    onChange={(value) => {
+                      this.getWallet(value);
+                      this.getSummary(value);
+                    }}
+                  >
                     <Select.OptGroup label="代理商">
                       {merchantsList.map((item) => (
                         <Select.Option key={item.uuid}>{item.contact}({item.mobile})</Select.Option>
@@ -163,7 +203,7 @@ class WalletList extends PureComponent {
               <Row>
                 <Col span={6} style={styles.tit}>按商家姓名搜索：</Col>
                 <Col span={17}>
-                  <Input placeholder="请输入商家姓名" onChange={(e) => this.setState({merchantsContact: e.target.value})}/>
+                  <Input placeholder="请输入商家姓名" onChange={(e) => this.setState({merchantsContact: e.target.value})} />
                 </Col>
               </Row>
             </Col>
@@ -176,7 +216,7 @@ class WalletList extends PureComponent {
           <div style={{marginBottom: 15}}>
             <span>账户余额 <span>{balance}</span> 元</span>&nbsp;&nbsp;
             <a href="#/wallet/withdrawal"><Button type="primary" size="small">提现</Button></a>
-            <Divider type="vertical"/>
+            <Divider type="vertical" />
             <span>手续费 0.1%，最低2元，72小时内到账</span>
           </div>
           <Tabs defaultActiveKey="1">
@@ -184,8 +224,11 @@ class WalletList extends PureComponent {
               {htmlHeader}
               {htmlBody(schedules)}
             </Tabs.TabPane>
-            <Tabs.TabPane tab="账户收支明细" key="2">
-              <Table rowKey="id" columns={columns} dataSource={lists}/>
+            <Tabs.TabPane tab="结算中心" key="2">
+              <Table rowKey="id" columns={columnsSummary} dataSource={summaryLists} />
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="账户收支明细" key="3">
+              <Table rowKey="id" columns={columns} dataSource={lists} />
             </Tabs.TabPane>
           </Tabs>
         </div>

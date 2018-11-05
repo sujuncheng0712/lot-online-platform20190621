@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign,no-plusplus,no-const-assign,radix,no-underscore-dangle,one-var */
 import React, {PureComponent} from 'react';
-import {Input, Button, Badge, message, List, Divider, Select, Row, Col} from 'antd';
+import {Input, Button, Badge, message, List, Divider, Select, Row, Col, Tabs} from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
@@ -53,22 +53,16 @@ class SubsidyList extends PureComponent {
   getEarnings(mid = '') {
     let getEarnings = `${url}/earnings`;
     getEarnings += mid ? `?mid=${mid}` : '';
-
     fetch(getEarnings).then((res) => {
-      if (res.ok) {
-        res.json().then((info) => {
-          if (info.status) {
-            const data = [];
-            info.data.forEach((val) => {
-              if (val.type === 1 || val.type === 3 || val.type === 4) data.push(val);
-            });
-            this.setState({lists: data, loading: false});
-          } else {
-            this.setState({lists: [], loading: false});
-            message.warning(`提示：[${info.message}]`);
-          }
-        });
-      }
+      if (!res.ok) return false;
+      res.json().then((info) => {
+        if (!info.status) {
+          this.setState({lists: [], loading: false});
+          message.warning(`提示：[${info.message}]`);
+          return false;
+        }
+        this.setState({lists: info.data, loading: false});
+      });
     });
   }
 
@@ -101,96 +95,80 @@ class SubsidyList extends PureComponent {
   render() {
     const {lists, loading, ordersLists, merchantsList} = this.state;
 
-    const nowadays = {m1: 0, m2: 0, m3: 0};
-    const yesterday = {m1: 0, m2: 0, m3: 0};
-    const thisMonth = {m1: 0, m2: 0, m3: 0};
-    const lastMonth = {m1: 0, m2: 0, m3: 0};
+    const earnings = (type) => {
+      const data = [];
+      const nowadays = {m1: 0, m2: 0, m3: 0};
+      const yesterday = {m1: 0, m2: 0, m3: 0};
+      const thisMonth = {m1: 0, m2: 0, m3: 0};
+      const lastMonth = {m1: 0, m2: 0, m3: 0};
 
-    lists.forEach((val, key) => {
-      ordersLists.forEach((value) => {
-        if (val.oid === value.uuid) {
-          const merchant = value.merchant.m3 || value.merchant.m2 || value.merchant.m1;
-          const contact = merchant ? merchant.contact : '--';
-          val.contact = contact;
-          val.consignee = value.consignee || '--';
-          val.pay_amount = value.pay_amount;
+      lists.forEach((val) => {
+        ordersLists.forEach((value) => {
+          if (val.oid === value.uuid) {
+            const merchant = value.merchant.m3 || value.merchant.m2 || value.merchant.m1;
+            const contact = merchant ? merchant.contact : '--';
+            val.contact = contact;
+            val.consignee = value.consignee || '--';
+            val.pay_amount = value.pay_amount;
+          }
+        });
+        merchantsList.forEach((value) => {
+          if (val.m1id === value.uuid) val.m1 = value.contact;
+          if (val.m2id === value.uuid) val.m2 = value.contact;
+          if (val.m3id === value.uuid) val.m3 = value.contact;
+        });
+
+        if (type === 1 && (val.type === 1 || val.type === 3 || val.type === 4)) {
+          if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate()) {
+            nowadays.m1 += val.m1earning !== 'None' ? parseInt(val.m1earning) : 0;
+            nowadays.m2 += val.m2earning !== 'None' ? parseInt(val.m2earning) : 0;
+            nowadays.m3 += val.m3earning !== 'None' ? parseInt(val.m3earning) : 0;
+          }
+          if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() - 1) {
+            yesterday.m1 += val.m1earning !== 'None' ? parseInt(val.m1earning) : 0;
+            yesterday.m2 += val.m2earning !== 'None' ? parseInt(val.m2earning) : 0;
+            yesterday.m3 += val.m3earning !== 'None' ? parseInt(val.m3earning) : 0;
+          }
+          if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth()) {
+            thisMonth.m1 += val.m1earning !== 'None' ? parseInt(val.m1earning) : 0;
+            thisMonth.m2 += val.m2earning !== 'None' ? parseInt(val.m2earning) : 0;
+            thisMonth.m3 += val.m3earning !== 'None' ? parseInt(val.m3earning) : 0;
+          }
+          if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() - 1) {
+            lastMonth.m1 += val.m1earning !== 'None' ? parseInt(val.m1earning) : 0;
+            lastMonth.m2 += val.m2earning !== 'None' ? parseInt(val.m2earning) : 0;
+            lastMonth.m3 += val.m3earning !== 'None' ? parseInt(val.m3earning) : 0;
+          }
+
+          data.push(val);
+        }
+        if (type === 2 && val.type === 2) {
+          if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate()) {
+            nowadays.m1 += val.m1earning !== 'None' ? parseInt(val.m1earning) : 0;
+            nowadays.m2 += val.m2earning !== 'None' ? parseInt(val.m2earning) : 0;
+            nowadays.m3 += val.m3earning !== 'None' ? parseInt(val.m3earning) : 0;
+          }
+          if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() - 1) {
+            yesterday.m1 += val.m1earning !== 'None' ? parseInt(val.m1earning) : 0;
+            yesterday.m2 += val.m2earning !== 'None' ? parseInt(val.m2earning) : 0;
+            yesterday.m3 += val.m3earning !== 'None' ? parseInt(val.m3earning) : 0;
+          }
+          if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth()) {
+            thisMonth.m1 += val.m1earning !== 'None' ? parseInt(val.m1earning) : 0;
+            thisMonth.m2 += val.m2earning !== 'None' ? parseInt(val.m2earning) : 0;
+            thisMonth.m3 += val.m3earning !== 'None' ? parseInt(val.m3earning) : 0;
+          }
+          if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() - 1) {
+            lastMonth.m1 += val.m1earning !== 'None' ? parseInt(val.m1earning) : 0;
+            lastMonth.m2 += val.m2earning !== 'None' ? parseInt(val.m2earning) : 0;
+            lastMonth.m3 += val.m3earning !== 'None' ? parseInt(val.m3earning) : 0;
+          }
+
+          data.push(val);
         }
       });
-      merchantsList.forEach((value) => {
-        if (val.m1id === value.uuid) val.m1 = value.contact;
-        if (val.m2id === value.uuid) val.m2 = value.contact;
-        if (val.m3id === value.uuid) val.m3 = value.contact;
-      });
 
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate()) {
-        nowadays.m1 += val.m1earning !== 'None' ? parseInt(val.m1earning) : 0;
-        nowadays.m2 += val.m2earning !== 'None' ? parseInt(val.m2earning) : 0;
-        nowadays.m3 += val.m3earning !== 'None' ? parseInt(val.m3earning) : 0;
-      }
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() - 1) {
-        yesterday.m1 += val.m1earning !== 'None' ? parseInt(val.m1earning) : 0;
-        yesterday.m2 += val.m2earning !== 'None' ? parseInt(val.m2earning) : 0;
-        yesterday.m3 += val.m3earning !== 'None' ? parseInt(val.m3earning) : 0;
-      }
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth()) {
-        thisMonth.m1 += val.m1earning !== 'None' ? parseInt(val.m1earning) : 0;
-        thisMonth.m2 += val.m2earning !== 'None' ? parseInt(val.m2earning) : 0;
-        thisMonth.m3 += val.m3earning !== 'None' ? parseInt(val.m3earning) : 0;
-      }
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() - 1) {
-        lastMonth.m1 += val.m1earning !== 'None' ? parseInt(val.m1earning) : 0;
-        lastMonth.m2 += val.m2earning !== 'None' ? parseInt(val.m2earning) : 0;
-        lastMonth.m3 += val.m3earning !== 'None' ? parseInt(val.m3earning) : 0;
-      }
-
-      val.id = key + 1;
-    });
-
-    return (
-      <PageHeaderLayout title="收益列表">
-        <div style={styles.content}>
-          <Row>
-            <Col span={10}>
-              <Row>
-                <Col span={6} style={styles.tit}>订单编号：</Col>
-                <Col span={17}>
-                  <Input placeholder="请输入需要查找的订单编号" onChange={(e) => this.setState({orderId: e.target.value})} />
-                </Col>
-              </Row>
-            </Col>
-            <Col span={4}>
-              <Button type="primary" onClick={this.searchList.bind(this)}>查找收益</Button>
-            </Col>
-          </Row>
-          <br />
-          <Row hidden={!(localStorage.getItem("antd-pro-authority") === "vendors") || false}>
-            <Col span={10}>
-              <Row>
-                <Col span={6} style={styles.tit}>商家：</Col>
-                <Col span={17}>
-                  <Select defaultValue="请选择" style={{width: '100%'}} onChange={(value) => this.getEarnings(value)}>
-                    <Select.OptGroup label="代理商">
-                      {merchantsList.map((item) => (
-                        <Select.Option key={item.uuid}>{item.contact}({item.mobile})</Select.Option>
-                      ))}
-                    </Select.OptGroup>
-                  </Select>
-                </Col>
-              </Row>
-            </Col>
-            <Col span={10}>
-              <Row>
-                <Col span={6} style={styles.tit}>按商家姓名搜索：</Col>
-                <Col span={17}>
-                  <Input placeholder="请输入商家姓名" onChange={(e) => this.setState({merchantsContact: e.target.value})} />
-                </Col>
-              </Row>
-            </Col>
-            <Col span={4}>
-              <Button type="primary" onClick={this.searchMerchantsList.bind(this)}>搜索商家</Button>
-            </Col>
-          </Row>
-        </div>
+      return (
         <div style={styles.content}>
           <div
             style={{marginBottom: 15, textAlign: 'left'}}
@@ -264,10 +242,10 @@ class SubsidyList extends PureComponent {
           <List
             split={false}
             bordered={false}
-            dataSource={lists}
+            dataSource={data}
             loading={loading}
             renderItem={
-              item => (
+              (item, key) => (
                 <div key={item.oid} style={styles.item}>
                   <div style={styles.rowT}>
                     <div>
@@ -275,7 +253,7 @@ class SubsidyList extends PureComponent {
                     </div>
                   </div>
                   <div style={styles.row}>
-                    <div style={styles.id}>{item.id}</div>
+                    <div style={styles.id}>{key + 1}</div>
                     <div style={styles.type}>
                       {item.type === 3 ? '团购订单' : '用户订单'}
                     </div>
@@ -319,6 +297,58 @@ class SubsidyList extends PureComponent {
             pagination={{pageSize: 10}}
           />
         </div>
+      );
+    };
+
+    return (
+      <PageHeaderLayout title="收益列表">
+        <div style={styles.content}>
+          <Row>
+            <Col span={10}>
+              <Row>
+                <Col span={6} style={styles.tit}>订单编号：</Col>
+                <Col span={17}>
+                  <Input placeholder="请输入需要查找的订单编号" onChange={(e) => this.setState({orderId: e.target.value})} />
+                </Col>
+              </Row>
+            </Col>
+            <Col span={4}>
+              <Button type="primary" onClick={this.searchList.bind(this)}>查找收益</Button>
+            </Col>
+          </Row>
+          <br />
+          <Row hidden={!(localStorage.getItem("antd-pro-authority") === "vendors") || false}>
+            <Col span={10}>
+              <Row>
+                <Col span={6} style={styles.tit}>商家：</Col>
+                <Col span={17}>
+                  <Select defaultValue="请选择" style={{width: '100%'}} onChange={(value) => this.getEarnings(value)}>
+                    <Select.OptGroup label="代理商">
+                      {merchantsList.map((item) => (
+                        <Select.Option key={item.uuid}>{item.contact}({item.mobile})</Select.Option>
+                      ))}
+                    </Select.OptGroup>
+                  </Select>
+                </Col>
+              </Row>
+            </Col>
+            <Col span={10}>
+              <Row>
+                <Col span={6} style={styles.tit}>按商家姓名搜索：</Col>
+                <Col span={17}>
+                  <Input placeholder="请输入商家姓名" onChange={(e) => this.setState({merchantsContact: e.target.value})} />
+                </Col>
+              </Row>
+            </Col>
+            <Col span={4}>
+              <Button type="primary" onClick={this.searchMerchantsList.bind(this)}>搜索商家</Button>
+            </Col>
+          </Row>
+        </div>
+        <Tabs defaultActiveKey="1">
+          <Tabs.TabPane tab="补贴收益" key="1">{earnings(1)}</Tabs.TabPane>
+          <Tabs.TabPane tab="返点收益" key="2">{earnings(2)}</Tabs.TabPane>
+        </Tabs>
       </PageHeaderLayout>
     );
   }

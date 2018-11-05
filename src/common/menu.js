@@ -29,14 +29,9 @@ const menuData = [
   }, {
     name: '预估收益',
     icon: 'pay-circle-o',
-    path: 'earnings',
-    children: [
-      {name: '补贴收益', path: 'subsidy-list'},
-      {name: '返点收益', path: 'rebate-list'},
-      {name: '结算中心', path: 'clearing-list'},
-    ],
+    path: 'earnings/subsidy-list',
   }, {
-    name: '我的钱包',
+    name: '我的收入',
     icon: 'red-envelope',
     path: 'wallet',
     children: [
