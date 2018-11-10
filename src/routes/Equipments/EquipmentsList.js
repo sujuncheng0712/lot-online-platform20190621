@@ -252,9 +252,9 @@ class EquipmentsList extends PureComponent {
         dataIndex: '',
         align: 'center',
         render: info => (info.online_at && !info.offline_at) ? (
-          <Badge status="success" text="在线" />
+          <Badge status="success" text="在线"/>
         ) : (
-          <Badge status="default" text="离线" />
+          <Badge status="default" text="离线"/>
         ),
       },
       localStorage.getItem('antd-pro-authority') === 'vendors' ? {
@@ -267,11 +267,13 @@ class EquipmentsList extends PureComponent {
           </Popover>
         ),
       } : {title: '使用人', dataIndex: 'mobile', align: 'center'},
-      {title: '推荐人', dataIndex: 'merchant', align: 'center', render: val => {
+      {
+        title: '推荐人', dataIndex: 'merchant', align: 'center', render: val => {
         const merchant = val.m3 || val.m2 || val.m1;
         const contact = merchant ? merchant.contact : '--';
         return contact;
-      }},
+      }
+      },
       {title: '代理商', dataIndex: 'merchant', align: 'center', render: val => val.m1 ? val.m1.contact : '--'},
       localStorage.getItem('antd-pro-authority') === 'vendors' ? {
         title: '操作',
@@ -279,7 +281,7 @@ class EquipmentsList extends PureComponent {
         render: info => (
           <Dropdown overlay={menu(info)}>
             <span style={{color: '#ff8800', cursor: 'pointer'}}>
-              操作 <Icon type="down" />
+              操作 <Icon type="down"/>
             </span>
           </Dropdown>
         ),
@@ -325,7 +327,7 @@ class EquipmentsList extends PureComponent {
               </Button>
             </Col>
           </Row>
-          <br />
+          <br/>
           <Row hidden={!(localStorage.getItem("antd-pro-authority") === "vendors") || false}>
             <Col span={10}>
               <Row>
@@ -372,13 +374,13 @@ class EquipmentsList extends PureComponent {
         </div>
         <div style={{padding: 20, backgroundColor: '#fff'}}>
           <div style={{marginTop: 15, textAlign: 'left'}}>
-            <Badge status="success" text={`已激活设备共${lists.length}台`} />
-            <Divider type="vertical" />
-            <Badge status="success" text={`在线设备共${onLine.length}台`} />
-            <Divider type="vertical" />
-            <Badge status="processing" text={`设备在线率${Math.ceil(onLine.length / lists.length * 100) || 0}%`} />
-            <Divider type="vertical" />
-            <Badge status="error" text={`未升级设备${notUpgraded.length}台`} />
+            <Badge status="success" text={`已激活设备共${lists.length}台`}/>
+            <Divider type="vertical"/>
+            <Badge status="success" text={`在线设备共${onLine.length}台`}/>
+            <Divider type="vertical"/>
+            <Badge status="processing" text={`设备在线率${Math.ceil(onLine.length / lists.length * 100) || 0}%`}/>
+            <Divider type="vertical"/>
+            <Badge status="error" text={`未升级设备${notUpgraded.length}台`}/>
           </div>
         </div>
         <div style={styles.content}>
