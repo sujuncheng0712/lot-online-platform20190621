@@ -1,11 +1,13 @@
-import React, {PureComponent} from 'react';
-import {Card, Button, Form, Icon, Input, Popover, message} from 'antd';
-import {connect} from 'dva';
+import React, { PureComponent } from 'react';
+import { Card, Button, Form, Icon, Input, Popover, message } from 'antd';
+import { connect } from 'dva';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 import styles from './style.less';
 
 const url = 'http://iot.dochen.cn/api';
-const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
+const auth = sessionStorage.getItem('dochen-auth')
+  ? JSON.parse(sessionStorage.getItem('dochen-auth'))
+  : '';
 
 // 输入框
 const fieldLabels = {
@@ -17,12 +19,12 @@ const fieldLabels = {
 
 const formItemLayout = {
   labelCol: {
-    xs: {span: 24},
-    sm: {span: 4},
+    xs: { span: 24 },
+    sm: { span: 4 },
   },
   wrapperCol: {
-    xs: {span: 24},
-    sm: {span: 10},
+    xs: { span: 24 },
+    sm: { span: 10 },
   },
 };
 
@@ -35,11 +37,11 @@ class ResetPassword extends PureComponent {
   // 验证手机号
   checkPassword = (rule, value, callback) => {
     if (!value) {
-      this.setState({visible: !!value});
+      this.setState({ visible: !!value });
       callback('error');
     } else {
       if (!this.state.visible) {
-        this.setState({visible: !!value});
+        this.setState({ visible: !!value });
       }
       if (value.length < 8) {
         callback('至少输入8位密码');
@@ -55,7 +57,7 @@ class ResetPassword extends PureComponent {
 
   // 验证确认密码
   checkConfirm = (rule, value, callback) => {
-    const {form} = this.props;
+    const { form } = this.props;
     if (value && value !== form.getFieldValue('password')) {
       callback('两次输入的密码不匹配!');
     } else {
@@ -64,8 +66,8 @@ class ResetPassword extends PureComponent {
   };
 
   render() {
-    const {form, submitting} = this.props;
-    const {getFieldDecorator, validateFieldsAndScroll, getFieldsError} = form;
+    const { form, submitting } = this.props;
+    const { getFieldDecorator, validateFieldsAndScroll, getFieldsError } = form;
 
     // 请求服务器
     const validate = () => {
@@ -79,13 +81,13 @@ class ResetPassword extends PureComponent {
           const getPWD = `${url}/${auth.type}/${auth.uuid}/pwd`;
           fetch(getPWD, {
             method: 'PUT',
-            body: JSON.stringify({data}),
-          }).then((res) => {
+            body: JSON.stringify({ data }),
+          }).then(res => {
             if (res.ok) {
-              res.json().then((info) => {
+              res.json().then(info => {
                 if (info.status) {
                   message.success('密码修改成功');
-                }else {
+                } else {
                   message.error(`密码修改失败[${info.message}],请重试`);
                 }
               });
@@ -102,13 +104,13 @@ class ResetPassword extends PureComponent {
       if (!errors || errorCount === 0) {
         return null;
       }
-      const scrollToField = (fieldKey) => {
+      const scrollToField = fieldKey => {
         const labelNode = document.querySelector(`label[for="${fieldKey}"]`);
         if (labelNode) {
           labelNode.scrollIntoView(true);
         }
       };
-      const errorList = Object.keys(errors).map((key) => {
+      const errorList = Object.keys(errors).map(key => {
         if (!errors[key]) {
           return null;
         }
@@ -121,7 +123,7 @@ class ResetPassword extends PureComponent {
         );
       });
       return (
-        <span className={styles.errorIcon} style={{float: 'right'}}>
+        <span className={styles.errorIcon} style={{ float: 'right' }}>
           <Popover
             title="表单校验信息"
             content={errorList}
@@ -137,52 +139,41 @@ class ResetPassword extends PureComponent {
     };
 
     return (
-      <PageHeaderLayout
-        title="修改密码"
-        wrapperClassName={styles.advancedForm}
-      >
+      <PageHeaderLayout title="修改密码" wrapperClassName={styles.advancedForm}>
         <Card title="修改密码" className={styles.card} bordered={false}>
           <Form>
-            <Form.Item label={fieldLabels.username} {...formItemLayout} >
+            <Form.Item label={fieldLabels.username} {...formItemLayout}>
               {getFieldDecorator('username', {
                 initialValue: auth.username,
-              })(
-                <Input disabled />
-              )}
+              })(<Input disabled />)}
             </Form.Item>
-            <Form.Item label={fieldLabels.old_password} {...formItemLayout} >
+            <Form.Item label={fieldLabels.old_password} {...formItemLayout}>
               {getFieldDecorator('old_password', {
-                rules: [
-                  {required: true, message: '旧密码必须填写'},
-                ],
-              })(
-                <Input type="password" placeholder="请输入8-16位的密码，区分大小写" />
-              )}
+                rules: [{ required: true, message: '旧密码必须填写' }],
+              })(<Input type="password" placeholder="请输入8-16位的密码，区分大小写" />)}
             </Form.Item>
-            <Form.Item label={fieldLabels.password} {...formItemLayout} >
+            <Form.Item label={fieldLabels.password} {...formItemLayout}>
               {getFieldDecorator('password', {
                 rules: [
-                  {required: true, message: '新密码必须填写'},
-                  {validator: this.checkPassword},
+                  { required: true, message: '新密码必须填写' },
+                  { validator: this.checkPassword },
                 ],
-              })(
-                <Input type="password" placeholder="请输入8-16位的密码，区分大小写" />
-              )}
+              })(<Input type="password" placeholder="请输入8-16位的密码，区分大小写" />)}
             </Form.Item>
-            <Form.Item label={fieldLabels.confirm_password} {...formItemLayout} >
+            <Form.Item label={fieldLabels.confirm_password} {...formItemLayout}>
               {getFieldDecorator('confirm_password', {
                 rules: [
-                  {required: true, message: '确认密码必须填写'},
-                  {validator: this.checkConfirm},
+                  { required: true, message: '确认密码必须填写' },
+                  { validator: this.checkConfirm },
                 ],
-              })(
-                <Input type="password" placeholder="请重新输入密码" />
-              )}
+              })(<Input type="password" placeholder="请重新输入密码" />)}
             </Form.Item>
           </Form>
         </Card>
-        <div style={{display: `flex`, alignItems: `center`, flexDirection: `row-reverse`}}>
-          <Button type="primary" onClick={validate} loading={submitting}>提交</Button>
+        <div style={{ display: `flex`, alignItems: `center`, flexDirection: `row-reverse` }}>
+          <Button type="primary" onClick={validate} loading={submitting}>
+            提交
+          </Button>
           {getErrorInfo()}
         </div>
       </PageHeaderLayout>
@@ -190,7 +181,7 @@ class ResetPassword extends PureComponent {
   }
 }
 
-export default connect(({global, loading}) => ({
+export default connect(({ global, loading }) => ({
   collapsed: global.collapsed,
   submitting: loading.effects['form/submitAdvancedForm'],
 }))(Form.create()(ResetPassword));

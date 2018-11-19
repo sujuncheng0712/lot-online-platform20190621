@@ -1,13 +1,13 @@
-import {createElement} from 'react';
+import { createElement } from 'react';
 import dynamic from 'dva/dynamic';
 import pathToRegexp from 'path-to-regexp';
-import {getMenuData} from './menu';
+import { getMenuData } from './menu';
 
 let routerDataCache;
 
 const modelNotExisted = (app, model) =>
   // eslint-disable-next-line
-  !app._models.some(({namespace}) => {
+  !app._models.some(({ namespace }) => {
     return namespace === model.substring(model.lastIndexOf('/') + 1);
   });
 
@@ -58,10 +58,10 @@ function getFlatMenuData(menus) {
   let keys = {};
   menus.forEach(item => {
     if (item.children) {
-      keys[item.path] = {...item};
-      keys = {...keys, ...getFlatMenuData(item.children)};
+      keys[item.path] = { ...item };
+      keys = { ...keys, ...getFlatMenuData(item.children) };
     } else {
-      keys[item.path] = {...item};
+      keys[item.path] = { ...item };
     }
   });
   return keys;
@@ -189,7 +189,9 @@ export const getRouterData = app => {
       component: dynamicWrapper(app, [], () => import('../routes/Exception/500')),
     },
     '/exception/trigger': {
-      component: dynamicWrapper(app, ['error'], () => import('../routes/Exception/triggerException')),
+      component: dynamicWrapper(app, ['error'], () =>
+        import('../routes/Exception/triggerException')
+      ),
     },
     '/user': {
       component: dynamicWrapper(app, [], () => import('../layouts/UserLayout')),

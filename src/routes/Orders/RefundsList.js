@@ -1,12 +1,26 @@
 /* eslint-disable no-param-reassign,no-plusplus,no-undef,no-underscore-dangle */
-import React, {PureComponent} from 'react';
-import {Input, Button, Icon, message, List, Popconfirm, Popover, Divider, Select, Row, Col} from 'antd';
+import React, { PureComponent } from 'react';
+import {
+  Input,
+  Button,
+  Icon,
+  message,
+  List,
+  Popconfirm,
+  Popover,
+  Divider,
+  Select,
+  Row,
+  Col,
+} from 'antd';
 import Ellipsis from 'ant-design-pro/lib/Ellipsis';
 import 'ant-design-pro/dist/ant-design-pro.css';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
-const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
+const auth = sessionStorage.getItem('dochen-auth')
+  ? JSON.parse(sessionStorage.getItem('dochen-auth'))
+  : '';
 const stateBadge = ['', '', '', '', '#666', '', '', '', '', '', '#f5222d'];
 const stateMap = ['', '', '', '待付款', '已付款', '', '', '', '', '', '已退款'];
 
@@ -33,10 +47,10 @@ class OrdersList extends PureComponent {
   // 获取商家列表
   getMerchantsList() {
     const getMerchants = `${url}/merchants`;
-    fetch(getMerchants).then((res) => {
+    fetch(getMerchants).then(res => {
       if (res.ok) {
-        res.json().then((info) => {
-          if (info.status) this.setState({merchantsList: info.data});
+        res.json().then(info => {
+          if (info.status) this.setState({ merchantsList: info.data });
         });
       }
     });
@@ -45,10 +59,10 @@ class OrdersList extends PureComponent {
   // 获取用户列表
   getUsers() {
     const getUsers = `${url}/users`;
-    fetch(getUsers).then((res) => {
+    fetch(getUsers).then(res => {
       if (res.ok) {
-        res.json().then((info) => {
-          if (info.status) this.setState({usersLists: info.data});
+        res.json().then(info => {
+          if (info.status) this.setState({ usersLists: info.data });
         });
       }
     });
@@ -58,22 +72,22 @@ class OrdersList extends PureComponent {
   getOrders(mid) {
     let getOrders = `${url}/orders`;
     getOrders += mid ? `?mid=${mid}` : '';
-    fetch(getOrders).then((res) => {
+    fetch(getOrders).then(res => {
       if (res.ok) {
-        res.json().then((info) => {
+        res.json().then(info => {
           if (info.status) {
             const lists = [];
             let k = 1;
-            info.data.forEach((val) => {
+            info.data.forEach(val => {
               if (val.state === 10) {
                 val.id = k;
                 lists.push(val);
                 k++;
               }
             });
-            this.setState({lists, loading: false});
+            this.setState({ lists, loading: false });
           } else {
-            this.setState({lists: [], loading: false});
+            this.setState({ lists: [], loading: false });
             message.warning(`提示：[${info.message}]`);
           }
         });
@@ -83,22 +97,22 @@ class OrdersList extends PureComponent {
 
   // 搜索列表
   searchList() {
-    const {lists, orderId, consignee} = this.state;
+    const { lists, orderId, consignee } = this.state;
 
     const arr = [];
-    lists.forEach((val) => {
+    lists.forEach(val => {
       if (val.uuid === orderId || val.consignee === consignee) arr.push(val);
     });
 
     if (arr.length === 0) message.error('没找到对应的数据');
 
-    this.setState({lists: arr.length > 0 ? arr : lists});
+    this.setState({ lists: arr.length > 0 ? arr : lists });
   }
 
   // 搜索商家的机器
   searchMerchantsList() {
-    const {merchantsList, merchantsContact} = this.state;
-    merchantsList.forEach((val) => {
+    const { merchantsList, merchantsContact } = this.state;
+    merchantsList.forEach(val => {
       if (val.contact === merchantsContact) {
         message.info(`正在搜索${merchantsContact}的订单，请稍后`);
         this.getOrders(val.uuid);
@@ -107,25 +121,47 @@ class OrdersList extends PureComponent {
   }
 
   render() {
-    const {merchantsList, lists, usersLists, loading} = this.state;
+    const { merchantsList, lists, usersLists, loading } = this.state;
 
     const nowadays = [];
     const yesterday = [];
     const thisMonth = [];
     const lastMonth = [];
 
-    lists.forEach((val) => {
-      usersLists.forEach((usersVal) => {
+    lists.forEach(val => {
+      usersLists.forEach(usersVal => {
         if (val.uid === usersVal.uuid) val.name = usersVal.name ? usersVal.name : usersVal.mobile;
       });
 
       const merchant = val.merchant.m3 || val.merchant.m2 || val.merchant.m1;
       val.referrer = merchant ? merchant.contact : '--';
 
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() && val.state === 4 && val.type === 1) nowadays.push(val);
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() - 1 && val.state === 4 && val.type === 1) yesterday.push(val);
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && val.state === 4 && val.type === 1) thisMonth.push(val);
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() - 1 && val.state === 4 && val.type === 1) lastMonth.push(val);
+      if (
+        new Date(val.created_at).getMonth() === new Date().getMonth() &&
+        new Date(val.created_at).getDate() === new Date().getDate() &&
+        val.state === 4 &&
+        val.type === 1
+      )
+        nowadays.push(val);
+      if (
+        new Date(val.created_at).getMonth() === new Date().getMonth() &&
+        new Date(val.created_at).getDate() === new Date().getDate() - 1 &&
+        val.state === 4 &&
+        val.type === 1
+      )
+        yesterday.push(val);
+      if (
+        new Date(val.created_at).getMonth() === new Date().getMonth() &&
+        val.state === 4 &&
+        val.type === 1
+      )
+        thisMonth.push(val);
+      if (
+        new Date(val.created_at).getMonth() === new Date().getMonth() - 1 &&
+        val.state === 4 &&
+        val.type === 1
+      )
+        lastMonth.push(val);
     });
 
     return (
@@ -134,34 +170,54 @@ class OrdersList extends PureComponent {
           <Row>
             <Col span={10}>
               <Row>
-                <Col span={6} style={styles.tit}>订单编号：</Col>
+                <Col span={6} style={styles.tit}>
+                  订单编号：
+                </Col>
                 <Col span={17}>
-                  <Input placeholder="请输入需要查找的订单编号" onChange={(e) => this.setState({orderId: e.target.value})} />
+                  <Input
+                    placeholder="请输入需要查找的订单编号"
+                    onChange={e => this.setState({ orderId: e.target.value })}
+                  />
                 </Col>
               </Row>
             </Col>
             <Col span={10}>
               <Row>
-                <Col span={6} style={styles.tit}>收货人姓名：</Col>
+                <Col span={6} style={styles.tit}>
+                  收货人姓名：
+                </Col>
                 <Col span={17}>
-                  <Input placeholder="请输入需要查找的买家姓名" onChange={(e) => this.setState({consignee: e.target.value})} />
+                  <Input
+                    placeholder="请输入需要查找的买家姓名"
+                    onChange={e => this.setState({ consignee: e.target.value })}
+                  />
                 </Col>
               </Row>
             </Col>
             <Col span={4}>
-              <Button type="primary" onClick={this.searchList.bind(this)}>搜索订单</Button>
+              <Button type="primary" onClick={this.searchList.bind(this)}>
+                搜索订单
+              </Button>
             </Col>
           </Row>
           <br />
-          <Row hidden={!(localStorage.getItem("antd-pro-authority") === "vendors") || false}>
+          <Row hidden={!(localStorage.getItem('antd-pro-authority') === 'vendors') || false}>
             <Col span={10}>
               <Row>
-                <Col span={6} style={styles.tit}>商家：</Col>
+                <Col span={6} style={styles.tit}>
+                  商家：
+                </Col>
                 <Col span={17}>
-                  <Select defaultValue="请选择" style={{width: '100%'}} onChange={(value) => this.getOrders(value)}>
+                  <Select
+                    defaultValue="请选择"
+                    style={{ width: '100%' }}
+                    onChange={value => this.getOrders(value)}
+                  >
                     <Select.OptGroup label="代理商">
-                      {merchantsList.map((item) => (
-                        <Select.Option key={item.uuid}>{item.contact}({item.mobile})</Select.Option>
+                      {merchantsList.map(item => (
+                        <Select.Option key={item.uuid}>
+                          {item.contact}({item.mobile})
+                        </Select.Option>
                       ))}
                     </Select.OptGroup>
                   </Select>
@@ -170,14 +226,21 @@ class OrdersList extends PureComponent {
             </Col>
             <Col span={10}>
               <Row>
-                <Col span={6} style={styles.tit}>按商家姓名搜索：</Col>
+                <Col span={6} style={styles.tit}>
+                  按商家姓名搜索：
+                </Col>
                 <Col span={17}>
-                  <Input placeholder="请输入商家姓名" onChange={(e) => this.setState({merchantsContact: e.target.value})} />
+                  <Input
+                    placeholder="请输入商家姓名"
+                    onChange={e => this.setState({ merchantsContact: e.target.value })}
+                  />
                 </Col>
               </Row>
             </Col>
             <Col span={4}>
-              <Button type="primary" onClick={this.searchMerchantsList.bind(this)}>搜索商家</Button>
+              <Button type="primary" onClick={this.searchMerchantsList.bind(this)}>
+                搜索商家
+              </Button>
             </Col>
           </Row>
         </div>
@@ -199,7 +262,7 @@ class OrdersList extends PureComponent {
             <div>{lastMonth.length}笔</div>
           </div>
         </div>
-        <div style={{padding: 10, backgroundColor: '#fff'}}>
+        <div style={{ padding: 10, backgroundColor: '#fff' }}>
           <div style={styles.title}>
             <div style={styles.id}>序号</div>
             <div style={styles.consignee}>收货人</div>
@@ -216,81 +279,96 @@ class OrdersList extends PureComponent {
             bordered={false}
             dataSource={lists}
             loading={loading}
-            renderItem={
-              item => (
-                <div key={item.uuid} style={styles.item}>
-                  <div style={styles.rowT}>
-                    <div>
-                      订单编号：{item.uuid}
-                      <Divider type="vertical" />
-                      {item.state !== 10 ? '成交' : '退款'}时间：{item.created_at}
-                    </div>
-                    {(localStorage.getItem('antd-pro-authority') === 'vendors' && item.state !== 10) ? (
-                      <Popconfirm
-                        placement="left"
-                        title="确认要退单吗？"
-                        okText="确认"
-                        cancelText="取消"
-                        onConfirm={() => {
-                          let returnUrl = `${url}/orders`;
-                          returnUrl += `/${item.uuid}`;
-                          returnUrl += `/return`;
-                          fetch(returnUrl, {
-                            method: 'POST',
-                            body: JSON.stringify({oid: item.uuid}),
-                          }).then((res) => {
-                            if (res.ok) {
-                              res.json().then((data) => {
-                                if (data.status) {
-                                  message.success('退单成功');
-                                  this.getOrders();
-                                } else {
-                                  message.error(`退单失败：[${data.message}]`);
-                                }
-                              });
-                            }
-                          });
-                        }}
-                      >
-                        <Button type="primary" size="small"><Icon type="delete" /> 退单</Button>
-                      </Popconfirm>
-                    ) : ''}
+            renderItem={item => (
+              <div key={item.uuid} style={styles.item}>
+                <div style={styles.rowT}>
+                  <div>
+                    订单编号：{item.uuid}
+                    <Divider type="vertical" />
+                    {item.state !== 10 ? '成交' : '退款'}时间：{item.created_at}
                   </div>
-                  <div style={styles.row}>
-                    <div style={styles.id}>{item.id}</div>
-                    <div style={styles.consignee}>{item.consignee}</div>
-                    <div style={styles.phone}>{item.phone}</div>
-                    <div style={styles.rowAddress}>
-                      <Ellipsis length={10} tooltip>{item.address}</Ellipsis>
-                    </div>
-                    <div span={4} style={styles.pay_amount}>
-                      {item.pay_amount !== null ? (
-                        <span>
-                          {item.pay_amount}元&nbsp;&nbsp;
-                          {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
-                            <Popover placement="top" title="支付单号" content={item.pay_billno} trigger="click">
-                              <Icon
-                                type="info-circle-o"
-                                style={{color: '#ccc', fontSize: 12, cursor: 'pointer'}}
-                              />
-                            </Popover>
-                          ) : ''}
-                        </span>
-                      ) : '--'}
-                    </div>
-                    <div span={4} style={styles.pay_amount}>
-                      <span style={{color: stateBadge[item.state]}}>
-                        {item.message === 'book' ? '已预约' : stateMap[item.state]}
+                  {localStorage.getItem('antd-pro-authority') === 'vendors' && item.state !== 10 ? (
+                    <Popconfirm
+                      placement="left"
+                      title="确认要退单吗？"
+                      okText="确认"
+                      cancelText="取消"
+                      onConfirm={() => {
+                        let returnUrl = `${url}/orders`;
+                        returnUrl += `/${item.uuid}`;
+                        returnUrl += `/return`;
+                        fetch(returnUrl, {
+                          method: 'POST',
+                          body: JSON.stringify({ oid: item.uuid }),
+                        }).then(res => {
+                          if (res.ok) {
+                            res.json().then(data => {
+                              if (data.status) {
+                                message.success('退单成功');
+                                this.getOrders();
+                              } else {
+                                message.error(`退单失败：[${data.message}]`);
+                              }
+                            });
+                          }
+                        });
+                      }}
+                    >
+                      <Button type="primary" size="small">
+                        <Icon type="delete" /> 退单
+                      </Button>
+                    </Popconfirm>
+                  ) : (
+                    ''
+                  )}
+                </div>
+                <div style={styles.row}>
+                  <div style={styles.id}>{item.id}</div>
+                  <div style={styles.consignee}>{item.consignee}</div>
+                  <div style={styles.phone}>{item.phone}</div>
+                  <div style={styles.rowAddress}>
+                    <Ellipsis length={10} tooltip>
+                      {item.address}
+                    </Ellipsis>
+                  </div>
+                  <div span={4} style={styles.pay_amount}>
+                    {item.pay_amount !== null ? (
+                      <span>
+                        {item.pay_amount}元&nbsp;&nbsp;
+                        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
+                          <Popover
+                            placement="top"
+                            title="支付单号"
+                            content={item.pay_billno}
+                            trigger="click"
+                          >
+                            <Icon
+                              type="info-circle-o"
+                              style={{ color: '#ccc', fontSize: 12, cursor: 'pointer' }}
+                            />
+                          </Popover>
+                        ) : (
+                          ''
+                        )}
                       </span>
-                    </div>
-                    <div style={styles.contact}>{item.name || '--'}</div>
-                    <div style={styles.contact}>{item.referrer}</div>
-                    <div style={styles.agents}>{item.merchant.m1 ? item.merchant.m1.contact : '--'}</div>
+                    ) : (
+                      '--'
+                    )}
+                  </div>
+                  <div span={4} style={styles.pay_amount}>
+                    <span style={{ color: stateBadge[item.state] }}>
+                      {item.message === 'book' ? '已预约' : stateMap[item.state]}
+                    </span>
+                  </div>
+                  <div style={styles.contact}>{item.name || '--'}</div>
+                  <div style={styles.contact}>{item.referrer}</div>
+                  <div style={styles.agents}>
+                    {item.merchant.m1 ? item.merchant.m1.contact : '--'}
                   </div>
                 </div>
-              )
-            }
-            pagination={{pageSize: 10}}
+              </div>
+            )}
+            pagination={{ pageSize: 10 }}
           />
         </div>
       </PageHeaderLayout>

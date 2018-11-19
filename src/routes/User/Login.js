@@ -1,13 +1,13 @@
 /* eslint-disable default-case,no-shadow,no-unused-vars */
-import React, {Component} from 'react';
-import {connect} from 'dva';
-import {Checkbox, Alert, message} from 'antd';
+import React, { Component } from 'react';
+import { connect } from 'dva';
+import { Checkbox, Alert, message } from 'antd';
 import Login from 'components/Login';
 import styles from './Login.less';
 
-const {Tab, UserName, Password, Submit} = Login;
+const { Tab, UserName, Password, Submit } = Login;
 
-@connect(({login, loading}) => ({
+@connect(({ login, loading }) => ({
   login,
   submitting: loading.effects['login/login'],
 }))
@@ -17,15 +17,15 @@ export default class LoginPage extends Component {
     this.state = {
       type: 'merchants',
       autoLogin: false,
-    }
+    };
   }
 
   onTabChange(type) {
-    this.setState({type});
+    this.setState({ type });
   }
 
   handleSubmit(err, values) {
-    const {type} = this.state;
+    const { type } = this.state;
     if (!err) {
       fetch('http://iot.dochen.cn/api/auth', {
         method: 'POST',
@@ -34,9 +34,9 @@ export default class LoginPage extends Component {
           password: values.password,
           type,
         }),
-      }).then((res) => {
+      }).then(res => {
         if (res.ok) {
-          res.json().then((info) => {
+          res.json().then(info => {
             if (info.status) {
               message.success(`登陆成功`);
               let type = 0;
@@ -74,20 +74,13 @@ export default class LoginPage extends Component {
     });
   }
 
-  renderMessage = (content) => {
-    return (
-      <Alert
-        style={{marginBottom: 24}}
-        message={content}
-        type="error"
-        showIcon
-      />
-    );
+  renderMessage = content => {
+    return <Alert style={{ marginBottom: 24 }} message={content} type="error" showIcon />;
   };
 
   render() {
-    const {login, submitting} = this.props;
-    const {type} = this.state;
+    const { login, submitting } = this.props;
+    const { type } = this.state;
 
     return (
       <div className={styles.main}>
@@ -97,39 +90,25 @@ export default class LoginPage extends Component {
           onSubmit={this.handleSubmit.bind(this)}
         >
           <Tab key="merchants" tab="商家登录">
-            {
-              login.status === 'error' &&
+            {login.status === 'error' &&
               login.type === 'merchants' &&
               !login.submitting &&
-              this.renderMessage('账户或密码错误')
-            }
-            <UserName
-              name="userName"
-              placeholder="请输入代理商账号"
-            />
-            <Password
-              name="password"
-              placeholder="请输入8-16位的密码"
-            />
+              this.renderMessage('账户或密码错误')}
+            <UserName name="userName" placeholder="请输入代理商账号" />
+            <Password name="password" placeholder="请输入8-16位的密码" />
           </Tab>
           <Tab key="vendors" tab="员工登录">
-            {
-              login.status === 'error' &&
+            {login.status === 'error' &&
               login.type === 'vendors' &&
               !login.submitting &&
-              this.renderMessage('账户或密码错误')
-            }
-            <UserName
-              name="userName"
-              placeholder="请输入运营商账号"
-            />
-            <Password
-              name="password"
-              placeholder="请输入8-16位的密码"
-            />
+              this.renderMessage('账户或密码错误')}
+            <UserName name="userName" placeholder="请输入运营商账号" />
+            <Password name="password" placeholder="请输入8-16位的密码" />
           </Tab>
           <div>
-            <Checkbox checked={this.state.autoLogin} onChange={this.changeAutoLogin.bind(this)}>记住账号密码</Checkbox>
+            <Checkbox checked={this.state.autoLogin} onChange={this.changeAutoLogin.bind(this)}>
+              记住账号密码
+            </Checkbox>
           </div>
           <Submit loading={submitting}>登录</Submit>
         </Login>

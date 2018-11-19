@@ -1,10 +1,12 @@
 /* eslint-disable no-param-reassign,no-plusplus,no-underscore-dangle */
-import React, {PureComponent} from 'react';
-import {Input, Button, message, List, Divider, Select, Row, Col} from 'antd';
+import React, { PureComponent } from 'react';
+import { Input, Button, message, List, Divider, Select, Row, Col, Popover, Icon } from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
-const auth = sessionStorage.getItem('dochen-auth') ? JSON.parse(sessionStorage.getItem('dochen-auth')) : '';
+const auth = sessionStorage.getItem('dochen-auth')
+  ? JSON.parse(sessionStorage.getItem('dochen-auth'))
+  : '';
 const stateBadge = ['', '', '', '', '#666', '', '', '', '', '', '#f5222d'];
 const stateMap = ['', '', '', '待付款', '已付款', '', '', '', '', '', '已退款'];
 
@@ -28,10 +30,10 @@ class OrdersList extends PureComponent {
   // 获取商家列表
   getMerchantsList() {
     const getMerchants = `${url}/merchants`;
-    fetch(getMerchants).then((res) => {
+    fetch(getMerchants).then(res => {
       if (res.ok) {
-        res.json().then((info) => {
-          if (info.status) this.setState({merchantsList: info.data});
+        res.json().then(info => {
+          if (info.status) this.setState({ merchantsList: info.data });
         });
       }
     });
@@ -42,13 +44,13 @@ class OrdersList extends PureComponent {
     let getOrders = `${url}/orders`;
     getOrders += mid ? `?mid=${mid}` : '';
 
-    fetch(getOrders).then((res) => {
+    fetch(getOrders).then(res => {
       if (res.ok) {
-        res.json().then((info) => {
+        res.json().then(info => {
           if (info.status) {
             const lists = [];
             let k = 1;
-            info.data.forEach((val) => {
+            info.data.forEach(val => {
               if (val.type === 3 && val.state === 4) {
                 val.id = k;
                 val.consignee = auth.contact;
@@ -56,9 +58,9 @@ class OrdersList extends PureComponent {
                 k++;
               }
             });
-            this.setState({lists, loading: false});
+            this.setState({ lists, loading: false });
           } else {
-            this.setState({lists: [], loading: false});
+            this.setState({ lists: [], loading: false });
             message.warning(`提示：[${info.message}]`);
           }
         });
@@ -68,21 +70,21 @@ class OrdersList extends PureComponent {
 
   // 搜索列表
   searchList() {
-    const {lists, orderId} = this.state;
+    const { lists, orderId } = this.state;
     const arr = [];
-    lists.forEach((val) => {
+    lists.forEach(val => {
       if (val.uuid === orderId) arr.push(val);
     });
 
     if (arr.length === 0) message.error('没找到对应的数据');
 
-    this.setState({lists: arr.length > 0 ? arr : lists});
+    this.setState({ lists: arr.length > 0 ? arr : lists });
   }
 
   // 搜索商家的机器
   searchMerchantsList() {
-    const {merchantsList, merchantsContact} = this.state;
-    merchantsList.forEach((val) => {
+    const { merchantsList, merchantsContact } = this.state;
+    merchantsList.forEach(val => {
       if (val.contact === merchantsContact) {
         message.info(`正在搜索${merchantsContact}的订单，请稍后`);
         this.getOrders(val.uuid);
@@ -91,21 +93,43 @@ class OrdersList extends PureComponent {
   }
 
   render() {
-    const {lists, loading, merchantsList} = this.state;
+    const { lists, loading, merchantsList } = this.state;
 
     const nowadays = [];
     const yesterday = [];
     const thisMonth = [];
     const lastMonth = [];
 
-    lists.forEach((val) => {
+    lists.forEach(val => {
       const merchant = val.merchant.m3 || val.merchant.m2 || val.merchant.m1;
       val.referrer = merchant ? merchant.contact : '--';
 
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() && val.state === 4 && val.type === 3) nowadays.push(val);
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && (new Date(val.created_at)).getDate() === (new Date()).getDate() - 1 && val.state === 4 && val.type === 3) yesterday.push(val);
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() && val.state === 4 && val.type === 3) thisMonth.push(val);
-      if ((new Date(val.created_at)).getMonth() === (new Date()).getMonth() - 1 && val.state === 4 && val.type === 3) lastMonth.push(val);
+      if (
+        new Date(val.created_at).getMonth() === new Date().getMonth() &&
+        new Date(val.created_at).getDate() === new Date().getDate() &&
+        val.state === 4 &&
+        val.type === 3
+      )
+        nowadays.push(val);
+      if (
+        new Date(val.created_at).getMonth() === new Date().getMonth() &&
+        new Date(val.created_at).getDate() === new Date().getDate() - 1 &&
+        val.state === 4 &&
+        val.type === 3
+      )
+        yesterday.push(val);
+      if (
+        new Date(val.created_at).getMonth() === new Date().getMonth() &&
+        val.state === 4 &&
+        val.type === 3
+      )
+        thisMonth.push(val);
+      if (
+        new Date(val.created_at).getMonth() === new Date().getMonth() - 1 &&
+        val.state === 4 &&
+        val.type === 3
+      )
+        lastMonth.push(val);
     });
 
     return (
@@ -114,26 +138,41 @@ class OrdersList extends PureComponent {
           <Row>
             <Col span={10}>
               <Row>
-                <Col span={6} style={styles.tit}>订单编号：</Col>
+                <Col span={6} style={styles.tit}>
+                  订单编号：
+                </Col>
                 <Col span={17}>
-                  <Input placeholder="请输入需要查找的设备ID" onChange={(e) => this.setState({orderId: e.target.value})} />
+                  <Input
+                    placeholder="请输入需要查找的设备ID"
+                    onChange={e => this.setState({ orderId: e.target.value })}
+                  />
                 </Col>
               </Row>
             </Col>
             <Col span={4}>
-              <Button type="primary" onClick={this.searchList.bind(this)}>搜索设备</Button>
+              <Button type="primary" onClick={this.searchList.bind(this)}>
+                搜索设备
+              </Button>
             </Col>
           </Row>
           <br />
-          <Row hidden={!(localStorage.getItem("antd-pro-authority") === "vendors") || false}>
+          <Row hidden={!(localStorage.getItem('antd-pro-authority') === 'vendors') || false}>
             <Col span={10}>
               <Row>
-                <Col span={6} style={styles.tit}>商家：</Col>
+                <Col span={6} style={styles.tit}>
+                  商家：
+                </Col>
                 <Col span={17}>
-                  <Select defaultValue="请选择" style={{width: '100%'}} onChange={(value) => this.getOrders(value)}>
+                  <Select
+                    defaultValue="请选择"
+                    style={{ width: '100%' }}
+                    onChange={value => this.getOrders(value)}
+                  >
                     <Select.OptGroup label="代理商">
-                      {merchantsList.map((item) => (
-                        <Select.Option key={item.uuid}>{item.contact}({item.mobile})</Select.Option>
+                      {merchantsList.map(item => (
+                        <Select.Option key={item.uuid}>
+                          {item.contact}({item.mobile})
+                        </Select.Option>
                       ))}
                     </Select.OptGroup>
                   </Select>
@@ -142,14 +181,21 @@ class OrdersList extends PureComponent {
             </Col>
             <Col span={10}>
               <Row>
-                <Col span={6} style={styles.tit}>按商家姓名搜索：</Col>
+                <Col span={6} style={styles.tit}>
+                  按商家姓名搜索：
+                </Col>
                 <Col span={17}>
-                  <Input placeholder="请输入商家姓名" onChange={(e) => this.setState({merchantsContact: e.target.value})} />
+                  <Input
+                    placeholder="请输入商家姓名"
+                    onChange={e => this.setState({ merchantsContact: e.target.value })}
+                  />
                 </Col>
               </Row>
             </Col>
             <Col span={4}>
-              <Button type="primary" onClick={this.searchMerchantsList.bind(this)}>搜索商家</Button>
+              <Button type="primary" onClick={this.searchMerchantsList.bind(this)}>
+                搜索商家
+              </Button>
             </Col>
           </Row>
         </div>
@@ -171,7 +217,7 @@ class OrdersList extends PureComponent {
             <div>{lastMonth.length}笔</div>
           </div>
         </div>
-        <div style={{padding: 10, backgroundColor: '#fff'}}>
+        <div style={{ padding: 10, backgroundColor: '#fff' }}>
           <div style={styles.title}>
             <div style={styles.id}>序号</div>
             <div style={styles.consignee}>购买人</div>
@@ -186,36 +232,66 @@ class OrdersList extends PureComponent {
             bordered={false}
             dataSource={lists}
             loading={loading}
-            renderItem={
-              item => (
-                <div key={item.uuid} style={styles.item}>
-                  <div style={styles.rowT}>
-                    <div>
-                      订单编号：{item.uuid}
-                      <Divider type="vertical" />
-                      {item.state !== 10 ? '成交' : '退款'}时间：{item.created_at}
-                    </div>
-                  </div>
-                  <div style={styles.row}>
-                    <div style={styles.id}>{item.id}</div>
-                    <div style={styles.consignee}>{item.referrer}</div>
-                    <div style={styles.quantity}>{item.quantity}</div>
-                    <div style={styles.total}>￥{item.total / item.quantity}</div>
-                    <div span={4} style={styles.pay_amount}>
-                      {item.pay_amount !== null ? (<span>{item.pay_amount}元</span>) : '--'}
-                    </div>
-                    <div span={4} style={styles.pay_amount}>
-                      <span style={{color: stateBadge[item.state]}}>{stateMap[item.state]}</span>
-                    </div>
-                    <div style={styles.agents}>{item.merchant.m1 ? item.merchant.m1.contact : '--'}</div>
+            renderItem={item => (
+              <div key={item.uuid} style={styles.item}>
+                <div style={styles.rowT}>
+                  <div>
+                    订单编号：{item.uuid}
+                    <Divider type="vertical" />
+                    {item.state !== 10 ? '成交' : '退款'}时间：{item.created_at}
+                    <Divider type="vertical" />
+                    支付方式：
+                    {item.pay_ch === 'weixin' && '微信支付'}
+                    {item.pay_ch === 'wallet' && '账户余额'}
+                    {item.pay_ch === 'bank' && '线下支付'}
                   </div>
                 </div>
-              )
-            }
+                <div style={styles.row}>
+                  <div style={styles.id}>{item.id}</div>
+                  <div style={styles.consignee}>{item.referrer}</div>
+                  <div style={styles.quantity}>{item.quantity}</div>
+                  <div style={styles.total}>￥{item.total / item.quantity}</div>
+                  <div span={4} style={styles.pay_amount}>
+                    {item.pay_amount !== null ? (
+                      <span>
+                        {item.pay_amount}元&nbsp;&nbsp;
+                        {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
+                          <Popover
+                            placement="top"
+                            title="支付单号"
+                            content={item.pay_billno}
+                            trigger="click"
+                          >
+                            {item.pay_billno ? (
+                              <Icon
+                                type="info-circle-o"
+                                style={{ color: '#ccc', fontSize: 12, cursor: 'pointer' }}
+                              />
+                            ) : (
+                              ''
+                            )}
+                          </Popover>
+                        ) : (
+                          ''
+                        )}
+                      </span>
+                    ) : (
+                      '--'
+                    )}
+                  </div>
+                  <div span={4} style={styles.pay_amount}>
+                    <span style={{ color: stateBadge[item.state] }}>{stateMap[item.state]}</span>
+                  </div>
+                  <div style={styles.agents}>
+                    {item.merchant.m1 ? item.merchant.m1.contact : '--'}
+                  </div>
+                </div>
+              </div>
+            )}
             pagination={{
-              onChange: (page) => {
-                console.log(page);
-              },
+              // onChange: (page) => {
+              //   console.log(page);
+              // },
               pageSize: 10,
             }}
           />

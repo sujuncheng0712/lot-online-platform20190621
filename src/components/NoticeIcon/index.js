@@ -1,22 +1,18 @@
 /* eslint-disable react/sort-comp */
-import React, {PureComponent} from 'react';
-import {Popover, Icon, Tabs, Badge, Spin} from 'antd';
+import React, { PureComponent } from 'react';
+import { Popover, Icon, Tabs, Badge, Spin } from 'antd';
 import classNames from 'classnames';
 import List from './NoticeList';
 import styles from './index.less';
 
-const {TabPane} = Tabs;
+const { TabPane } = Tabs;
 
 export default class NoticeIcon extends PureComponent {
   static defaultProps = {
-    onItemClick: () => {
-    },
-    onPopupVisibleChange: () => {
-    },
-    onTabChange: () => {
-    },
-    onClear: () => {
-    },
+    onItemClick: () => {},
+    onPopupVisibleChange: () => {},
+    onTabChange: () => {},
+    onClear: () => {},
     loading: false,
     locale: {
       emptyText: '暂无数据',
@@ -35,16 +31,16 @@ export default class NoticeIcon extends PureComponent {
   }
 
   onItemClick = (item, tabProps) => {
-    const {onItemClick} = this.props;
+    const { onItemClick } = this.props;
     onItemClick(item, tabProps);
   };
   onTabChange = tabType => {
-    this.setState({tabType});
+    this.setState({ tabType });
     this.props.onTabChange(tabType);
   };
 
   getNotificationBox() {
-    const {children, loading, locale} = this.props;
+    const { children, loading, locale } = this.props;
     if (!children) {
       return null;
     }
@@ -76,7 +72,7 @@ export default class NoticeIcon extends PureComponent {
   }
 
   render() {
-    const {className, count, popupAlign, onPopupVisibleChange} = this.props;
+    const { className, count, popupAlign, onPopupVisibleChange } = this.props;
     const noticeButtonClass = classNames(className, styles.noticeButton);
     const notificationBox = this.getNotificationBox();
     const trigger = (

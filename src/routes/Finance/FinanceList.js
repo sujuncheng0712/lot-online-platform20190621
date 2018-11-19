@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign,no-shadow */
-import React, {PureComponent} from 'react';
-import {Tabs, List, Divider, Button, Popconfirm} from 'antd';
+import React, { PureComponent } from 'react';
+import { Tabs, List, Divider, Button, Popconfirm } from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 import banks from '../../models/banks';
 
@@ -24,23 +24,23 @@ class FinanceList extends PureComponent {
   // 获取商家列表
   getMerchantsList() {
     const getMerchants = `${url}/merchants`;
-    fetch(getMerchants).then((res) => {
+    fetch(getMerchants).then(res => {
       if (res.ok) {
-        res.json().then((info) => {
-          if (info.status) this.setState({merchantsList: info.data});
+        res.json().then(info => {
+          if (info.status) this.setState({ merchantsList: info.data });
         });
       }
     });
   }
 
   // 获取提现申请列表
-  getWalletApply(){
+  getWalletApply() {
     const getWalletApply = `${url}/wallet/apply`;
-    fetch(getWalletApply).then((res) => {
+    fetch(getWalletApply).then(res => {
       if (res.ok) {
-        res.json().then((info) => {
+        res.json().then(info => {
           if (info.status) {
-            this.setState({lists: info.data});
+            this.setState({ lists: info.data });
           }
         });
       }
@@ -55,10 +55,10 @@ class FinanceList extends PureComponent {
     postWalletApply += `/${uuid}`;
     fetch(postWalletApply, {
       method: 'POST',
-      body: JSON.stringify({verdict: type}),
-    }).then((res) => {
+      body: JSON.stringify({ verdict: type }),
+    }).then(res => {
       if (res.ok) {
-        res.json().then((info) => {
+        res.json().then(info => {
           if (info.status) this.getWalletApply();
         });
       }
@@ -66,18 +66,18 @@ class FinanceList extends PureComponent {
   }
 
   render() {
-    const {lists, merchantsList} = this.state;
+    const { lists, merchantsList } = this.state;
 
     const lists1 = [];
     const lists2 = [];
     const lists3 = [];
-    lists.forEach((val)=>{
-      if(val.withdraw){
-        banks.forEach((value) => {
+    lists.forEach(val => {
+      if (val.withdraw) {
+        banks.forEach(value => {
           if (value.code === val.withdraw.bank) val.bank = value.name;
         });
       }
-      merchantsList.forEach((value)=>{
+      merchantsList.forEach(value => {
         if (value.uuid === val.mid) val.contact = value.contact;
       });
 
@@ -97,59 +97,62 @@ class FinanceList extends PureComponent {
         <div style={styles.tool}>操作</div>
       </div>
     );
-    const htmlBody = (data) => (
+    const htmlBody = data => (
       <List
         split={false}
         bordered={false}
         dataSource={data}
-        pagination={{pageSize: 10}}
+        pagination={{ pageSize: 10 }}
         loading={false}
-        renderItem={
-          (item, key) => (
-            <div key={item.oid} style={styles.item}>
-              <div style={styles.row}>
-                <div>
-                  发起时间：{item.created_at}
-                  <Divider type="vertical" />
-                  银行账户：{item.withdraw ? item.withdraw.account : '--'}
-                </div>
-              </div>
-              <div style={styles.column}>
-                <div style={styles.order}>{key + 1}</div>
-                <div style={styles.col}>{item.contact || '--'}</div>
-                <div style={styles.col}>{item.amount}元</div>
-                <div style={styles.col}>
-                  {((Math.round(item.amount * 0.1) / 100) <= 2 ? 2 : Math.round(item.amount * 0.1) / 100).toFixed(2)}元
-                </div>
-                <div style={styles.bank}>{item.bank}</div>
-                <div style={styles.col}>{item.withdraw ? item.withdraw.name : '--'}</div>
-                {item.state === 1 ? (
-                  <div style={styles.tool}>
-                    <Popconfirm
-                      placement="topRight"
-                      title="确认要通过这笔提现吗？"
-                      onConfirm={this.postWalletApply.bind(this, item.mid, item.uuid, 1)}
-                      okText="确认"
-                      cancelText="取消"
-                    >
-                      <Button type="primary" size="small">通过</Button>
-                    </Popconfirm>
-                    <Divider type="vertical" />
-                    <Button
-                      type="primary"
-                      size="small"
-                      onClick={this.postWalletApply.bind(this, item.mid, item.uuid, 0)}
-                    >
-                      拒绝
-                    </Button>
-                  </div>
-                ) : (
-                  <div style={styles.tool}>{stateMap[item.state]}</div>
-                )}
+        renderItem={(item, key) => (
+          <div key={item.oid} style={styles.item}>
+            <div style={styles.row}>
+              <div>
+                发起时间：{item.created_at}
+                <Divider type="vertical" />
+                银行账户：{item.withdraw ? item.withdraw.account : '--'}
               </div>
             </div>
-          )
-        }
+            <div style={styles.column}>
+              <div style={styles.order}>{key + 1}</div>
+              <div style={styles.col}>{item.contact || '--'}</div>
+              <div style={styles.col}>{item.amount}元</div>
+              <div style={styles.col}>
+                {(Math.round(item.amount * 0.1) / 100 <= 2
+                  ? 2
+                  : Math.round(item.amount * 0.1) / 100
+                ).toFixed(2)}元
+              </div>
+              <div style={styles.bank}>{item.bank}</div>
+              <div style={styles.col}>{item.withdraw ? item.withdraw.name : '--'}</div>
+              {item.state === 1 ? (
+                <div style={styles.tool}>
+                  <Popconfirm
+                    placement="topRight"
+                    title="确认要通过这笔提现吗？"
+                    onConfirm={this.postWalletApply.bind(this, item.mid, item.uuid, 1)}
+                    okText="确认"
+                    cancelText="取消"
+                  >
+                    <Button type="primary" size="small">
+                      通过
+                    </Button>
+                  </Popconfirm>
+                  <Divider type="vertical" />
+                  <Button
+                    type="primary"
+                    size="small"
+                    onClick={this.postWalletApply.bind(this, item.mid, item.uuid, 0)}
+                  >
+                    拒绝
+                  </Button>
+                </div>
+              ) : (
+                <div style={styles.tool}>{stateMap[item.state]}</div>
+              )}
+            </div>
+          </div>
+        )}
       />
     );
 
@@ -184,7 +187,7 @@ const styles = {
   },
   // 列表
   item: {
-    margin:'0px 5px',
+    margin: '0px 5px',
     marginTop: 10,
     boxShadow: '0 1px 4px rgba(0,21,41,.12)',
   },
@@ -194,8 +197,8 @@ const styles = {
     justifyContent: 'space-between',
   },
   colBk: {
-    margin:'0px 5px',
-    backgroundColor:'#f1f1f1',
+    margin: '0px 5px',
+    backgroundColor: '#f1f1f1',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
