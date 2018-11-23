@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 import React, { PureComponent } from 'react';
-import { Card, Col, Row, Table, Tag, Icon, message, Button } from 'antd';
+import { Card, Col, Row, Table, Tag, Button } from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
@@ -108,7 +108,7 @@ class CenterProfile extends PureComponent {
     productsLists.forEach(item => {
       if (allowanceLists) {
         allowanceLists.forEach(val => {
-          if (item.pid === val.pid) {
+          if (item.tags === val.eptags) {
             item.allowance = val.allowance || 0;
             item.commission = val.commission || 0;
             item.editType = 'PUT';
@@ -134,9 +134,9 @@ class CenterProfile extends PureComponent {
       {
         align: 'center',
         title: '补贴/返点（元/%）',
-        render: info => (
+        render: val => (
           <span style={{ paddingRight: 15 }}>
-            {info.type === 2 ? `${info.commission} %` : `${info.allowance} 元`}
+            {val.type === 2 ? `${val.commission} %` : `${val.allowance} 元`}
           </span>
         ),
       },
