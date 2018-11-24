@@ -35,6 +35,8 @@ class EquipmentsList extends PureComponent {
       notUpgradedNum: 0, // 未升级设备数量
       isUsedPaginationSearch: true,
       latestVersion: '', // 最新的版本号
+      deviceId: '',
+      codeId: '',
     };
   }
 
@@ -108,12 +110,13 @@ class EquipmentsList extends PureComponent {
     });
   }
 
-  // 获取搜索后的列表
+  // 管理员权限获取搜索后的列表
   searchList() {
     const { inputValue } = this.state;
     const arr = [];
     const eidRegex = /^[0-9A-Z]{10}$/;
     const codeRegex = /^[0-9A-Z]{8}$/;
+    const orderRegex = /^[0-9]{20}$/;
     const merchantRegex = /^[\u4E00-\u9FA5]{1,5}$/;
     if (eidRegex.test(inputValue)) {
       this.setState({ loading: true });
@@ -132,7 +135,7 @@ class EquipmentsList extends PureComponent {
           });
         }
       });
-    } else if (codeRegex.test(inputValue)) {
+    } else if (codeRegex.test(inputValue) || orderRegex.test(inputValue)) {
       this.setState({ loading: true });
       let searchEidUrl = `${url}/devices`;
       searchEidUrl += `?search=code&code=${inputValue}`;
@@ -149,7 +152,10 @@ class EquipmentsList extends PureComponent {
           });
         }
       });
-    } else if (merchantRegex.test(inputValue)) {
+    } else if (
+      localStorage.getItem('antd-pro-authority') === 'vendors' &&
+      merchantRegex.test(inputValue)
+    ) {
       this.setState({ loading: true });
       let searchEidUrl = `${url}/devices`;
       searchEidUrl += `?search=merchant&merchant=${inputValue}`;
@@ -173,6 +179,19 @@ class EquipmentsList extends PureComponent {
     } else {
       message.error('没找到对应的数据');
     }
+  }
+
+  // 商家权限获取搜索后的列表
+  searchListOfMerchant() {
+    const { lists, codeId, deviceId } = this.state;
+    const arr = [];
+    lists.forEach(val => {
+      if (val.activation_code === codeId || val.eid === deviceId) arr.push(val);
+    });
+
+    if (arr.length === 0) message.error('没找到对应的数据');
+
+    this.setState({ lists: arr.length > 0 ? arr : lists });
   }
 
   render() {
@@ -399,39 +418,61 @@ class EquipmentsList extends PureComponent {
         <div style={styles.content}>
           <Row>
             {localStorage.getItem('antd-pro-authority') === 'vendors' ? (
-              <Col span={14}>
-                <Row>
-                  <Col span={6} style={styles.tit}>
-                    设备ID/激活码/代理商/经销商：
-                  </Col>
-                  <Col span={17}>
-                    <Input
-                      placeholder="请输入需要查找的设备ID、激活码、代理商或经销商"
-                      onChange={e => this.setState({ inputValue: e.target.value })}
-                    />
-                  </Col>
-                </Row>
-              </Col>
+              <div>
+                <Col span={12}>
+                  <Row>
+                    <Col span={5} style={styles.tit}>
+                      关键词：
+                    </Col>
+                    <Col span={18}>
+                      <Input
+                        placeholder="请输入需要查找的设备ID、激活码、订单号、代理商或经销商"
+                        onChange={e => this.setState({ inputValue: e.target.value })}
+                      />
+                    </Col>
+                  </Row>
+                </Col>
+                <Col span={6}>
+                  <Button type="primary" onClick={this.searchList.bind(this)}>
+                    搜索
+                  </Button>
+                </Col>
+              </div>
             ) : (
-              <Col span={14}>
-                <Row>
-                  <Col span={4} style={styles.tit}>
-                    设备ID/激活码：
-                  </Col>
-                  <Col span={19}>
-                    <Input
-                      placeholder="请输入需要查找的设备ID或激活码"
-                      onChange={e => this.setState({ inputValue: e.target.value })}
-                    />
-                  </Col>
-                </Row>
-              </Col>
+              <div>
+                <Col span={10}>
+                  <Row>
+                    <Col span={6} style={styles.tit}>
+                      设备ID：
+                    </Col>
+                    <Col span={17}>
+                      <Input
+                        placeholder="请输入需要查找的设备ID"
+                        onChange={e => this.setState({ deviceId: e.target.value })}
+                      />
+                    </Col>
+                  </Row>
+                </Col>
+                <Col span={10}>
+                  <Row>
+                    <Col span={6} style={styles.tit}>
+                      激活码/订单号：
+                    </Col>
+                    <Col span={17}>
+                      <Input
+                        placeholder="请输入激活码或订单编号"
+                        onChange={e => this.setState({ codeId: e.target.value })}
+                      />
+                    </Col>
+                  </Row>
+                </Col>
+                <Col span={4}>
+                  <Button type="primary" onClick={this.searchListOfMerchant.bind(this)}>
+                    搜索
+                  </Button>
+                </Col>
+              </div>
             )}
-            <Col span={6}>
-              <Button type="primary" onClick={this.searchList.bind(this)}>
-                搜索
-              </Button>
-            </Col>
           </Row>
         </div>
         <div style={{ padding: 20, backgroundColor: '#fff' }}>
@@ -482,7 +523,7 @@ const styles = {
   },
   tit: {
     minWidth: 110,
-    textAlign: 'left',
+    textAlign: 'right',
     lineHeight: '32px',
   },
   pagination: {
