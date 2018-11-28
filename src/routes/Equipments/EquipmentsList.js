@@ -125,7 +125,7 @@ class EquipmentsList extends PureComponent {
       fetch(searchEidUrl).then(res => {
         if (res.ok) {
           res.json().then(info => {
-            if (info.status && info.data.length > 0) {
+            if (info.status && info.data.length > 0 && info.data[0].activation_code) {
               info.data[0].id = 1;
               arr.push(info.data[0]);
             } else {
@@ -152,10 +152,7 @@ class EquipmentsList extends PureComponent {
           });
         }
       });
-    } else if (
-      localStorage.getItem('antd-pro-authority') === 'vendors' &&
-      merchantRegex.test(inputValue)
-    ) {
+    } else if (merchantRegex.test(inputValue)) {
       this.setState({ loading: true });
       let searchEidUrl = `${url}/devices`;
       searchEidUrl += `?search=merchant&merchant=${inputValue}`;
@@ -205,6 +202,12 @@ class EquipmentsList extends PureComponent {
       latestVersion,
     } = this.state;
 
+    lists.forEach(val => {
+      if (val.version === '1.0') {
+        val.version = `${val.version}.0`;
+      }
+    });
+
     // 翻译使用用户
     const onLine = [];
     const versionArr = [];
@@ -238,12 +241,12 @@ class EquipmentsList extends PureComponent {
             cancelText="取消"
             onConfirm={() => {
               let returnUrl = `${url}/equipments`;
-              returnUrl += `/${info.uuid}`;
+              returnUrl += `/${info.eid}`;
               returnUrl += `/return`;
 
               fetch(returnUrl, {
                 method: 'POST',
-                body: JSON.stringify({ eid: info.uuid }),
+                body: JSON.stringify({ eid: info.eid }),
               }).then(res => {
                 if (res.ok) {
                   res.json().then(data => {
@@ -272,13 +275,13 @@ class EquipmentsList extends PureComponent {
               cancelText="取消"
               onConfirm={() => {
                 let returnUrl = `${url}/equipments`;
-                returnUrl += `/${info.uuid}`;
+                returnUrl += `/${info.eid}`;
                 returnUrl += `/replace`;
 
                 fetch(returnUrl, {
                   method: 'POST',
                   body: JSON.stringify({
-                    eid: info.uuid,
+                    eid: info.eid,
                     oid: info.activation_code,
                   }),
                 }).then(res => {

@@ -51,7 +51,8 @@ class OrdersList extends PureComponent {
             const lists = [];
             let k = 1;
             info.data.forEach(val => {
-              if (val.type === 3 && val.state === 4) {
+              if (val.type === 3 && (val.state === 4 || val.state === 3) &&
+                val.activations.length > 0) {
                 val.id = k;
                 val.consignee = auth.contact;
                 lists.push(val);
