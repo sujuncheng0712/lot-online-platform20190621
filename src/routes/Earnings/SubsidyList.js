@@ -285,7 +285,10 @@ class SubsidyList extends PureComponent {
                   </div>
                   <div
                     style={styles.agents}
-                    hidden={localStorage.getItem('antd-pro-authority') === 'merchants_02'}
+                    hidden={
+                      localStorage.getItem('antd-pro-authority') === 'merchants_02' ||
+                      localStorage.getItem('antd-pro-authority') === 'merchants_03'
+                    }
                   >
                     {item.m1 || '--'}
                   </div>
@@ -301,7 +304,6 @@ class SubsidyList extends PureComponent {
                   <div
                     style={styles.dealers}
                     hidden={
-                      localStorage.getItem('antd-pro-authority') === 'merchants_02' ||
                       localStorage.getItem('antd-pro-authority') === 'merchants_03'
                     }
                   >
@@ -309,7 +311,7 @@ class SubsidyList extends PureComponent {
                   </div>
                   <div
                     style={styles.dealer_earning}
-                    hidden={localStorage.getItem('antd-pro-authority') === 'merchants_02'}
+                    hidden={localStorage.getItem('antd-pro-authority') === 'merchants_03'}
                   >
                     {item.m2earning !== 'None' ? `${item.m2earning}元` : '--'}
                   </div>

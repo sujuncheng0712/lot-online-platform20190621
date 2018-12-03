@@ -37,6 +37,7 @@ class EquipmentsList extends PureComponent {
       latestVersion: '', // 最新的版本号
       deviceId: '',
       codeId: '',
+      curPage: 1,
     };
   }
 
@@ -200,6 +201,7 @@ class EquipmentsList extends PureComponent {
       notUpgradedNum,
       isUsedPaginationSearch,
       latestVersion,
+      curPage,
     } = this.state;
 
     lists.forEach(val => {
@@ -309,8 +311,34 @@ class EquipmentsList extends PureComponent {
 
     // 表格列的配置描述
     const columns = [
-      { title: '序号', dataIndex: 'id', align: 'center' },
-      { title: '激活时间', dataIndex: 'activation_at', align: 'center' },
+      isUsedPaginationSearch ? {
+          title: '序号',
+          dataIndex: 'id',
+          align: 'center',
+        } :
+      { title: '序号',
+        dataIndex: '',
+        align: 'center',
+        render: (text, record, index) => {
+          if (curPage === 1) {
+            return `${index+1}`
+          } else if (curPage.current === 1) {
+            return `${index+1}`
+          } else if (curPage.current > 1) {
+            if (`${index+1}`.length > 1) {
+              return `${curPage.current}0`
+            } else {
+              return `${curPage.current -1 }${index+1}`
+            }
+          }
+        },
+      },
+      { title: '激活时间',
+        dataIndex: 'activation_at',
+        align: 'center',
+        defaultSortOrder: 'descend',
+        sorter: (pre, next) => Date.parse(pre.activation_at) - Date.parse(next.activation_at),
+      },
       { title: '设备ID', dataIndex: 'eid', align: 'center' },
       { title: '型号', dataIndex: 'model', align: 'center' },
       {
@@ -498,6 +526,7 @@ class EquipmentsList extends PureComponent {
             loading={loading}
             columns={columns}
             dataSource={lists}
+            onChange={(current) => this.setState({curPage: current})}
             pagination={isUsedPaginationSearch ? false : {}}
           />
           {isUsedPaginationSearch ? (
