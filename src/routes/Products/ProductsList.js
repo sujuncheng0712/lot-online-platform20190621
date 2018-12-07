@@ -1,3 +1,4 @@
+/* eslint-disable no-shadow,no-param-reassign,radix */
 import React, { PureComponent } from 'react';
 import { Button, Table, Icon } from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
@@ -32,8 +33,19 @@ class ProductsList extends PureComponent {
   render() {
     const { lists, loading } = this.state;
 
+    const data = [];
+    let k = 0;
+    lists.forEach(val => {
+      if (val.state === 0 && val.type !== 8) {
+        val.key = k + 1;
+        data.push(val);
+        k += 1;
+      }
+    });
+
     const columns = [
-      { title: '序号', dataIndex: 'order', align: 'center', sorter: (a, b) => a.order - b.order },
+      // { title: '序号', dataIndex: 'order', align: 'center', sorter: (a, b) => a.order - b.order },
+      { title: '序号', dataIndex: 'key', align: 'center' },
       {
         title: '主图',
         dataIndex: 'prev_image',
@@ -130,7 +142,7 @@ class ProductsList extends PureComponent {
           >
             <Icon type="plus" /> 发布产品
           </Button>
-          <Table rowKey="id" columns={columns} dataSource={lists} loading={loading} />
+          <Table rowKey="id" columns={columns} dataSource={data} loading={loading} />
         </div>
       </PageHeaderLayout>
     );

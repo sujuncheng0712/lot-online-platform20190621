@@ -2,29 +2,34 @@ import { isUrl } from '../utils/utils';
 
 const menuData = [
   {
-    name: '设备管理',
+    name: '我的设备',
     icon: 'laptop',
     path: 'equipments',
-    children: [{ name: '已激活设备', path: 'equipments-list' }],
+    children: [
+      { name: '已激活设备', path: 'equipments-list' },
+      { name: '滤芯寿命列表', path: 'expiration-filterElement-equipments' },
+    ],
   },
   {
-    name: '用户订单',
+    name: '我的订单',
     icon: 'profile',
     path: 'orders',
     children: [
-      { name: '产品订单', path: 'orders-list' },
+      { name: '购码订单', path: 'code-list' },
+      // { name: '产品订单', path: 'orders-list' },
       { name: '滤芯订单', path: 'filters-list' },
-      { name: '预约订单', path: 'book-list' },
+      // { name: '预约订单', path: 'book-list' },
       { name: '退款列表', path: 'refunds-list' },
     ],
   },
   {
-    name: '团购订单',
+    name: '我的激活码',
     icon: 'dot-chart',
-    path: 'group',
+    path: 'codes',
     children: [
-      { name: '购码订单', path: 'group-orders-list' },
-      { name: '我的激活码', path: 'code-list' },
+      // { name: '购码订单', path: 'group-orders-list' },  // 该子菜单移动到 我的订单 菜单下
+      { name: '设备激活码', path: 'equipment-code-list' },
+      { name: '滤芯激活码', path: 'filterElement-code-list' },
     ],
   },
   {
@@ -51,7 +56,7 @@ const menuData = [
     path: 'merchants/merchants-list',
   },
   {
-    name: '用户管理',
+    name: '我的用户',
     icon: 'team',
     path: 'users/users-list',
   },

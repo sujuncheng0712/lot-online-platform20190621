@@ -19,6 +19,7 @@ class OrdersList extends PureComponent {
       merchantsList: [],
       orderId: '',
       merchantsContact: '',
+      consignee: '',
     };
   }
 
@@ -71,10 +72,10 @@ class OrdersList extends PureComponent {
 
   // 搜索列表
   searchList() {
-    const { lists, orderId } = this.state;
+    const { lists, orderId, consignee } = this.state;
     const arr = [];
     lists.forEach(val => {
-      if (val.uuid === orderId) arr.push(val);
+      if (val.uuid === orderId || val.referrer === consignee) arr.push(val);
     });
 
     if (arr.length === 0) message.error('没找到对应的数据');
@@ -134,7 +135,7 @@ class OrdersList extends PureComponent {
     });
 
     return (
-      <PageHeaderLayout title="团购订单列表">
+      <PageHeaderLayout title="购码订单列表">
         <div style={styles.content}>
           <Row>
             <Col span={10}>
@@ -144,15 +145,28 @@ class OrdersList extends PureComponent {
                 </Col>
                 <Col span={17}>
                   <Input
-                    placeholder="请输入需要查找的设备ID"
+                    placeholder="请输入需要查找的订单编号"
                     onChange={e => this.setState({ orderId: e.target.value })}
+                  />
+                </Col>
+              </Row>
+            </Col>
+            <Col span={10}>
+              <Row>
+                <Col span={6} style={styles.tit}>
+                  收货人姓名：
+                </Col>
+                <Col span={17}>
+                  <Input
+                    placeholder="请输入需要查找的买家姓名"
+                    onChange={e => this.setState({ consignee: e.target.value })}
                   />
                 </Col>
               </Row>
             </Col>
             <Col span={4}>
               <Button type="primary" onClick={this.searchList.bind(this)}>
-                搜索设备
+                搜索订单
               </Button>
             </Col>
           </Row>
@@ -381,6 +395,11 @@ const styles = {
     textAlign: 'center',
   },
   consignee: {
+    width: 200,
+    padding: '0px 10px',
+    textAlign: 'center',
+  },
+  tags: {
     width: 200,
     padding: '0px 10px',
     textAlign: 'center',

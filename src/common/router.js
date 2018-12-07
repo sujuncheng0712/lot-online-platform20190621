@@ -76,6 +76,10 @@ export const getRouterData = app => {
     '/equipments/equipments-list': {
       component: dynamicWrapper(app, [], () => import('../routes/Equipments/EquipmentsList')),
     },
+    // 滤芯寿命列表
+    '/equipments/expiration-filterElement-equipments': {
+      component: dynamicWrapper(app, [], () => import('../routes/Equipments/expirationEquipment')),
+    },
     // 产品订单列表
     '/orders/orders-list': {
       component: dynamicWrapper(app, [], () => import('../routes/Orders/OrdersList')),
@@ -136,14 +140,16 @@ export const getRouterData = app => {
       component: dynamicWrapper(app, [], () => import('../routes/Merchants/Distribution')),
       authority: ['vendors'],
     },
-    // 团购订单列表
-    '/group/group-orders-list': {
+    // 团购订单列表 --- *由原来的团购订单菜单移到我的订单菜单下
+    '/orders/code-list': {
       component: dynamicWrapper(app, [], () => import('../routes/Group/GroupOrdersList')),
     },
-    // 团购码列表
-    '/group/code-list': {
+    // 团购码列表 --- *改为设备激活码列表
+    '/codes/equipment-code-list': {
       component: dynamicWrapper(app, [], () => import('../routes/Group/CodeList')),
     },
+    // 滤芯激活码列表
+
     // 用户列表
     '/users/users-list': {
       component: dynamicWrapper(app, [], () => import('../routes/Users/UsersList')),

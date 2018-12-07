@@ -9,12 +9,24 @@ const auth = sessionStorage.getItem('dochen-auth')
   : '';
 
 const columns = [
-  { title: '序号', dataIndex: 'id' },
-  { title: '注册时间', dataIndex: 'created_at' },
-  { title: '注册手机号', dataIndex: 'mobile' },
-  { title: '姓名', dataIndex: 'name', render: val => val || '-' },
-  { title: '推荐人', dataIndex: 'merchant', render: val => (val.m3 || val.m2 || val.m1).contact },
-  { title: '代理商', dataIndex: 'merchant', render: val => val.m1.contact },
+  { title: '序号', dataIndex: 'id', align: 'center' },
+  { title: '注册时间', dataIndex: 'created_at', align: 'center' },
+  { title: '注册手机号', dataIndex: 'mobile', align: 'center' },
+  { title: '姓名',
+    dataIndex: 'name',
+    align: 'center',
+    render: val => val || '-',
+  },
+  { title: '推荐人',
+    dataIndex: 'merchant',
+    align: 'center' ,
+    render: val => (val.m3 || val.m2 || val.m1).contact,
+  },
+  { title: '代理商',
+    dataIndex: '',
+    align: 'center' ,
+    render: info => info.merchant.m1 ? info.merchant.m1.contact : '--',
+  },
 ];
 
 class UsersList extends PureComponent {

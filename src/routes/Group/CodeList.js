@@ -123,7 +123,7 @@ class codesList extends PureComponent {
     });
 
     return (
-      <PageHeaderLayout title="激活码列表">
+      <PageHeaderLayout title="设备激活码列表">
         <div style={styles.content}>
           <Row>
             <Col span={10}>
@@ -148,7 +148,7 @@ class codesList extends PureComponent {
                 </Col>
                 <Col span={17}>
                   <Input
-                    placeholder="请输入需要查找的买家姓名"
+                    placeholder="请输入需要查找的激活码"
                     onChange={e => {
                       this.setState({ orderCode: e.target.value });
                     }}

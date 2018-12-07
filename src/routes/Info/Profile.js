@@ -105,6 +105,13 @@ class CenterProfile extends PureComponent {
         : {},
     ];
 
+    const lists = [];
+    productsLists.forEach(val => {
+      if (val.state === 0 && val.type !== 8) {
+        lists.push(val);
+      }
+    });
+
     productsLists.forEach(item => {
       if (allowanceLists) {
         allowanceLists.forEach(val => {
@@ -214,7 +221,7 @@ class CenterProfile extends PureComponent {
         </Card>
         <br />
         <Card title="产品收益/返点" bordered={false}>
-          <Table rowKey="id" columns={allowanceColumns} dataSource={productsLists} />
+          <Table rowKey="id" columns={allowanceColumns} dataSource={lists} />
         </Card>
       </PageHeaderLayout>
     );
