@@ -221,7 +221,6 @@ class expirationEquipment extends PureComponent {
   render() {
     const { loading, devicesList, usersList, agentList, referrerList, dataList, expirationList } = this.state;
 
-
     const addProperty = (list) => {
       let k = 1;
       // 把 devicesList 的设备型号和 usersList 的用户姓名、手机号，推荐人和代理商加进 lists 里面
@@ -324,7 +323,7 @@ class expirationEquipment extends PureComponent {
                 <Col span={17}>
                   <Select
                     showSearch
-                    placeholder="请选择"
+                    placeholder="请输入或从下拉列表中选择需要查找的代理商"
                     optionFilterProp="children"
                     onChange={selectValue => {
                       this.setState({loading: true});
@@ -349,7 +348,7 @@ class expirationEquipment extends PureComponent {
                 <Col span={17}>
                   <Select
                     showSearch
-                    placeholder="请选择"
+                    placeholder="请输入或从下拉列表中选择需要查找的经销商"
                     optionFilterProp="children"
                     onChange={selectValue => {
                       this.setState({loading: true});

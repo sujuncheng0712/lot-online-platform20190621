@@ -149,7 +149,9 @@ export const getRouterData = app => {
       component: dynamicWrapper(app, [], () => import('../routes/Group/CodeList')),
     },
     // 滤芯激活码列表
-
+    '/codes/filterElement-code-list': {
+      component: dynamicWrapper(app, [], () => import('../routes/Group/filterElementCode')),
+    },
     // 用户列表
     '/users/users-list': {
       component: dynamicWrapper(app, [], () => import('../routes/Users/UsersList')),
