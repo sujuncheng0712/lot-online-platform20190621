@@ -35,7 +35,12 @@ const menuData = [
   {
     name: '预估收益',
     icon: 'pay-circle-o',
-    path: 'earnings/subsidy-list',
+    path: 'earnings',
+    children: [
+      // {name: '预估收益', path: 'subsidy-list'},
+      {name: '补贴预估收益', path: 'newSubsidy-list'},
+      {name: '返点预估收益', path: 'rebateEarning-list'},
+    ],
   },
   {
     name: '我的收入',

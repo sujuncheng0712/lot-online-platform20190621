@@ -188,7 +188,7 @@ class SubsidyList extends PureComponent {
             style={{ marginBottom: 15, textAlign: 'left' }}
             hidden={
               localStorage.getItem('antd-pro-authority') === 'merchants_02' ||
-              localStorage.getItem('antd-pro-authority') === 'merchants_02'
+              localStorage.getItem('antd-pro-authority') === 'merchants_03'
             }
           >
             一级运营商：
@@ -267,7 +267,7 @@ class SubsidyList extends PureComponent {
             bordered={false}
             dataSource={data}
             loading={loading}
-            renderItem={(item, key) => (
+            renderItem={item => (
               <div key={item.oid} style={styles.item}>
                 <div style={styles.rowT}>
                   <div>
@@ -276,7 +276,7 @@ class SubsidyList extends PureComponent {
                   </div>
                 </div>
                 <div style={styles.row}>
-                  <div style={styles.id}>{key + 1}</div>
+                  <div style={styles.id}>{item.id}</div>
                   <div style={styles.type}>{item.type === 3 ? '团购订单' : '用户订单'}</div>
                   <div style={styles.pay_amount}>{item.total}元</div>
                   <div style={styles.pay_amount}>已付款</div>

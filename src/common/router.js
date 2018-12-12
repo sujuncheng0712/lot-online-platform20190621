@@ -104,6 +104,14 @@ export const getRouterData = app => {
     '/earnings/subsidy-list': {
       component: dynamicWrapper(app, [], () => import('../routes/Earnings/SubsidyList')),
     },
+    // 补贴预估收益
+    '/earnings/newSubsidy-list': {
+      component: dynamicWrapper(app, [], () => import('../routes/Earnings/newSubsidyList')),
+    },
+    // 返点预估收益
+    '/earnings/rebateEarning-list': {
+      component: dynamicWrapper(app, [], () => import('../routes/Earnings/RebateEarning')),
+    },
     // 钱包账户
     '/wallet/wallet-list': {
       component: dynamicWrapper(app, [], () => import('../routes/Wallet/WalletList')),
