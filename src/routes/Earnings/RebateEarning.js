@@ -14,6 +14,7 @@ class RebateEarning extends PureComponent {
     this.state = {
       merchantsList: [],
       lists: [],
+      usersList: [],  // 用户列表
       loading: true,
       orderId: '',
       midList: [],
@@ -23,6 +24,7 @@ class RebateEarning extends PureComponent {
   componentDidMount() {
     this.getMerchantsList();
     this.getEarnings();
+    this.getUsersList();
   }
 
   // 获取商家列表
@@ -32,6 +34,25 @@ class RebateEarning extends PureComponent {
       if (res.ok) {
         res.json().then(info => {
           if (info.status) this.setState({ merchantsList: info.data });
+        });
+      }
+    });
+  }
+
+  // 获取用户列表
+  getUsersList() {
+    let getUsersUrl = `${url}/users`;
+    getUsersUrl += auth.mid ? `?mid=${auth.mid}` : '';
+    fetch(getUsersUrl).then(res => {
+      if (res.ok) {
+        res.json().then(info => {
+          if (info.status) {
+            const usersList = [];
+            info.data.forEach(val => {
+              usersList.push(val);
+            });
+            this.setState({usersList});
+          }
         });
       }
     });
@@ -119,7 +140,7 @@ class RebateEarning extends PureComponent {
   }
 
   render() {
-    const { lists, loading, merchantsList, midList } = this.state;
+    const { lists, loading, merchantsList, midList, usersList } = this.state;
 
     // 从全部商家列表中找出该收益列表才有的商家
     const merchantOfEarningList = [];
@@ -137,6 +158,12 @@ class RebateEarning extends PureComponent {
       if (item.type === 2) dealerList.push(item);
     });
 
+    // 根据 uid 找出用户名
+    lists.forEach(item => {
+      usersList.forEach(val => {
+        if (item.uid === val.uuid) item.username = val.name;
+      });
+    });
 
     const data = [];
     const nowadays = { m1: 0, m2: 0, m3: 0 };
@@ -146,8 +173,6 @@ class RebateEarning extends PureComponent {
 
     let k = 1;
     lists.forEach(val => {
-      val.id = k;
-      k += 1;
 
       merchantOfEarningList.forEach(value => {
         if (val.m1id === value.uuid) val.m1 = value.contact;
@@ -184,7 +209,14 @@ class RebateEarning extends PureComponent {
           lastMonth.m3 += val.m3earning !== 'None' ? parseInt(val.m3earning) : 0;
         }
 
+        // 根据 eptags 字段翻译出滤芯名称
+        if (val.eptags === 'DCL01') val.filterName = 'PPC复合滤芯';
+        if (val.eptags === 'DCL02') val.filterName = 'PPC复合滤芯';
+        if (val.eptags === 'DCL09') val.filterName = 'RO反渗透滤芯';
+
+        val.id = k;
         data.push(val);
+        k += 1;
       }
     });
 
@@ -345,9 +377,9 @@ class RebateEarning extends PureComponent {
                 </div>
                 <div style={styles.row}>
                   <div style={styles.id}>{item.id}</div>
-                  <div style={styles.name}>{}</div>
-                  <div style={styles.code}>{}</div>
-                  <div style={styles.consignee}>{item.payer}</div>
+                  <div style={styles.name}>{item.filterName}</div>
+                  <div style={styles.code}>{item.link_id}</div>
+                  <div style={styles.consignee}>{item.username || '--'}</div>
                   <div
                     style={styles.agents}
                     hidden={

@@ -26,7 +26,7 @@ const links = [
 
 const copyright = (
   <Fragment>
-    Copyright <Icon type="copyright" /> 2017 DGK 智能平台 &nbsp;&nbsp; 版本号：v2.0.0 2018-12-12
+    Copyright <Icon type="copyright" /> 2017 DGK 智能平台 &nbsp;&nbsp; 版本号：v2.0.0 2018-12-19
   </Fragment>
 );
 

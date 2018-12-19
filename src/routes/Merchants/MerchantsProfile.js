@@ -31,7 +31,7 @@ class ADProfile extends PureComponent {
     super(...args);
     this.state = {
       info: {},
-      merchantsList: [],
+      // merchantsList: [],
       subscriptionList: [],
       productsLists: [],
       allowanceLists: [],
@@ -40,7 +40,7 @@ class ADProfile extends PureComponent {
 
   componentWillMount() {
     this.getMerchantsInfo();
-    this.getMerchantsList();
+    // this.getMerchantsList();
     this.getSubscriptionList();
     this.getProducts();
     this.getAllowance();
@@ -61,16 +61,16 @@ class ADProfile extends PureComponent {
   }
 
   // 获取商家列表
-  getMerchantsList() {
-    const getMerchants = `${url}/merchants`;
-    fetch(getMerchants).then(res => {
-      if (res.ok) {
-        res.json().then(info => {
-          if (info.status) this.setState({ merchantsList: info.data });
-        });
-      }
-    });
-  }
+  // getMerchantsList() {
+  //   const getMerchants = `${url}/merchants`;
+  //   fetch(getMerchants).then(res => {
+  //     if (res.ok) {
+  //       res.json().then(info => {
+  //         if (info.status) this.setState({ merchantsList: info.data });
+  //       });
+  //     }
+  //   });
+  // }
 
   // 获取签约信息列表
   getSubscriptionList() {
@@ -172,6 +172,12 @@ class ADProfile extends PureComponent {
     const mid = search.slice(1).split('=')[1];
 
     const { info, subscriptionList, productsLists, allowanceLists } = this.state;
+
+    // 隐藏服务费和移动水吧等 state=0 & type!=8 的产品
+    const dataList = [];
+    productsLists.forEach(val => {
+      if (val.state === 0 && val.type !== 8) dataList.push(val);
+    });
 
     const columns = [
       { title: '起始时间', dataIndex: 'begin_at' },
@@ -315,7 +321,7 @@ class ADProfile extends PureComponent {
         </Card>
         <br />
         <Card title="产品收益/返点" bordered={false}>
-          <Table rowKey="id" columns={allowanceColumns} dataSource={productsLists} />
+          <Table rowKey="id" columns={allowanceColumns} dataSource={dataList} />
         </Card>
         <br />
         <Card title="发货信息" bordered={false}>

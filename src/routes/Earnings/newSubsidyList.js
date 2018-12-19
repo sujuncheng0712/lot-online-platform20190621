@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign,no-plusplus,no-const-assign,radix,no-underscore-dangle,one-var */
 import React, { PureComponent } from 'react';
-import { Input, Button, Badge, message, List, Divider, Select, Row, Col } from 'antd';
+import { Input, Button, Badge, message, List, Divider, Select, Row, Col, Popover } from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
@@ -13,16 +13,20 @@ class newSubsidyList extends PureComponent {
     super(...args);
     this.state = {
       merchantsList: [],
+      usersList: [],  // 用户列表
       lists: [],
       loading: true,
       orderId: '',
       midList: [],
+      orderList: [],  // 订单列表
     };
   }
 
   componentDidMount() {
     this.getMerchantsList();
     this.getEarnings();
+    this.getUsersList();
+    this.getOrders();
   }
 
   // 获取商家列表
@@ -32,6 +36,50 @@ class newSubsidyList extends PureComponent {
       if (res.ok) {
         res.json().then(info => {
           if (info.status) this.setState({ merchantsList: info.data });
+        });
+      }
+    });
+  }
+
+  // 获取用户列表
+  getUsersList() {
+    let getUsersUrl = `${url}/users`;
+    getUsersUrl += auth.mid ? `?mid=${auth.mid}` : '';
+    fetch(getUsersUrl).then(res => {
+      if (res.ok) {
+        res.json().then(info => {
+          if (info.status) {
+            const usersList = [];
+            info.data.forEach(val => {
+              usersList.push(val);
+            });
+            this.setState({usersList});
+          }
+        });
+      }
+    });
+  }
+
+  // 获取订单列表
+  getOrders() {
+    const getOrders = `${url}/orders`;
+
+    fetch(getOrders).then(res => {
+      if (res.ok) {
+        res.json().then(info => {
+          if (info.status) {
+            const orderList = [];
+            info.data.forEach(val => {
+              if (val.type === 3 && (val.state === 4 || val.state === 3) &&
+                val.activations.length > 0) {
+                orderList.push(val);
+              }
+            });
+            this.setState({ orderList, loading: false });
+          } else {
+            this.setState({ orderList: [], loading: false });
+            message.warning(`提示：[${info.message}]`);
+          }
         });
       }
     });
@@ -119,7 +167,7 @@ class newSubsidyList extends PureComponent {
   }
 
   render() {
-    const { lists, loading, merchantsList, midList } = this.state;
+    const { lists, loading, merchantsList, midList, usersList, orderList } = this.state;
 
     // 从全部商家列表中找出该收益列表才有的商家
     const merchantOfEarningList = [];
@@ -137,6 +185,18 @@ class newSubsidyList extends PureComponent {
       if (item.type === 2) dealerList.push(item);
     });
 
+    // 根据 uid 找出用户名, 根据订单号 oid 找购买人
+    lists.forEach(item => {
+      usersList.forEach(val => {
+        if (item.uid === val.uuid) item.username = val.name;
+      });
+      orderList.forEach(oVal => {
+        if (item.oid === oVal.uuid) {
+          const merchant = oVal.merchant.m2 || oVal.merchant.m1;
+          item.purchaser = merchant ? merchant.contact : '--';
+        }
+      });
+    });
 
     const data = [];
     const nowadays = { m1: 0, m2: 0, m3: 0 };
@@ -146,8 +206,6 @@ class newSubsidyList extends PureComponent {
 
     let k = 1;
     lists.forEach(val => {
-      val.id = k;
-      k += 1;
 
       merchantOfEarningList.forEach(value => {
         if (val.m1id === value.uuid) val.m1 = value.contact;
@@ -183,23 +241,25 @@ class newSubsidyList extends PureComponent {
           lastMonth.m3 += val.m3earning !== 'None' ? parseInt(val.m3earning) : 0;
         }
 
+        val.id = k;
         data.push(val);
+        k += 1;
       }
 
     });
 
     return (
-      <PageHeaderLayout title="补贴预估收益列表">
+      <PageHeaderLayout title="预估补贴收益列表">
         <div style={styles.content}>
           <Row>
             <Col span={10}>
               <Row>
                 <Col span={6} style={styles.tit}>
-                  订单编号：
+                  激活码单号：
                 </Col>
                 <Col span={17}>
                   <Input
-                    placeholder="请输入需要查找的订单编号"
+                    placeholder="请输入需要查找的激活码单号"
                     onChange={e => this.setState({ orderId: e.target.value })}
                   />
                 </Col>
@@ -294,10 +354,11 @@ class newSubsidyList extends PureComponent {
           </div>
           <div style={styles.title}>
             <div style={styles.id}>序号</div>
+            <div style={styles.activationTime}>激活时间</div>
             <div style={styles.model}>设备型号</div>
-            <div style={styles.eid}>ID</div>
+            <div style={styles.eid}>设备ID</div>
             <div style={styles.code}>设备激活码</div>
-            <div style={styles.consignee}>用户</div>
+            <div style={styles.consignee}>激活人</div>
             <div
               style={styles.agents}
               hidden={
@@ -340,16 +401,34 @@ class newSubsidyList extends PureComponent {
               <div key={item.oid} style={styles.item}>
                 <div style={styles.rowT}>
                   <div>
-                    订单编号：{item.oid}
-                    <Divider type="vertical" />成交时间：{item.created_at}
+                    激活码单号：
+                    <Popover
+                      title="订单信息"
+                      content={(
+                        <div>
+                          <div>单价：{item.univalent}元</div>
+                          <div>数量：{item.quantity}</div>
+                          <div>总金额：{Number(item.payment_amount.toString().slice(0, -2))}元</div>
+                        </div>
+                      )}
+                    >
+                      {item.oid}
+                    </Popover>
+                    <Divider type="vertical" />
+                    购买人：{item.purchaser || '--'}
+                    <Divider type="vertical" />
+                    {item.pay_ch === 'weixin' && '微信支付'}
+                    {item.pay_ch === 'wallet' && '账户余额支付'}
+                    {item.pay_ch === 'bank' && '线下支付'}
                   </div>
                 </div>
                 <div style={styles.row}>
                   <div style={styles.id}>{item.id}</div>
+                  <div style={styles.activationTime}>{item.link_at}</div>
                   <div style={styles.model}>{item.eptags}</div>
                   <div style={styles.eid}>{item.eid}</div>
                   <div style={styles.code}>{item.link_id}</div>
-                  <div style={styles.consignee}>{item.payer}</div>
+                  <div style={styles.consignee}>{item.username || '--'}</div>
                   <div
                     style={styles.agents}
                     hidden={
@@ -446,7 +525,11 @@ const styles = {
     padding: '0px 10px',
     textAlign: 'center',
   },
-
+  activationTime: {
+    width: 200,
+    padding: '0px 10px',
+    textAlign: 'center',
+  },
   model: {
     width: 200,
     padding: '0px 10px',

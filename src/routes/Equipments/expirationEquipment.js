@@ -1,4 +1,4 @@
-/* eslint-disable no-param-reassign,no-plusplus,no-script-url,no-undef */
+/* eslint-disable no-param-reassign,no-plusplus,prefer-rest-params,no-script-url,no-undef */
 import React, { PureComponent } from 'react';
 import { Input, Button, message, Select, Row, Col, Tabs, List, Divider } from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
@@ -9,6 +9,21 @@ const auth = sessionStorage.getItem('dochen-auth')
   ? JSON.parse(sessionStorage.getItem('dochen-auth'))
   : '';
 
+function injectUnount (target){
+  // 改装componentWillUnmount，销毁的时候记录一下
+  const next = target.prototype.componentWillUnmount;
+  target.prototype.componentWillUnmount = function () {
+    if (next) next.call(this, ...arguments);
+    this.unmount = true
+  }
+  // 对setState的改装，setState查看目前是否已经销毁
+  const {setState} = target.prototype;
+  target.prototype.setState = function () {
+    if ( this.unmount ) return ;
+    setState.call(this, ...arguments)
+  }
+}
+@injectUnount
 class expirationEquipment extends PureComponent {
   constructor(...args) {
     super(...args);
@@ -120,14 +135,10 @@ class expirationEquipment extends PureComponent {
   // 从滤芯寿命列表中找出到期的滤芯
   getexpirationData() {
     const {dataList} = this.state;
-    const tmp = [];
+    const expirationList = [];
     dataList.forEach(eItem => {
-      if (eItem.CPP.used >= 180 || eItem.PPC.used >= 180 || eItem.RO.used >= 720) {
-        tmp.unshift(eItem);
-      }
+      if (eItem.state === 0) expirationList.unshift(eItem);
     });
-
-    const expirationList = tmp.map(o => Object.assign({}, o));
 
     this.setState({expirationList});
   }
@@ -136,21 +147,26 @@ class expirationEquipment extends PureComponent {
   changeData(lists, isExpiration=false) {
     // 添加滤芯类型属性
     lists.forEach(fItem => {
-      if (fItem.type === '1') fItem.CPP = {type: Number(fItem.type), used: fItem.used};
-      if (fItem.type === '2') fItem.PPC = {type: Number(fItem.type), used: fItem.used};
-      if (fItem.type === '3') fItem.RO = {type: Number(fItem.type), used: fItem.used};
+      if (fItem.eptags === 'DCL01') fItem.CPP = fItem.used;
+      if (fItem.eptags === 'DCL02') fItem.PPC = fItem.used;
+      if (fItem.eptags === 'DCL09') fItem.RO = fItem.used;
     });
 
+    // 把 eid 拿出来放到数组eidList中并去重
+    let eidList = [];
+    lists.forEach(fItem => {
+      eidList.push(fItem.eid);
+    });
+    eidList = [...new Set(eidList)];
+
     // 同一个设备的滤芯放到同一个数组中
-    let first = 0;
-    let third = 3;
     const arrList = [];
-    lists.forEach((val, index) => {
-      if (third <= index+1) {
-        arrList.push(lists.slice(first, third));
-        first += 3;
-        third += 3;
-      }
+    eidList.forEach(val => {
+      const tmpArr = [];
+      lists.forEach(fItem => {
+        if (fItem.eid === val) tmpArr.push(fItem);
+      });
+      arrList.push(tmpArr);
     });
 
     // 合并三个滤芯对象并依次添加到新数组中
@@ -158,11 +174,13 @@ class expirationEquipment extends PureComponent {
     const expirationList = [];
     if (!isExpiration) {
       arrList.forEach(arrItem => {
-        dataList.push(Object.assign({}, arrItem[0], arrItem[1], arrItem[2]));
+        arrItem.sort((last, next) => next.state - last.state);
+        dataList.push(Object.assign({}, arrItem[0], arrItem[1], arrItem[2], arrItem[3], arrItem[4], arrItem[5]));
       });
     } else {
       arrList.forEach(arrItem => {
-        expirationList.push(Object.assign({}, arrItem[0], arrItem[1], arrItem[2]));
+        arrItem.sort((last, next) => next.state - last.state);
+        expirationList.push(Object.assign({}, arrItem[0], arrItem[1], arrItem[2], arrItem[3], arrItem[4], arrItem[5]));
       });
     }
 
@@ -188,7 +206,7 @@ class expirationEquipment extends PureComponent {
               lists.push(val);
             });
             this.changeData(lists);
-            if (info.data[0].used >= 180 || info.data[1].used >= 180 || info.data[2].used >= 720) {
+            if (info.data[0].state === 0 || info.data[1].state === 0  || info.data[2].state === 0 ) {
               const isExpiration=true;
               this.changeData(lists, isExpiration);
             }
@@ -236,11 +254,11 @@ class expirationEquipment extends PureComponent {
           if (uItem.uuid === fItem.uid) {
             fItem.name = uItem.name;
             fItem.mobile = uItem.mobile;
+            const referrer1 = uItem.merchant.m1 ? uItem.merchant.m1.contact : '';
+            const referrer2 = uItem.merchant.m2 ? uItem.merchant.m2.contact : '';
+            fItem.referrer = referrer2 || referrer1;
             if (uItem.merchant.m1) {
               fItem.agent = uItem.merchant.m1.contact;
-            }
-            if (uItem.merchant.m2 && uItem.merchant.m2.uuid === fItem.mid) {
-              fItem.referrer = uItem.merchant.m2.contact;
             }
           }
         });
@@ -277,10 +295,10 @@ class expirationEquipment extends PureComponent {
                 </div>
                 <div style={styles.row}>
                   <div style={styles.id}>{item.key}</div>
-                  <div style={styles.model}>{item.model}</div>
+                  <div style={styles.model}>{item.model || '--'}</div>
                   <div style={styles.eid}>{item.eid}</div>
                   <div style={styles.filter_element}>
-                    {`CPP : ${(180 - item.CPP.used) > 0 ? 180 - item.CPP.used : 0} 天 | PPC : ${(180 - item.PPC.used) > 0 ? 180 - item.PPC.used : 0} 天 | RO : ${(720 - item.RO.used) > 0 ? 720 - item.RO.used : 0} 天`}
+                    {`CPP : ${(180 - item.CPP) > 0 ? 180 - item.CPP : 0} 天 | PPC : ${(180 - item.PPC) > 0 ? 180 - item.PPC : 0} 天 | RO : ${(720 - item.RO) > 0 ? 720 - item.RO : 0} 天`}
                   </div>
                   <div style={styles.name}>{item.name ||'--'}</div>
                   <div style={styles.referrer}>{item.referrer || '--'}</div>

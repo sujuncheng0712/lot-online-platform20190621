@@ -15,7 +15,7 @@ const menuData = [
     icon: 'profile',
     path: 'orders',
     children: [
-      { name: '购码订单', path: 'code-list' },
+      { name: '购码订单', path: 'buy-code-list' },
       // { name: '产品订单', path: 'orders-list' },
       { name: '滤芯订单', path: 'filters-list' },
       // { name: '预约订单', path: 'book-list' },
@@ -38,8 +38,8 @@ const menuData = [
     path: 'earnings',
     children: [
       // {name: '预估收益', path: 'subsidy-list'},
-      {name: '补贴预估收益', path: 'newSubsidy-list'},
-      {name: '返点预估收益', path: 'rebateEarning-list'},
+      {name: '预估补贴收益', path: 'newSubsidy-list'},
+      {name: '预估返点收益', path: 'rebateEarning-list'},
     ],
   },
   {
@@ -56,7 +56,8 @@ const menuData = [
     children: [{ name: '提现审核', path: 'finance-list' }],
   },
   {
-    name: '商家列表',
+    // name: '商家列表',
+    name: '我的客户',
     icon: 'idcard',
     path: 'merchants/merchants-list',
   },

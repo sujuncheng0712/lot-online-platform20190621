@@ -148,8 +148,8 @@ export const getRouterData = app => {
       component: dynamicWrapper(app, [], () => import('../routes/Merchants/Distribution')),
       authority: ['vendors'],
     },
-    // 团购订单列表 --- *由原来的团购订单菜单移到我的订单菜单下
-    '/orders/code-list': {
+    // 团购订单列表 --- *由原来的团购订单菜单转移到我的订单菜单下，并改为购码订单
+    '/orders/buy-code-list': {
       component: dynamicWrapper(app, [], () => import('../routes/Group/GroupOrdersList')),
     },
     // 团购码列表 --- *改为设备激活码列表

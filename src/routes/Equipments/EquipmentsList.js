@@ -1,4 +1,4 @@
-/* eslint-disable no-param-reassign,no-plusplus,no-script-url,no-undef */
+/* eslint-disable no-param-reassign,no-plusplus,no-script-url,no-undef, prefer-rest-params */
 import React, { PureComponent } from 'react';
 import {
   Table,
@@ -23,6 +23,21 @@ const auth = sessionStorage.getItem('dochen-auth')
   ? JSON.parse(sessionStorage.getItem('dochen-auth'))
   : '';
 
+function injectUnount (target){
+  // 改装componentWillUnmount，销毁的时候记录一下
+  const next = target.prototype.componentWillUnmount;
+  target.prototype.componentWillUnmount = function () {
+    if (next) next.call(this, ...arguments);
+    this.unmount = true
+  }
+  // 对setState的改装，setState查看目前是否已经销毁
+  const {setState} = target.prototype;
+  target.prototype.setState = function () {
+    if ( this.unmount ) return ;
+    setState.call(this, ...arguments)
+  }
+}
+@injectUnount
 class EquipmentsList extends PureComponent {
   constructor(...args) {
     super(...args);
@@ -81,7 +96,7 @@ class EquipmentsList extends PureComponent {
   // 根据分页获取数据
   getDevicesByPagination(curPage, pageSize) {
     let getDevices = `${url}/devices`;
-    getDevices += `?offset=${curPage}&limit=${pageSize}`;
+    getDevices += `?offset=${curPage * pageSize}&limit=${pageSize}`;
     fetch(getDevices).then(res => {
       if (res.ok) {
         res.json().then(info => {

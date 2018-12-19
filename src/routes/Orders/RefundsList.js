@@ -357,7 +357,8 @@ class OrdersList extends PureComponent {
                   </div>
                   <div span={4} style={styles.pay_amount}>
                     <span style={{ color: stateBadge[item.state] }}>
-                      {item.message === 'book' ? '已预约' : stateMap[item.state]}
+                      {/* {item.message === 'book' ? '已预约' : stateMap[item.state]} */}
+                      {stateMap[item.state]}
                     </span>
                   </div>
                   <div style={styles.contact}>{item.name || '--'}</div>

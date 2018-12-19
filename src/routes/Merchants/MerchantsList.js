@@ -39,13 +39,13 @@ class AgentsList extends PureComponent {
                 val.id = key + 1;
                 lists.push(val);
               }
-              if (val.type === 1) {
-                val.type = '一级';
-              } else if (val.type === 2) {
-                val.type = '二级';
-              } else if (val.type === 3) {
-                val.type = '三级';
-              }
+              // if (val.type === 1) {
+              //   val.type = '一级';
+              // } else if (val.type === 2) {
+              //   val.type = '二级';
+              // } else if (val.type === 3) {
+              //   val.type = '三级';
+              // }
             });
             this.setState({ lists, loading: false });
           }
@@ -63,7 +63,7 @@ class AgentsList extends PureComponent {
       { title: '联系人', dataIndex: 'contact', width: 100, align: 'center' },
       { title: '联系人电话', dataIndex: 'mobile', width: 120, align: 'center' },
       { title: '代理区域', dataIndex: 'area', align: 'center' },
-      { title: '代理商等级', dataIndex: 'type', align: 'center' },
+      // { title: '代理商等级', dataIndex: 'type', align: 'center' },
       {
         title: '操作',
         dataIndex: 'uuid',
@@ -120,7 +120,8 @@ class AgentsList extends PureComponent {
                 location.hash = '/merchants/add-edit-merchants';
               }}
             >
-              <Icon type="plus" /> 添加商家
+              {/* 添加商家 */}
+              <Icon type="plus" /> 添加客户
             </Button>
             <Radio.Group
               name="radiogroup"
@@ -131,9 +132,11 @@ class AgentsList extends PureComponent {
               }}
             >
               <Radio value={0}>全部</Radio>
-              <Radio value={1}>一级代理商</Radio>
+              <Radio value={1}>代理商</Radio>
+              <Radio value={2}>经销商</Radio>
+              {/* <Radio value={1}>一级代理商</Radio>
               <Radio value={2}>二级代理商</Radio>
-              <Radio value={3}>三级代理商</Radio>
+              <Radio value={3}>三级代理商</Radio> */}
             </Radio.Group>
           </div>
           <Table rowKey="id" columns={columns} dataSource={lists} loading={loading} />
