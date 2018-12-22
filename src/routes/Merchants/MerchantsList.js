@@ -57,11 +57,11 @@ class AgentsList extends PureComponent {
   render() {
     const { lists, loading } = this.state;
     const columns = [
-      { title: '序号', dataIndex: 'id', width: 80, align: 'center' },
+      { title: '序号', dataIndex: 'id', align: 'center' },
       { title: '注册时间', dataIndex: 'created_at', align: 'center' },
       { title: '单位名称', dataIndex: 'organization', align: 'center' },
-      { title: '联系人', dataIndex: 'contact', width: 100, align: 'center' },
-      { title: '联系人电话', dataIndex: 'mobile', width: 120, align: 'center' },
+      { title: '联系人', dataIndex: 'contact', align: 'center' },
+      { title: '联系人电话', dataIndex: 'mobile', align: 'center' },
       { title: '代理区域', dataIndex: 'area', align: 'center' },
       // { title: '代理商等级', dataIndex: 'type', align: 'center' },
       {

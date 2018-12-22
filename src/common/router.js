@@ -76,6 +76,10 @@ export const getRouterData = app => {
     '/equipments/equipments-list': {
       component: dynamicWrapper(app, [], () => import('../routes/Equipments/EquipmentsList')),
     },
+    // 已激活滤芯列表
+    '/equipments/filterElements-list': {
+      component: dynamicWrapper(app, [], () => import('../routes/Equipments/FilterElementsList')),
+    },
     // 滤芯寿命列表
     '/equipments/expiration-filterElement-equipments': {
       component: dynamicWrapper(app, [], () => import('../routes/Equipments/expirationEquipment')),

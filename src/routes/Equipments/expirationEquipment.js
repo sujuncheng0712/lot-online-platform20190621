@@ -40,10 +40,10 @@ class expirationEquipment extends PureComponent {
   }
 
   componentWillMount() {
-    this.getFilterElementList();
     this.getDevicesList();
     this.getUsersList();
     this.getMerchantsList();
+    this.getFilterElementList();
   }
 
   // 获取滤芯使用情况列表
@@ -174,7 +174,10 @@ class expirationEquipment extends PureComponent {
     const expirationList = [];
     if (!isExpiration) {
       arrList.forEach(arrItem => {
+        // 把未激活或已过期的放到数组后面
         arrItem.sort((last, next) => next.state - last.state);
+        // 把新更换的(使用天数少的)放到数组后面以覆盖前面的
+        arrItem.sort((last, next) => next.used - last.used);
         dataList.push(Object.assign({}, arrItem[0], arrItem[1], arrItem[2], arrItem[3], arrItem[4], arrItem[5]));
       });
     } else {
@@ -241,7 +244,7 @@ class expirationEquipment extends PureComponent {
 
     const addProperty = (list) => {
       let k = 1;
-      // 把 devicesList 的设备型号和 usersList 的用户姓名、手机号，推荐人和代理商加进 lists 里面
+      // 把 devicesList 的设备型号和 usersList 的用户姓名、手机号，推荐人和代理商加进 list 里面
       list.forEach(fItem => {
         fItem.key = k;
         k += 1;

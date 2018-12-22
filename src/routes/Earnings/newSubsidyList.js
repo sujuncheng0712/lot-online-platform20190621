@@ -24,9 +24,9 @@ class newSubsidyList extends PureComponent {
 
   componentDidMount() {
     this.getMerchantsList();
-    this.getEarnings();
-    this.getUsersList();
     this.getOrders();
+    this.getUsersList();
+    this.getEarnings();
   }
 
   // 获取商家列表
@@ -75,9 +75,9 @@ class newSubsidyList extends PureComponent {
                 orderList.push(val);
               }
             });
-            this.setState({ orderList, loading: false });
+            this.setState({ orderList });
           } else {
-            this.setState({ orderList: [], loading: false });
+            this.setState({ orderList: [] });
             message.warning(`提示：[${info.message}]`);
           }
         });
@@ -185,10 +185,13 @@ class newSubsidyList extends PureComponent {
       if (item.type === 2) dealerList.push(item);
     });
 
-    // 根据 uid 找出用户名, 根据订单号 oid 找购买人
+    // 根据 uid 找出激活人, 根据订单号 oid 找购买人
     lists.forEach(item => {
       usersList.forEach(val => {
-        if (item.uid === val.uuid) item.username = val.name;
+        if (item.uid === val.uuid) item.activationName = val.name ? val.name : val.mobile;
+      });
+      merchantsList.forEach(val => {
+        if (item.uid === val.uuid) item.activationName = val.contact;
       });
       orderList.forEach(oVal => {
         if (item.oid === oVal.uuid) {
@@ -428,7 +431,7 @@ class newSubsidyList extends PureComponent {
                   <div style={styles.model}>{item.eptags}</div>
                   <div style={styles.eid}>{item.eid}</div>
                   <div style={styles.code}>{item.link_id}</div>
-                  <div style={styles.consignee}>{item.username || '--'}</div>
+                  <div style={styles.consignee}>{item.activationName || '--'}</div>
                   <div
                     style={styles.agents}
                     hidden={

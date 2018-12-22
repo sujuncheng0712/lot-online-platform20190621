@@ -7,6 +7,7 @@ const menuData = [
     path: 'equipments',
     children: [
       { name: '已激活设备', path: 'equipments-list' },
+      { name: '已激活滤芯', path: 'filterElements-list' },
       { name: '滤芯寿命列表', path: 'expiration-filterElement-equipments' },
     ],
   },

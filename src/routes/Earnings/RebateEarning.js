@@ -161,7 +161,7 @@ class RebateEarning extends PureComponent {
     // 根据 uid 找出用户名
     lists.forEach(item => {
       usersList.forEach(val => {
-        if (item.uid === val.uuid) item.username = val.name;
+        if (item.uid === val.uuid) item.username = val.name ? val.name : val.mobile;
       });
     });
 

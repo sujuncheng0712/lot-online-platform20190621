@@ -110,7 +110,7 @@ class filterElementCode extends PureComponent {
     let orderArr = [];
     lists.forEach(item => {
       usersList.forEach(uItem => {
-        if (uItem.uuid === item.uid) item.purchaser = uItem.name;
+        if (uItem.uuid === item.uid) item.purchaser = uItem.name ? uItem.name : uItem.mobile;
       });
 
       orderArr.push(item.oid);
