@@ -123,6 +123,19 @@ class OrdersList extends PureComponent {
   render() {
     const { merchantsList, lists, usersLists, loading } = this.state;
 
+    // 不显示含有服务费的订单
+    const dataList = [];
+    lists.forEach(item => {
+      item.hasServiceCharge = 0;
+      item.products.forEach(val => {
+        if (val.coding === '000000001') item.hasServiceCharge = 1;
+      });
+      if (item.hasServiceCharge === 0) dataList.push(item);
+    });
+    dataList.forEach((item, index) => {
+      item.id = index + 1;
+    });
+
     const nowadays = [];
     const yesterday = [];
     const thisMonth = [];
@@ -277,7 +290,7 @@ class OrdersList extends PureComponent {
           <List
             split={false}
             bordered={false}
-            dataSource={lists}
+            dataSource={dataList}
             loading={loading}
             renderItem={item => (
               <div key={item.uuid} style={styles.item}>

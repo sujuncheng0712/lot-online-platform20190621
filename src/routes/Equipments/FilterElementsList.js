@@ -119,13 +119,12 @@ class FilterElementsList extends PureComponent {
 
   // 获取滤芯激活码列表
   getFilterElementList() {
-    const getUrl = `${url}/filter_element`;
+    let getUrl = `${url}/filter_cdkey`;
+    getUrl += auth.mid ? `?mid=${auth.mid}` : '';
     fetch(getUrl, {
       headers: identity === 'vendors' ? {
         vid: 'f40d03342db411e8bc9600163e0851fd',
-      } : {
-        mid: auth.mid,
-      },
+      } : {},
     }).then(res => {
       if (res.ok) {
         res.json().then(info => {
@@ -135,7 +134,7 @@ class FilterElementsList extends PureComponent {
               if (val.eptags === 'DCL01') val.fliterName = 'PPC复合PP棉滤芯';
               if (val.eptags === 'DCL02') val.fliterName = 'CPP复合活性炭滤芯';
               if (val.eptags === 'DCL09') val.fliterName = 'RO反渗透滤芯';
-              lists.push(val);
+              if (val.confirm_at) lists.push(val);
             });
             this.setState({lists, loading: false});
           } else {
@@ -221,7 +220,7 @@ class FilterElementsList extends PureComponent {
                 body: JSON.stringify({
                   uid: info.uid,
                   tags: info.eptags,
-                  code: info.activation_code,
+                  code: info.code,
                 }),
               }).then(res => {
                 if (res.ok) {
@@ -248,7 +247,7 @@ class FilterElementsList extends PureComponent {
     // 表格列的配置描述
     const columns = [
       { title: '序号', dataIndex: 'id', align: 'center' },
-      { title: '激活时间', dataIndex: 'activation_at', align: 'center' },
+      { title: '激活时间', dataIndex: 'confirm_at', align: 'center' },
       { title: '设备ID', dataIndex: 'eid', align: 'center' },
       { title: '产品型号',
         dataIndex: 'model',
@@ -260,7 +259,7 @@ class FilterElementsList extends PureComponent {
         dataIndex: 'fliterName',
         align: 'center',
       },
-      { title: '激活码', dataIndex: 'activation_code', align: 'center' },
+      { title: '激活码', dataIndex: 'code', align: 'center' },
       localStorage.getItem('antd-pro-authority') === 'vendors'
         ? {
           title: '使用人',
@@ -268,11 +267,15 @@ class FilterElementsList extends PureComponent {
           align: 'center',
           render: (val, info) => (
             <Popover placement="top" title="用户ID" content={info.uid} trigger="click">
-              {info.name || info.mobile}
+              {info.name || info.mobile || '--'}
             </Popover>
           ),
         }
-        : { title: '使用人', dataIndex: 'name', align: 'center' },
+        : { title: '使用人',
+          dataIndex: '',
+          align: 'center',
+          render: (val, info) => info.name || info.mobile || '--',
+          },
       {
         title: '推荐人',
         dataIndex: 'referrer',

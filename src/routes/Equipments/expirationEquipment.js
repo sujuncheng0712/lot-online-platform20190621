@@ -2,6 +2,7 @@
 import React, { PureComponent } from 'react';
 import { Input, Button, message, Select, Row, Col, Tabs, List, Divider } from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
+import Ellipsis from 'ant-design-pro/lib/Ellipsis';
 
 const url = 'http://iot.dochen.cn/api';
 const identity = localStorage.getItem('antd-pro-authority');
@@ -36,6 +37,7 @@ class expirationEquipment extends PureComponent {
       agentList: [],  // 代理商列表
       referrerList: [],  // 经销商列表
       equipmentId: '',
+      orderList: [],  // 订单列表
     };
   }
 
@@ -43,6 +45,7 @@ class expirationEquipment extends PureComponent {
     this.getDevicesList();
     this.getUsersList();
     this.getMerchantsList();
+    this.getOrders();
     this.getFilterElementList();
   }
 
@@ -61,10 +64,14 @@ class expirationEquipment extends PureComponent {
           if (info.status) {
             const lists = [];
             info.data.forEach(val => {
+              // 添加滤芯类型属性
+              if (val.eptags === 'DCL01') val.CPP = val.used;
+              if (val.eptags === 'DCL02') val.PPC = val.used;
+              if (val.eptags === 'DCL09') val.RO = val.used;
               lists.push(val);
             });
             this.changeData(lists);
-            this.getexpirationData();
+            this.getexpirationData(lists);
           } else {
             this.setState({ loading: false });
             message.warning(`提示：[${info.message}]`);
@@ -132,11 +139,29 @@ class expirationEquipment extends PureComponent {
     });
   }
 
+  // 获取订单列表
+  getOrders() {
+    let getOrders = `${url}/orders`;
+    getOrders += auth.mid ? `?mid=${auth.mid}` : '';
+    fetch(getOrders).then(res => {
+      if (res.ok) {
+        res.json().then(info => {
+          if (info.status) {
+            const orderList = [];
+            info.data.forEach(val => {
+              orderList.push(val);
+            });
+            this.setState({ orderList });
+          }
+        });
+      }
+    });
+  }
+
   // 从滤芯寿命列表中找出到期的滤芯
-  getexpirationData() {
-    const {dataList} = this.state;
+  getexpirationData(lists) {
     const expirationList = [];
-    dataList.forEach(eItem => {
+    lists.forEach(eItem => {
       if (eItem.state === 0) expirationList.unshift(eItem);
     });
 
@@ -145,12 +170,6 @@ class expirationEquipment extends PureComponent {
 
   // 把后端获取到的数据转为显示到滤芯寿命列表的数据
   changeData(lists, isExpiration=false) {
-    // 添加滤芯类型属性
-    lists.forEach(fItem => {
-      if (fItem.eptags === 'DCL01') fItem.CPP = fItem.used;
-      if (fItem.eptags === 'DCL02') fItem.PPC = fItem.used;
-      if (fItem.eptags === 'DCL09') fItem.RO = fItem.used;
-    });
 
     // 把 eid 拿出来放到数组eidList中并去重
     let eidList = [];
@@ -177,13 +196,14 @@ class expirationEquipment extends PureComponent {
         // 把未激活或已过期的放到数组后面
         arrItem.sort((last, next) => next.state - last.state);
         // 把新更换的(使用天数少的)放到数组后面以覆盖前面的
-        arrItem.sort((last, next) => next.used - last.used);
-        dataList.push(Object.assign({}, arrItem[0], arrItem[1], arrItem[2], arrItem[3], arrItem[4], arrItem[5]));
+        // arrItem.sort((last, next) => next.used - last.used);
+        // 新更换的滤芯默认放在数组的前面，所以只需取前三条滤芯即可
+        dataList.push(Object.assign({}, arrItem[0], arrItem[1], arrItem[2]));
       });
     } else {
       arrList.forEach(arrItem => {
         arrItem.sort((last, next) => next.state - last.state);
-        expirationList.push(Object.assign({}, arrItem[0], arrItem[1], arrItem[2], arrItem[3], arrItem[4], arrItem[5]));
+        expirationList.push(Object.assign({}, arrItem[0], arrItem[1], arrItem[2]));
       });
     }
 
@@ -240,7 +260,19 @@ class expirationEquipment extends PureComponent {
 
 
   render() {
-    const { loading, devicesList, usersList, agentList, referrerList, dataList, expirationList } = this.state;
+    const { loading, devicesList, usersList, agentList, referrerList, dataList, expirationList, orderList } = this.state;
+
+    // 增加用户地址
+    orderList.forEach(oItem => {
+      dataList.forEach(fItem => {
+        if (oItem.link_id && oItem.link_id === fItem.eid) fItem.address = oItem.address;
+        if (oItem.activations.length > 0) {
+          oItem.activations.forEach(val => {
+            if (val.eid === fItem.eid) fItem.address = oItem.address;
+          })
+        }
+      });
+    });
 
     const addProperty = (list) => {
       let k = 1;
@@ -294,6 +326,15 @@ class expirationEquipment extends PureComponent {
                     姓名：{item.name || '--'}
                     <Divider type="vertical" />
                     电话：{item.mobile}
+                    {item.address && (
+                      <span>
+                        <Divider type="vertical" />
+                        地址：
+                        <Ellipsis length={10} tooltip>
+                          {item.address}
+                        </Ellipsis>
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div style={styles.row}>
@@ -301,9 +342,9 @@ class expirationEquipment extends PureComponent {
                   <div style={styles.model}>{item.model || '--'}</div>
                   <div style={styles.eid}>{item.eid}</div>
                   <div style={styles.filter_element}>
-                    {`CPP : ${(180 - item.CPP) > 0 ? 180 - item.CPP : 0} 天 | PPC : ${(180 - item.PPC) > 0 ? 180 - item.PPC : 0} 天 | RO : ${(720 - item.RO) > 0 ? 720 - item.RO : 0} 天`}
+                    {`PPC : ${(180 - item.CPP) > 0 ? 180 - item.CPP : 0} 天 | CPP : ${(180 - item.PPC) > 0 ? 180 - item.PPC : 0} 天 | RO : ${(720 - item.RO) > 0 ? 720 - item.RO : 0} 天`}
                   </div>
-                  <div style={styles.name}>{item.name ||'--'}</div>
+                  <div style={styles.name}>{item.name || item.mobile ||'--'}</div>
                   <div style={styles.referrer}>{item.referrer || '--'}</div>
                   <div style={styles.agent}>{item.agent || '--'}</div>
                 </div>

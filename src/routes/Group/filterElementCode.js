@@ -61,11 +61,10 @@ class filterElementCode extends PureComponent {
 
   // 获取滤芯激活码订单列表
   getOrders() {
-    const getOrders = `${url}/filter_cdkey`;
+    let getOrders = `${url}/filter_cdkey`;
+    getOrders += auth.mid ? `?mid=${auth.mid}` : '';
     fetch(getOrders, {
-      headers: auth.mid ? {
-        mid: auth.mid,
-      } : {
+      headers: auth.mid ? {} : {
         vid: 'f40d03342db411e8bc9600163e0851fd',
       },
     }).then(res => {
