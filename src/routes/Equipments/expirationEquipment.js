@@ -330,7 +330,7 @@ class expirationEquipment extends PureComponent {
                       <span>
                         <Divider type="vertical" />
                         地址：
-                        <Ellipsis length={10} tooltip>
+                        <Ellipsis length={10} tooltip style={{display: 'inline'}}>
                           {item.address}
                         </Ellipsis>
                       </span>
