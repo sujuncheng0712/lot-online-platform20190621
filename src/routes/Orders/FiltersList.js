@@ -134,6 +134,9 @@ class OrdersList extends PureComponent {
     });
     dataList.forEach((item, index) => {
       item.id = index + 1;
+      // 拼接完整的地址
+      const areaToStr = item.area ? item.area.replace(/\//g, '') : '';
+      item.detailAddress = item.address ? areaToStr + item.address : areaToStr;
     });
 
     const nowadays = [];
@@ -341,7 +344,7 @@ class OrdersList extends PureComponent {
                   <div style={styles.phone}>{item.phone}</div>
                   <div style={styles.rowAddress}>
                     <Ellipsis length={10} tooltip>
-                      {item.address}
+                      {item.detailAddress}
                     </Ellipsis>
                   </div>
                   <div span={4} style={styles.pay_amount}>
