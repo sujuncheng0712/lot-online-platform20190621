@@ -90,6 +90,7 @@ class filterElementCode extends PureComponent {
 
   // 搜索列表
   searchList() {
+    this.setState({loading: true});
     const { lists, orderId, orderCode } = this.state;
     const arr = [];
     lists.forEach(val => {
@@ -99,7 +100,7 @@ class filterElementCode extends PureComponent {
 
     if (arr.length === 0) message.error('没找到对应的数据');
 
-    this.setState({ lists: arr.length > 0 ? arr : lists });
+    this.setState({ lists: arr.length > 0 ? arr : lists, loading: false });
   }
 
   render() {

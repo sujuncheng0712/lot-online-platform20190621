@@ -72,6 +72,7 @@ class OrdersList extends PureComponent {
 
   // 搜索列表
   searchList() {
+    this.setState({loading: true});
     const { lists, orderId, consignee } = this.state;
     const arr = [];
     lists.forEach(val => {
@@ -80,11 +81,12 @@ class OrdersList extends PureComponent {
 
     if (arr.length === 0) message.error('没找到对应的数据');
 
-    this.setState({ lists: arr.length > 0 ? arr : lists });
+    this.setState({ lists: arr.length > 0 ? arr : lists, loading: false });
   }
 
   // 搜索商家的机器
   searchMerchantsList() {
+    this.setState({loading: true});
     const { merchantsList, merchantsContact } = this.state;
     merchantsList.forEach(val => {
       if (val.contact === merchantsContact) {
@@ -181,7 +183,10 @@ class OrdersList extends PureComponent {
                   <Select
                     defaultValue="请选择"
                     style={{ width: '100%' }}
-                    onChange={value => this.getOrders(value)}
+                    onChange={value => {
+                      this.setState({loading: true});
+                      this.getOrders(value);
+                    }}
                   >
                     <Select.OptGroup label="代理商">
                       {merchantsList.map(item => (

@@ -119,24 +119,24 @@ class newSubsidyList extends PureComponent {
 
   // 根据 mid 搜索收益列表
   getEarningByMid(val) {
-    const {midList} = this.state;
     const getEarnings = `${url}/dgk_earning`;
-    if (midList.includes(val)) {
-      fetch(getEarnings, {
-        headers: {
-          mid: val,
-        },
-      }).then(res => {
-        if (res.ok) {
-          res.json().then(info => {
-            if (info.status) this.setState({ lists: info.data, loading: false });
-          });
-        }
-      });
-    } else {
-      message.warning(`搜索的商家不存在！`);
-      this.setState({ loading: false });
-    }
+    fetch(getEarnings, {
+      headers: {
+        mid: val,
+      },
+    }).then(res => {
+      if (res.ok) {
+        res.json().then(info => {
+          if (info.status) {
+            this.setState({ lists: info.data, loading: false });
+          } else {
+            message.warning(`搜索的商家不存在！`);
+            this.setState({ loading: false });
+          }
+        });
+      }
+    });
+
   }
 
   // 搜索列表
@@ -158,12 +158,21 @@ class newSubsidyList extends PureComponent {
   searchMerchantsList(mid) {
     this.setState({loading: true});
     const { merchantsList, merchantsContact } = this.state;
-    this.getEarningByMid(mid);
+    let isSearch = false;
+    if (typeof mid === 'string') {
+      this.getEarningByMid(mid);
+      return;
+    }
     merchantsList.forEach(val => {
       if (val.contact === merchantsContact) {
+        isSearch = true;
         this.getEarningByMid(val.uuid)
       }
     });
+    if (!isSearch) {
+      message.warning(`搜索的商家不存在！`);
+      this.setState({ loading: false });
+    }
   }
 
   render() {

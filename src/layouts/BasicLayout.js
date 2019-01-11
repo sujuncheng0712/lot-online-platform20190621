@@ -242,7 +242,7 @@ class BasicLayout extends React.PureComponent {
               copyright={
                 <Fragment>
                   Copyright <Icon type="copyright" /> 2017 DGK 智能平台 &nbsp;&nbsp; 版本号：v2.0.0
-                  2019-01-03
+                  2019-01-10
                 </Fragment>
               }
             />
