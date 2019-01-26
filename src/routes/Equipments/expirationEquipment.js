@@ -1,8 +1,8 @@
 /* eslint-disable no-param-reassign,no-plusplus,prefer-rest-params,no-script-url,no-undef */
 import React, { PureComponent } from 'react';
 import { Input, Button, message, Select, Row, Col, Tabs, List, Divider } from 'antd';
-import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 import Ellipsis from 'ant-design-pro/lib/Ellipsis';
+import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
 const url = 'http://iot.dochen.cn/api';
 const identity = localStorage.getItem('antd-pro-authority');
@@ -16,7 +16,7 @@ function injectUnount (target){
   target.prototype.componentWillUnmount = function () {
     if (next) next.call(this, ...arguments);
     this.unmount = true
-  }
+  };
   // 对setState的改装，setState查看目前是否已经销毁
   const {setState} = target.prototype;
   target.prototype.setState = function () {
@@ -71,7 +71,7 @@ class expirationEquipment extends PureComponent {
               lists.push(val);
             });
             this.changeData(lists);
-            this.getexpirationData(lists);
+            this.getExpirationData(lists);
           } else {
             this.setState({ loading: false });
             message.warning(`提示：[${info.message}]`);
@@ -159,10 +159,29 @@ class expirationEquipment extends PureComponent {
   }
 
   // 从滤芯寿命列表中找出到期的滤芯
-  getexpirationData(lists) {
+  getExpirationData(lists) {
     const expirationList = [];
+    let eidList = [];
     lists.forEach(eItem => {
-      if (eItem.state === 0) expirationList.unshift(eItem);
+      if (eItem.state === 0) {
+        // expirationList.unshift(eItem);
+        eidList.push(eItem.eid);
+      };
+    });
+    eidList = [...new Set(eidList)];
+
+    const arrList = [];
+    eidList.forEach(val => {
+      const tmpArr = [];
+      lists.forEach(fItem => {
+        if (fItem.eid === val) tmpArr.push(fItem);
+      });
+      arrList.push(tmpArr);
+    });
+
+    arrList.forEach(arrItem => {
+      arrItem.sort((last, next) => next.state - last.state);
+      expirationList.unshift(Object.assign({}, arrItem[0], arrItem[1], arrItem[2]));
     });
 
     this.setState({expirationList});
@@ -226,6 +245,10 @@ class expirationEquipment extends PureComponent {
           if (info.status) {
             const lists = [];
             info.data.forEach(val => {
+              // 添加滤芯类型属性
+              if (val.eptags === 'DCL01') val.CPP = val.used;
+              if (val.eptags === 'DCL02') val.PPC = val.used;
+              if (val.eptags === 'DCL09') val.RO = val.used;
               lists.push(val);
             });
             this.changeData(lists);
