@@ -181,7 +181,9 @@ class expirationEquipment extends PureComponent {
 
     arrList.forEach(arrItem => {
       arrItem.sort((last, next) => next.state - last.state);
-      expirationList.unshift(Object.assign({}, arrItem[0], arrItem[1], arrItem[2]));
+      if (arrItem[0].state === 0 || arrItem[1].state === 0 || arrItem[2].state === 0) {
+        expirationList.unshift(Object.assign({}, arrItem[0], arrItem[1], arrItem[2]));
+      }
     });
 
     this.setState({expirationList});
@@ -244,6 +246,8 @@ class expirationEquipment extends PureComponent {
         res.json().then(info => {
           if (info.status) {
             const lists = [];
+            // 把未激活或已过期的放到数组后面
+            info.data.sort((last, next) => next.state - last.state);
             info.data.forEach(val => {
               // 添加滤芯类型属性
               if (val.eptags === 'DCL01') val.CPP = val.used;
@@ -251,6 +255,7 @@ class expirationEquipment extends PureComponent {
               if (val.eptags === 'DCL09') val.RO = val.used;
               lists.push(val);
             });
+            console.log(info.data);
             this.changeData(lists);
             if (info.data[0].state === 0 || info.data[1].state === 0  || info.data[2].state === 0 ) {
               const isExpiration=true;
