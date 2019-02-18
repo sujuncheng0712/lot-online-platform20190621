@@ -65,8 +65,8 @@ class expirationEquipment extends PureComponent {
             const lists = [];
             info.data.forEach(val => {
               // 添加滤芯类型属性
-              if (val.eptags === 'DCL01') val.CPP = val.used;
-              if (val.eptags === 'DCL02') val.PPC = val.used;
+              if (val.eptags === 'DCL01') val.PPC = val.used;
+              if (val.eptags === 'DCL02') val.CPP = val.used;
               if (val.eptags === 'DCL09') val.RO = val.used;
               lists.push(val);
             });
@@ -216,6 +216,17 @@ class expirationEquipment extends PureComponent {
       arrList.forEach(arrItem => {
         // 把未激活或已过期的放到数组后面
         arrItem.sort((last, next) => next.state - last.state);
+        // 把与新激活相同的未过期的滤芯放到数组后面，避免覆盖前面新激活的滤芯
+        arrItem.forEach(val => {
+          arrItem.forEach(item=> {
+            if (item.eptags === val.eptags) {
+              if (item.used > val.used) {
+                const position = arrItem.indexOf(item);
+                arrItem.splice(position, 1);
+              }
+            }
+          });
+        });
         // 把新更换的(使用天数少的)放到数组后面以覆盖前面的
         // arrItem.sort((last, next) => next.used - last.used);
         // 新更换的滤芯默认放在数组的前面，所以只需取前三条滤芯即可
@@ -250,12 +261,25 @@ class expirationEquipment extends PureComponent {
             info.data.sort((last, next) => next.state - last.state);
             info.data.forEach(val => {
               // 添加滤芯类型属性
-              if (val.eptags === 'DCL01') val.CPP = val.used;
-              if (val.eptags === 'DCL02') val.PPC = val.used;
+              if (val.eptags === 'DCL01') val.PPC = val.used;
+              if (val.eptags === 'DCL02') val.CPP = val.used;
               if (val.eptags === 'DCL09') val.RO = val.used;
               lists.push(val);
+              // 把与新激活相同的已过期的滤芯删除，避免覆盖前面新激活的滤芯
+              info.data.forEach(item => {
+                if (item.eptags === val.eptags) {
+                  if (item.state < val.state) {
+                    const position = info.data.indexOf(item);
+                    info.data.splice(position, 1);
+                  }
+                  // 把与新激活相同的未过期的滤芯放到数组后面，避免覆盖前面新激活的滤芯
+                  if (item.used > val.used) {
+                    const position = info.data.indexOf(item);
+                    info.data.splice(position, 1);
+                  }
+                }
+              });
             });
-            console.log(info.data);
             this.changeData(lists);
             if (info.data[0].state === 0 || info.data[1].state === 0  || info.data[2].state === 0 ) {
               const isExpiration=true;
@@ -370,7 +394,7 @@ class expirationEquipment extends PureComponent {
                   <div style={styles.model}>{item.model || '--'}</div>
                   <div style={styles.eid}>{item.eid}</div>
                   <div style={styles.filter_element}>
-                    {`PPC : ${(180 - item.CPP) > 0 ? 180 - item.CPP : 0} 天 | CPP : ${(180 - item.PPC) > 0 ? 180 - item.PPC : 0} 天 | RO : ${(720 - item.RO) > 0 ? 720 - item.RO : 0} 天`}
+                    {`PPC : ${(180 - item.PPC) > 0 ? 180 - item.PPC : 0} 天 | CPP : ${(180 - item.CPP) > 0 ? 180 - item.CPP : 0} 天 | RO : ${(720 - item.RO) > 0 ? 720 - item.RO : 0} 天`}
                   </div>
                   <div style={styles.name}>{item.name || item.mobile ||'--'}</div>
                   <div style={styles.referrer}>{item.referrer || '--'}</div>
