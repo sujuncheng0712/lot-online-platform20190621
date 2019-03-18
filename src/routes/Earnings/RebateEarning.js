@@ -211,7 +211,7 @@ class RebateEarning extends PureComponent {
 
         // 根据 eptags 字段翻译出滤芯名称
         if (val.eptags === 'DCL01') val.filterName = 'PPC复合滤芯';
-        if (val.eptags === 'DCL02') val.filterName = 'PPC复合滤芯';
+        if (val.eptags === 'DCL02') val.filterName = 'CPP复合滤芯';
         if (val.eptags === 'DCL09') val.filterName = 'RO反渗透滤芯';
 
         val.id = k;
@@ -372,7 +372,8 @@ class RebateEarning extends PureComponent {
                 <div style={styles.rowT}>
                   <div>
                     订单编号：{item.oid}
-                    <Divider type="vertical" />成交时间：{item.created_at}
+                    <Divider type="vertical" />
+                    成交时间：{item.created_at}
                   </div>
                 </div>
                 <div style={styles.row}>

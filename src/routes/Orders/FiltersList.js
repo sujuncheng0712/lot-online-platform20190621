@@ -123,6 +123,14 @@ class OrdersList extends PureComponent {
   render() {
     const { merchantsList, lists, usersLists, loading } = this.state;
 
+    // 把商家分为代理商和经销商
+    const agentList = [];
+    const dealerList = [];
+    merchantsList.forEach(item => {
+      if (item.type === 1) agentList.push(item);
+      if (item.type === 2) dealerList.push(item);
+    });
+
     // 不显示含有服务费的订单
     const dataList = [];
     lists.forEach(item => {
@@ -230,7 +238,14 @@ class OrdersList extends PureComponent {
                     onChange={value => this.getOrders(value)}
                   >
                     <Select.OptGroup label="代理商">
-                      {merchantsList.map(item => (
+                      {agentList.map(item => (
+                        <Select.Option key={item.uuid}>
+                          {item.contact}({item.mobile})
+                        </Select.Option>
+                      ))}
+                    </Select.OptGroup>
+                    <Select.OptGroup label="经销商">
+                      {dealerList.map(item => (
                         <Select.Option key={item.uuid}>
                           {item.contact}({item.mobile})
                         </Select.Option>
@@ -302,6 +317,23 @@ class OrdersList extends PureComponent {
                     订单编号：{item.uuid}
                     <Divider type="vertical" />
                     {item.state !== 10 ? '成交' : '退款'}时间：{item.created_at}
+                    <Divider type="vertical" />
+                    <Popover
+                      placement="top"
+                      // title="滤芯名称 x 数量"
+                      content={(
+                        <div>
+                          {item.products.map((val) => (
+                            <div>
+                              <span>{val.desc} x {val.quantity}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      trigger="hover"
+                    >
+                      滤芯名称/数量
+                    </Popover>
                   </div>
                   {localStorage.getItem('antd-pro-authority') === 'vendors' && item.state !== 10 ? (
                     <Popconfirm

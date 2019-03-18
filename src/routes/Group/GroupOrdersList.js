@@ -99,6 +99,14 @@ class OrdersList extends PureComponent {
   render() {
     const { lists, loading, merchantsList } = this.state;
 
+    // 把商家分为代理商和经销商
+    const agentList = [];
+    const dealerList = [];
+    merchantsList.forEach(item => {
+      if (item.type === 1) agentList.push(item);
+      if (item.type === 2) dealerList.push(item);
+    });
+
     const nowadays = [];
     const yesterday = [];
     const thisMonth = [];
@@ -189,7 +197,14 @@ class OrdersList extends PureComponent {
                     }}
                   >
                     <Select.OptGroup label="代理商">
-                      {merchantsList.map(item => (
+                      {agentList.map(item => (
+                        <Select.Option key={item.uuid}>
+                          {item.contact}({item.mobile})
+                        </Select.Option>
+                      ))}
+                    </Select.OptGroup>
+                    <Select.OptGroup label="经销商">
+                      {dealerList.map(item => (
                         <Select.Option key={item.uuid}>
                           {item.contact}({item.mobile})
                         </Select.Option>
