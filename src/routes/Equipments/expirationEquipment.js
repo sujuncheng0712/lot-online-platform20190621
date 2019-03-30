@@ -10,6 +10,7 @@ const auth = sessionStorage.getItem('dochen-auth')
   ? JSON.parse(sessionStorage.getItem('dochen-auth'))
   : '';
 
+// 如果页面还没加载完就点击其它页面，控制台会报一个错误。添加了该函数就可以避免控制台报错
 function injectUnount (target){
   // 改装componentWillUnmount，销毁的时候记录一下
   const next = target.prototype.componentWillUnmount;
@@ -51,12 +52,13 @@ class expirationEquipment extends PureComponent {
 
   // 获取滤芯使用情况列表
   getFilterElementList() {
-    const getUrl = `${url}/filter_element`;
+    let getUrl = `${url}/filter_element`;
+    if (identity !== 'vendors') getUrl += `?mid=${auth.mid}`;
     fetch(getUrl, {
       headers: identity === 'vendors' ? {
         vid: 'f40d03342db411e8bc9600163e0851fd',
       } : {
-        mid: auth.mid,
+        vid: '',
       },
     }).then(res => {
       if (res.ok) {
@@ -166,7 +168,7 @@ class expirationEquipment extends PureComponent {
       if (eItem.state === 0) {
         // expirationList.unshift(eItem);
         eidList.push(eItem.eid);
-      };
+      }
     });
     eidList = [...new Set(eidList)];
 
